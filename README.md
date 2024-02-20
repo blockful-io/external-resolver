@@ -1,6 +1,6 @@
 # External Resolver
 
-This project aims to scale the Ethereum Name Service (ENS) by reducing costs for users and increasing its usage. The strategy involves combining existing patterns such as [ERC-3668](https://eips.ethereum.org/EIPS/eip-3668) and [EIP-5559](https://eips.ethereum.org/EIPS/eip-5559) [ENSIP-10](https://docs.ens.domains/ensip/10) and [ERC-16](https://docs.ens.domains/ensip/16), along with proof of concepts to develop a comprehensive reference codebase for the industry.
+This project aims to scale the Ethereum Name Service (ENS) by reducing costs for users and increasing its usage. The strategy involves combining existing patterns such as [ERC-3668](https://eips.ethereum.org/EIPS/eip-3668), [EIP-5559](https://eips.ethereum.org/EIPS/eip-5559), [ENSIP-10](https://docs.ens.domains/ensip/10) and [ERC-16](https://docs.ens.domains/ensip/16), along with proof of concepts to develop a comprehensive reference codebase for the industry.
 
 The primary objective of this project is to enhance the scalability of ENS while making it more cost-effective for users. By increasing its usability, we aim to foster broader adoption within the community.
 
