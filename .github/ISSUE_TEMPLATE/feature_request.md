@@ -7,28 +7,28 @@ assignees: ''
 
 ---
 
-## Feature Request
+# Feature Request
 
-### Describe the Feature Request
+## Describe the Feature Request
 
 <!-- A clear and concise description of the feature request.
 Please include if your feature request is related to a problem. -->
 
-### Describe Preferred Solution
+## Describe Preferred Solution
 
 <!-- A clear and concise description of what you want to happen. -->
 
-### Describe Alternatives
+## Describe Alternatives
 
 <!-- A clear and concise description of any alternative solutions or
 features you've considered. -->
 
-### Related Code
+## Related Code
 
 <!-- If you can illustrate the bug or feature request with an
 example, please provide it here. -->
 
-### Additional Context
+## Additional Context
 
 <!-- List any other information that is relevant to your issue. Stack traces,
 related issues, suggestions on how to add, use case, Stack Overflow links,
