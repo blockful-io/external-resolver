@@ -9,8 +9,6 @@ assignees: ''
 
 # Feature Request
 
-## Describe the Feature Request
-
 <!-- A clear and concise description of the feature request.
 Please include if your feature request is related to a problem. -->
 
