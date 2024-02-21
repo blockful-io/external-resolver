@@ -1,0 +1,13 @@
+{
+  "name": "external-resolver",
+  "version": "1.0.0",
+  "packageManager": "yarn@4.1.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "client": "yarn workspace client",
+    "gateway": "yarn workspace gateway",
+    "contracts": "yarn workspace contracts"
+  }
+}
