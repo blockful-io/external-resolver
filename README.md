@@ -14,3 +14,23 @@ The primary objective of this project is to enhance the scalability of ENS while
 ## Conclusion
 
 This project seeks to significantly enhance the scalability and usability of the Ethereum Name Service through the development of a comprehensive reference codebase. By combining existing patterns and best practices, we aim to lower costs for users and drive increased adoption within the industry. We welcome collaboration and feedback from the community as we progress towards our goals.
+
+## Contributing
+
+We welcome contributions from the community to improve this frontend application. To contribute, please follow these guidelines:
+
+1. Fork the repository and create a new branch for your feature or bug fix.
+
+2. Make your changes and ensure they follow the project's coding conventions.
+
+3. Test your changes locally to ensure they work as expected.
+
+4. Create a pull request with a detailed description of your changes.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## Acknowledgements
+
+Special thanks to the Ethereum Name Service (ENS) community for their contributions and support.

@@ -8,6 +8,11 @@
   "scripts": {
     "client": "yarn workspace client",
     "gateway": "yarn workspace gateway",
-    "contracts": "yarn workspace contracts"
+    "contracts": "yarn workspace contracts",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "build": "turbo run build",
+    "node": "anvil"
   }
 }
