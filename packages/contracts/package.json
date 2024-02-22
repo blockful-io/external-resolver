@@ -1,0 +1,8 @@
+{
+  "name": "contracts",
+  "packageManager": "yarn@4.1.0",
+  "scripts": {
+    "test": "echo contracts test",
+    "dev": "echo contracts dev"
+  }
+}
