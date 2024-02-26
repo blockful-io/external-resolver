@@ -2,7 +2,7 @@
   "name": "contracts",
   "packageManager": "yarn@4.1.0",
   "scripts": {
-    "test": "echo contracts test",
+    "test": "forge test -vv",
     "dev": "echo contracts dev"
   }
 }

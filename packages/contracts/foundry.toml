@@ -2,5 +2,10 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+remappings = [
+  "@ens-contracts=lib/ens-contracts/contracts",
+  "@openzeppelin=lib/openzeppelin-contracts",
+  "@ensdomains=lib"
+]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
