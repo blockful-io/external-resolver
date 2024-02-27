@@ -3,6 +3,11 @@
   "packageManager": "yarn@4.1.0",
   "scripts": {
     "test": "forge test -vv",
-    "dev": "echo contracts dev"
+    "test:watch": "forge test -vv --watch",
+    "dev": "anvil & copyfiles ../../.env contracts/.env && forge script script/*.sol --rpc-url http://localhost:8545 --broadcast -vv",
+    "deploy": "forge script script/*.sol --broadcast -vvvv"
+  },
+  "devDependencies": {
+    "copyfiles": "^2.4.1"
   }
 }

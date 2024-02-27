@@ -2,12 +2,12 @@
 pragma solidity ^0.8.13;
 
 import {Test, console2} from "forge-std/Test.sol";
-import "./Helper.t.sol";
+import "../src/Helper.sol";
 import "@ens-contracts/registry/ENSRegistry.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 
-contract PublicResolverTest is Test, TestHelper {
+contract PublicResolverTest is Test, ENSHelper {
     PublicResolver public resolver;
 
     function setUp() public {
@@ -17,7 +17,7 @@ contract PublicResolverTest is Test, TestHelper {
 
         // .reverse
         registry.setSubnodeOwner(rootNode, labelhash("reverse"), address(1));
-        // .addr
+        // addr.reverse
         registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
 
         resolver = new PublicResolver(registry, INameWrapper(address(1)), address(1), address(registrar));
