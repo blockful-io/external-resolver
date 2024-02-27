@@ -11,6 +11,25 @@ The primary objective of this project is to enhance the scalability of ENS while
 * **Gateway**: An API capable of handling reading data from an external source following the flow specified by the [EIP-5559](https://eips.ethereum.org/EIPS/eip-5559).
 * **Client**: A module that is able to read ENS domain properties even when stored in external data sources.
 
+## Usage
+
+To run this application locally, follow these steps:
+
+1. Clone this repository to your local machine.
+2. Install dependencies by running:
+
+```bash
+yarn install
+```
+
+3. Start the development server:
+
+```bash
+yarn start
+```
+
+4. Access the contracts through `http://localhost:8545`
+
 ## Conclusion
 
 This project seeks to significantly enhance the scalability and usability of the Ethereum Name Service through the development of a comprehensive reference codebase. By combining existing patterns and best practices, we aim to lower costs for users and drive increased adoption within the industry. We welcome collaboration and feedback from the community as we progress towards our goals.

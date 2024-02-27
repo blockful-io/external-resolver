@@ -9,7 +9,7 @@
     "client": "yarn workspace client",
     "gateway": "yarn workspace gateway",
     "contracts": "yarn workspace contracts",
-    "dev": "dotenvx run -- turbo run dev",
+    "start": "dotenvx run -- turbo run start",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
     "build": "turbo run build",

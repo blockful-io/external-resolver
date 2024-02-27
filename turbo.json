@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
-    "dev": {
+    "start": {
       "cache": false,
       "persistent": true
     },
