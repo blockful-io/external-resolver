@@ -1,0 +1,7 @@
+{
+  "name": "gateway",
+  "packageManager": "yarn@4.1.0",
+  "dependencies": {
+    "evmgateway": "file:../evmgateway"
+  }
+}
