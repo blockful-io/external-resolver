@@ -1,0 +1,3 @@
+[submodule "packages/evmgateway"]
+	path = packages/evmgateway
+	url = https://github.com/ensdomains/evmgateway
