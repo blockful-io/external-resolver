@@ -6,6 +6,7 @@ import "../src/Helper.sol";
 import "@ens-contracts/registry/ENSRegistry.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
+import "@ens-contracts/utils/UniversalResolver.sol";
 
 contract PublicResolverTest is Test, ENSHelper {
     PublicResolver public resolver;
@@ -13,6 +14,9 @@ contract PublicResolverTest is Test, ENSHelper {
     function setUp() public {
         vm.startPrank(address(1));
         ENSRegistry registry = new ENSRegistry();
+        string[] memory urls = new string[](1);
+        urls[0] = "localhost:8080";
+        UniversalResolver universalResolver = new UniversalResolver(address(registry), urls);
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
         // .reverse
