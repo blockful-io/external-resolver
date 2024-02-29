@@ -140,3 +140,4 @@ dist
 # foundry
 **/broadcast/**
 **/cache/**
+**/bin/**

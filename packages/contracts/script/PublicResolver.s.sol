@@ -18,7 +18,7 @@ contract PublicResolverScript is Script, ENSHelper {
         ENSRegistry registry = new ENSRegistry();
         string[] memory urls = new string[](1);
         urls[0] = "localhost:8080";
-        UniversalResolver universalResolver = new UniversalResolver(address(registry), urls);
+        new UniversalResolver(address(registry), urls);
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
         // .reverse
@@ -34,16 +34,9 @@ contract PublicResolverScript is Script, ENSHelper {
         // public.eth
         registry.setSubnodeRecord(namehash("eth"), labelhash("public"), publicKey, address(resolver), 100000);
 
-        console.logBytes32(namehash("eth"));
-        console.logBytes32(labelhash("eth"));
-        console.logBytes32(namehash("public.eth"));
-
         // inital properties
         resolver.setAddr(namehash("public.eth"), address(1));
-        resolver.setText(namehash("public.eth"), "avatar", "blockful.png");
-
-        string memory text = resolver.text(namehash("public.eth"), "avatar");
-        console.logString(text);
+        resolver.setText(namehash("public.eth"), "avatar", "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ"); // blockful.jpeg
 
         vm.stopBroadcast();
     }
