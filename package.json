@@ -19,6 +19,8 @@
     "@dotenvx/dotenvx": "^0.20.2"
   },
   "devDependencies": {
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "turbo": "^1.12.4"
   }
 }
