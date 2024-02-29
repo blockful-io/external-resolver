@@ -15,5 +15,6 @@ test("should resolve", async () => {
     universalResolverAddress: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
   });
 
-  expect(x).toEqual("blockful.png");
+  // blockful.jpeg
+  expect(x).toEqual("QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ");
 });
