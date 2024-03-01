@@ -69,4 +69,10 @@ contract PublicResolverTest is Test, ENSHelper {
         resolver.setAddr(namehash("public.eth"), uint256(60), abi.encodePacked(owner));
         assertEq(resolver.addr(namehash("public.eth"), uint256(60)), abi.encodePacked(owner));
     }
+
+    function test_Name() public {
+        vm.prank(owner);
+        resolver.setName(namehash("public.eth"), "blockful");
+        assertEq(resolver.name(namehash("public.eth")), "blockful");
+    }
 }

@@ -36,6 +36,7 @@ contract PublicResolverScript is Script, ENSHelper {
 
         // inital properties
         resolver.setAddr(namehash("public.eth"), address(1));
+        resolver.setName(namehash("public.eth"), "blockful");
         resolver.setText(namehash("public.eth"), "avatar", "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ"); // blockful.jpeg
 
         vm.stopBroadcast();
