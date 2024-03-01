@@ -21,10 +21,16 @@ const client = createPublicClient({
 (async () => {
   const ensAddress = normalize("public.eth");
 
-  const x = await client.getEnsAvatar({
+  const avatar = await client.getEnsAvatar({
     name: ensAddress,
     universalResolverAddress: resolver,
-    // gatewayUrls: ["http://localhost:8080/nodes/{sender}/{data}.json"],
   });
-  console.log("address", x);
+  const address = await client.getEnsAddress({
+    name: ensAddress,
+    universalResolverAddress: resolver,
+  });
+  const name = await client.getEnsName({
+    address: "0xc74E8eFaFE54481bD109f97422AeBca607499f57",
+    universalResolverAddress: resolver,
+  });
 })();
