@@ -4,12 +4,6 @@
 
 This folder contains a simple gateway and a series of tests for it. The tests cover various function calls, including handling GET requests and setting values for different function types.
 
-- Navigate to the packages/gateway directory.
-
-```
-cd packages/gateway
-```
-
 - Run yarn to install dependencies.
 
 ```
@@ -19,7 +13,7 @@ yarn install
 - Run yarn test to execute the tests.
 
 ```
-yarn test
+yarn gateway test
 ```
 
 ## Gateway Information
