@@ -15,7 +15,7 @@
  *
  */
 import { describe, it, beforeAll, expect } from "vitest";
-import { server, abi } from "../src/gateWay";
+import { server, abi } from "../src/server";
 import ethers from "ethers";
 import * as ccipread from "@chainlink/ccip-read-server";
 import { Interface } from "ethers/lib/utils";
