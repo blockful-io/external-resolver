@@ -30,7 +30,13 @@ const client = createPublicClient({
     universalResolverAddress: resolver,
   });
   const name = await client.getEnsName({
-    address: "0xc74E8eFaFE54481bD109f97422AeBca607499f57",
+    address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
     universalResolverAddress: resolver,
+  });
+
+  console.log({
+    avatar,
+    name,
+    address,
   });
 })();

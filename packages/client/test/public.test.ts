@@ -1,14 +1,14 @@
-import { localhost } from "viem/chains";
-import { createPublicClient, http } from "viem";
+import { foundry } from "viem/chains";
+import { createTestClient, http, publicActions } from "viem";
 import { normalize, labelhash, namehash } from "viem/ens";
 
-const client = createPublicClient({
-  chain: localhost,
+const client = createTestClient({
+  chain: foundry,
+  mode: "anvil",
   transport: http(),
-});
+}).extend(publicActions);
 
 describe("ENS reading", () => {
-  const owner = "0x0000000000000000000000000000000000000001";
   const ensAddress = normalize("public.eth");
 
   test("should get avatar", async () => {
@@ -26,7 +26,7 @@ describe("ENS reading", () => {
       universalResolverAddress: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     });
 
-    expect(address).toBe(owner);
+    expect(address).toMatch(/0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266/i); // case insensitive
   });
 
   test("should get resolver", async () => {
@@ -40,11 +40,10 @@ describe("ENS reading", () => {
 
   test("should get name", async () => {
     const name = await client.getEnsName({
-      address:
-        "0x36f4458307cdb864c670ce989072842621dd6b7022b8abacc37f7fab25890b27",
+      address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
       universalResolverAddress: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     });
 
-    expect(name).toBe("blockful");
+    expect(name).toBe("public.eth");
   });
 });
