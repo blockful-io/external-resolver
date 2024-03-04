@@ -59,6 +59,7 @@ async function doCall(
   }
   // Encode function data using ABI and arguments
   const calldata = iface.encodeFunctionData(type, args);
+
   // Make a server call with encoded function data
   const result = await server.call({ to: path, data: calldata });
 
