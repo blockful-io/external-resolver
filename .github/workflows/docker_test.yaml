@@ -23,6 +23,9 @@ jobs:
     - name: Start Docker container
       run: docker run -d --name external-resolver-contracts -p 8545:8545 blockful/external-resolver-contracts
 
+    - name: Run install
+      run: yarn
+      
     - name: Run tests
       run: yarn test
 
