@@ -16,6 +16,9 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: 'recursive'
+      
+    - name: Install Foundry
+      uses: foundry-rs/foundry-toolchain@v1
 
     - name: Build Docker image
       run: docker build -t blockful/external-resolver-contracts -f packages/contracts/Dockerfile packages/contracts
