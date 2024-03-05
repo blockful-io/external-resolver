@@ -48,11 +48,6 @@ We welcome contributions from the community to improve this frontend application
 
 4. Create a pull request with a detailed description of your changes.
 
-## Disclaimer
-
-The latest version of the [ENS Contracts](https://github.com/ensdomains/ens-contracts/) is causing some errors that are currently being discussed on issues [#336](https://github.com/ensdomains/ens-contracts/issues/336) and [#338](https://github.com/ensdomains/ens-contracts/issues/338).
-In order to unblock the development a fork of the [ENS Contracts](https://github.com/blockful-io/ens-contracts) as well as the [Openzeppelin Contracts](https://github.com/blockful-io/openzeppelin-contracts) have been created under the Blockful's Github Organization fixing the issue temporarily.
-
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
