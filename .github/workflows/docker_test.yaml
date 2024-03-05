@@ -1,0 +1,32 @@
+name: Docker Test
+
+on:
+  push:
+    branches-ignore:
+      - main
+  # pull_request:
+  #   branches:
+  #     - '*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Build Docker image
+      run: docker build -t anvil packages/contracts
+
+    - name: Start Docker container
+      run: docker run -d --name blockchain-node -p 8545:8545 anvil
+
+    - name: Wait for container to be healthy
+      run: docker wait blockchain-node
+
+    - name: Run tests
+      run: yarn test
+
+    - name: Stop Docker container
+      run: docker stop blockchain-node
