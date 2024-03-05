@@ -5,7 +5,6 @@
     "test": "forge test -vv",
     "test:watch": "forge test -vv --watch",
     "start": "anvil & copyfiles ../../.env contracts/.env && forge script script/*.sol --rpc-url http://localhost:8545 --broadcast -vv",
-    "deploy": "forge script script/*.sol --broadcast -vvvv",
     "postinstall": "forge install"
   },
   "devDependencies": {
