@@ -11,3 +11,6 @@
 [submodule "packages/contracts/lib/ens-contracts"]
 	path = packages/contracts/lib/ens-contracts
 	url = https://github.com/ensdomains/ens-contracts
+[submodule "packages/contracts/lib/offchain-resolver"]
+	path = packages/contracts/lib/offchain-resolver
+	url = https://github.com/ensdomains/offchain-resolver
