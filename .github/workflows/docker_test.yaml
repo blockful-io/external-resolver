@@ -14,12 +14,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
 
     - name: Build Docker image
       run: docker build -t blockful/external-resolver-contracts -f packages/contracts/Dockerfile packages/contracts
-      with:
-        build-args: |
-          BUILDKIT_CONTEXT_KEEP_GIT_DIR=true
 
     - name: Start Docker container
       run: docker run -d --name external-resolver-contracts -p 8545:8545 blockful/external-resolver-contracts

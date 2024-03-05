@@ -5,7 +5,6 @@ FROM ghcr.io/foundry-rs/foundry
 WORKDIR /app
 COPY . .
 
-RUN forge install
 RUN forge build
 
 # Runs `forge script` against the anvil chain to set up contracts
