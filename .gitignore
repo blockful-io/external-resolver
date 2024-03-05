@@ -136,3 +136,8 @@ dist
 
 **/build/**
 **/dist/**
+
+# foundry
+**/broadcast/**
+**/cache/**
+**/bin/**

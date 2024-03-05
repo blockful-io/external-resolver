@@ -9,10 +9,15 @@
     "client": "yarn workspace client",
     "gateway": "yarn workspace gateway",
     "contracts": "yarn workspace contracts",
-    "start": "turbo run start",
+    "start": "dotenvx run -- turbo run start",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
-    "build": "turbo run build",
-    "node": "anvil"
+    "build": "turbo run build"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "^0.20.2"
+  },
+  "devDependencies": {
+    "turbo": "^1.12.4"
   }
 }
