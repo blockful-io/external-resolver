@@ -13,17 +13,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Build Docker image
-      run: docker-compose -f compose.yaml up -d
+      run: docker build -t blockful/external-resolver-contracts -f packages/contracts/Dockerfile packages/contracts
+
+    - name: Start Docker container
+      run: docker run -d --name external-resolver-contracts -p 8545:8545 blockful/external-resolver-contracts
 
     - name: Wait for container to be healthy
-      run: docker-compose -f compose.yaml exec contracts sh -c 'while ! nc -z localhost 8545; do sleep 1; done'
+      run: docker wait external-resolver-contracts
 
     - name: Run tests
       run: yarn test
 
     - name: Stop Docker container
-      run: docker-compose -f compose.yaml down
+      run: docker stop external-resolver-contracts
