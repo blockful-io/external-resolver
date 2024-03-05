@@ -6,7 +6,6 @@
       "persistent": true
     },
     "test": {},
-    "test:watch": {},
-    "deploy": {}
+    "test:watch": {}
   }
 }

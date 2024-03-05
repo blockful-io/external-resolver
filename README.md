@@ -16,19 +16,21 @@ The primary objective of this project is to enhance the scalability of ENS while
 To run this application locally, follow these steps:
 
 1. Clone this repository to your local machine.
-2. Install dependencies by running:
+2. Copy the `env.example` to a `.env` file on the root directory
+3. Install dependencies by running:
 
 ```bash
 yarn install
+cd packages/contracts && forge install && cd -
 ```
 
-3. Start the development server:
+4. Start the development server:
 
 ```bash
 yarn start
 ```
 
-4. Access the contracts through `http://localhost:8545`
+5. Access the contracts through `http://localhost:8545`
 
 ## Conclusion
 
