@@ -17,16 +17,13 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build Docker image
-      run: docker build -t anvil packages/contracts
-
-    - name: Start Docker container
-      run: docker run -d --name blockchain-node -p 8545:8545 anvil
+      run: docker-compose -f compose.yaml up -d
 
     - name: Wait for container to be healthy
-      run: docker wait blockchain-node
+      run: docker-compose -f compose.yaml exec contracts sh -c 'while ! nc -z localhost 8545; do sleep 1; done'
 
     - name: Run tests
       run: yarn test
 
     - name: Stop Docker container
-      run: docker stop blockchain-node
+      run: docker-compose -f compose.yaml down
