@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-//import {Script, console} from "../lib/forge-std/src/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
 
 import "../src/Helper.sol";
 import "@ens-contracts/registry/ENSRegistry.sol";
@@ -24,20 +24,45 @@ contract PublicResolverScript is Script, ENSHelper {
         // .reverse
         registry.setSubnodeOwner(rootNode, labelhash("reverse"), publicKey);
         // addr.reverse
-        registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
+        registry.setSubnodeOwner(
+            namehash("reverse"),
+            labelhash("addr"),
+            address(registrar)
+        );
 
-        PublicResolver resolver = new PublicResolver(registry, INameWrapper(publicKey), publicKey, address(registrar));
+        PublicResolver resolver = new PublicResolver(
+            registry,
+            INameWrapper(publicKey),
+            publicKey,
+            address(registrar)
+        );
         registrar.setDefaultResolver(address(resolver));
 
         // .eth
-        registry.setSubnodeRecord(rootNode, labelhash("eth"), publicKey, address(resolver), 100000);
+        registry.setSubnodeRecord(
+            rootNode,
+            labelhash("eth"),
+            publicKey,
+            address(resolver),
+            100000
+        );
         // public.eth
-        registry.setSubnodeRecord(namehash("eth"), labelhash("public"), publicKey, address(resolver), 100000);
+        registry.setSubnodeRecord(
+            namehash("eth"),
+            labelhash("public"),
+            publicKey,
+            address(resolver),
+            100000
+        );
 
         // inital properties
         resolver.setAddr(namehash("public.eth"), address(1));
         resolver.setName(namehash("public.eth"), "blockful");
-        resolver.setText(namehash("public.eth"), "avatar", "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ"); // blockful.jpeg
+        resolver.setText(
+            namehash("public.eth"),
+            "avatar",
+            "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ"
+        ); // blockful.jpeg
 
         vm.stopBroadcast();
     }

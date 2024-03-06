@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Script, console} from "../lib/forge-std/src/Script.sol";
-import "../lib/forge-std/src/console.sol";
+import {Script, console} from "forge-std/Script.sol";
+import "forge-std/console.sol";
 
 import "../src/Helper.sol";
 import "@ens-contracts/registry/ENSRegistry.sol";

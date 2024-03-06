@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Test} from "../lib/forge-std/src/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import "../src/Helper.sol";
 import "@ens-contracts/registry/ENSRegistry.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
