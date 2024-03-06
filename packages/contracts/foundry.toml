@@ -6,7 +6,7 @@ remappings = [
   "@ens-contracts=lib/ens-contracts/contracts",
   "@openzeppelin=lib/openzeppelin-contracts",
   "@ensdomains=lib",
-  "forge-std=lib/forge-std/contracts/src"
+  "forge-std=lib/forge-std/src"
 ]
 ignored_warnings_from = ["lib/**"]
 
