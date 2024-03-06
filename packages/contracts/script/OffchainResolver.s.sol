@@ -23,8 +23,6 @@ contract OffchainResolverScript is Script, ENSHelper {
             t
         );
 
-        console.log("yeah budy!");
-
         vm.stopBroadcast();
     }
 }
