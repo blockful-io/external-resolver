@@ -1,8 +1,14 @@
+/**
+ * This file purpose is to implement a client capable of calling methods on a given
+ * Blockchain Node and to redirect the request to a Gateway whenever necessary.
+ */
+
 import { Command } from "commander";
 import { createPublicClient, http } from "viem";
 import { normalize } from "viem/ens";
 import { localhost } from "viem/chains";
 
+// Define command-line options using Commander
 const program = new Command();
 program
   .requiredOption("-r --resolver <address>", "ENS Universal Resolver address")
