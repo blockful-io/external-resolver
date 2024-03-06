@@ -56,8 +56,8 @@ contract PublicResolverScript is Script, ENSHelper {
         );
 
         // inital properties
-        resolver.setAddr(namehash("public.eth"), address(1));
-        resolver.setName(namehash("public.eth"), "blockful");
+        resolver.setAddr(namehash("public.eth"), publicKey);
+        registrar.setName("public.eth");
         resolver.setText(
             namehash("public.eth"),
             "avatar",

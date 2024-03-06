@@ -2,8 +2,8 @@
   "name": "contracts",
   "packageManager": "yarn@4.1.0",
   "scripts": {
-    "test": "forge test -vv",
-    "test:watch": "forge test -vv --watch",
+    "test": "forge test -vvv",
+    "test:watch": "forge test -vvv --watch",
     "start": "anvil & copyfiles ../../.env contracts/.env && forge script script/*.sol --rpc-url http://localhost:8545 --broadcast -vv",
     "postinstall": "forge install"
   },
