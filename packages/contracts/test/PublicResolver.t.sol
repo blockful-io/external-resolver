@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Test} from "forge-std/Test.sol";
+import {Test} from "../lib/forge-std/src/Test.sol";
 import "../src/Helper.sol";
 import "@ens-contracts/registry/ENSRegistry.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
@@ -66,8 +66,15 @@ contract PublicResolverTest is Test, ENSHelper {
 
     function test_AddrMultiCoin() public {
         vm.prank(owner);
-        resolver.setAddr(namehash("public.eth"), uint256(60), abi.encodePacked(owner));
-        assertEq(resolver.addr(namehash("public.eth"), uint256(60)), abi.encodePacked(owner));
+        resolver.setAddr(
+            namehash("public.eth"),
+            uint256(60),
+            abi.encodePacked(owner)
+        );
+        assertEq(
+            resolver.addr(namehash("public.eth"), uint256(60)),
+            abi.encodePacked(owner)
+        );
     }
 
     function test_Name() public {
