@@ -1,0 +1,14 @@
+services:
+   contracts:
+    build: 
+      context: packages/contracts
+    container_name: contracts
+    ports:
+      - "8545:8545"
+    networks:
+      - local
+    env_file:
+      - .env
+
+networks:
+  local:

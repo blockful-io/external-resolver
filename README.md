@@ -30,7 +30,14 @@ cd packages/contracts && forge install && cd -
 yarn start
 ```
 
-5. Access the contracts through `http://localhost:8545`
+5. Run tests:
+
+```bash
+docker-compose up -d # start local blockchain node
+yarn test
+```
+
+6. Access the contracts through `http://localhost:8545`
 
 ## Conclusion
 

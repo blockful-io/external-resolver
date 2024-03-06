@@ -7,37 +7,25 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "start client",
+      "name": "debug ts",
       "skipFiles": [
         "<node_internals>/**"
       ],
       "program": "${workspaceFolder}/packages/client/src/index.ts",
-      "args": [
-        "--registry",
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
-      ]
-    },
-    {
-      "name": "Jest file",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
-      "args": [
-        "${fileBasenameNoExtension}",
-        "--runInBand",
-        "--watch",
-        "--coverage=false",
-        "--no-cache"
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register"
       ],
-      "cwd": "${workspaceRoot}",
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "sourceMaps": true,
-      "windows": {
-        "program": "${workspaceFolder}/node_modules/jest/bin/jest"
-      },
-      "skipFiles": [
-        "${workspaceFolder}/packages/contracts/**/**/*.js"
+      "outFiles": [
+        "${workspaceFolder}/**/*.js",
+        "!**/node_modules/**"
+      ],
+      "args": [
+        "--resolver",
+        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
       ]
     }
   ]

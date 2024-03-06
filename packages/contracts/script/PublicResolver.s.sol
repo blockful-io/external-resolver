@@ -35,8 +35,8 @@ contract PublicResolverScript is Script, ENSHelper {
         registry.setSubnodeRecord(namehash("eth"), labelhash("public"), publicKey, address(resolver), 100000);
 
         // inital properties
-        resolver.setAddr(namehash("public.eth"), address(1));
-        resolver.setName(namehash("public.eth"), "blockful");
+        resolver.setAddr(namehash("public.eth"), publicKey);
+        registrar.setName("public.eth");
         resolver.setText(namehash("public.eth"), "avatar", "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ"); // blockful.jpeg
 
         vm.stopBroadcast();
