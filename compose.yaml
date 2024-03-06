@@ -1,6 +1,6 @@
 services:
-   contracts:
-    build: 
+  contracts:
+    build:
       context: packages/contracts
     container_name: contracts
     ports:
@@ -9,6 +9,21 @@ services:
       - local
     env_file:
       - .env
+  mongo:
+    image: mongo
+    container_name: gateway-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: blockful
+      MONGO_INITDB_ROOT_PASSWORD: ensdomains
+      MONGO_INITDB_DATABASE: ensdomains
 
 networks:
   local:
+
+volumes:
+  mongodb_data:

@@ -14,10 +14,10 @@
  * ```
  *
  */
-import * as ccipread from "@chainlink/ccip-read-server";
+import * as ccip from "@chainlink/ccip-read-server";
 
 // Application Binary Interfaces
-export const abi: string[] = [
+const abi: string[] = [
   "function getSignedBalance(address addr) public view returns(uint256 balance, bytes memory sig)",
   "function setText(address addr, string text) public view returns(string result, string returned_args)",
   "function setAddr(bytes32 node, address addr) public view returns(string result, string returned_args)",
@@ -25,57 +25,13 @@ export const abi: string[] = [
   "function text(bytes32 node, string key) public view returns(string memory result)",
 ];
 
-// Creating a ccip-read server
-const server = new ccipread.Server();
+function NewServer(...opts: ccip.HandlerDescription[]): ccip.Server {
+  const server = new ccip.Server();
 
-// Adding a handlers for the gateway
-server.add(abi, [
-  {
-    type: "getSignedBalance",
-    func: (_args) => {
-      // Implement logic or call dataBase / Contract
-      return Promise.resolve([1000, "0x123456"]);
-    },
-  },
-  {
-    type: "setText",
-    func: (_args) => {
-      const [addr, newText] = _args;
-      // Implement logic or call dataBase / Contract
-      return Promise.resolve(["Did it!", newText]);
-    },
-  },
-  {
-    type: "setAddr",
-    func: (args) => {
-      const [node, addr] = args;
-      // Implement logic or call dataBase / Contract
-      return Promise.resolve([
-        "Address Set",
-        `Node: ${node}, Address: ${addr}`,
-      ]);
-    },
-  },
-  {
-    type: "addr",
-    func: (args) => {
-      const [node, coinType] = args;
-      // Implement logic or call dataBase / Contract
-      const multicoinAddress = "0x123456";
-      return Promise.resolve([multicoinAddress]);
-    },
-  },
+  server.add(abi, opts);
 
-  {
-    type: "text",
-    func: (args) => {
-      const [node, key] = args;
-      // Implement logic or call dataBase / Contract
-      const textValue = "This is the text value storage.";
-      return Promise.resolve([textValue]);
-    },
-  },
-]);
+  return server;
+}
 
 // Exporting the created gateway and the function that allow communication with it.
-export { server };
+export { NewServer, abi };

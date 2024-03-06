@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Domain {
+  namehash  String    @id @map("_id")
+  addresses Address[]
+  avatar    String?
+  text      Json?
+}
+
+model Address {
+  address    String @id @map("_id")
+  coin       Int?
+  domainHash String
+  domain     Domain @relation(fields: [domainHash], references: [namehash])
+}

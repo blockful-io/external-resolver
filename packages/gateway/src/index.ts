@@ -1,10 +1,14 @@
 /**
- * Script for running the server locally exposing the API on port 3001
+ * Script for running the server locally exposing the API
  */
-import { server } from "./server";
+import { withGetText, withSetText } from "./handlers";
+import { MongoDBRepository } from "./repositories/mongodb";
+import { NewServer } from "./server";
 
-const app = server.makeApp("/");
+const repo = new MongoDBRepository();
 
-app.listen(3001, () => {
+const app = NewServer(withSetText(repo), withGetText(repo)).makeApp("/");
+
+app.listen(process.env.PORT || 3000, () => {
   console.log(`Gateway is running!`);
 });

@@ -5,13 +5,16 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "start": "ts-node ./src/index.ts"
+    "start": "ts-node ./src/index.ts",
+    "migrate": "prisma db push"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@prisma/client": "^5.10.2",
     "@types/node": "^20.11.24",
+    "prisma": "^5.10.2",
     "typescript": "^5.3.3",
     "vitest": "^1.3.1"
   },

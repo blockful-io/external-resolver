@@ -15,23 +15,23 @@
  *
  */
 import { describe, it, beforeAll, expect } from "vitest";
-import { server, abi } from "../src/server";
+import { NewServer, abi } from "../src/server";
 import ethers from "ethers";
 import * as ccipread from "@chainlink/ccip-read-server";
 import { Interface } from "ethers/lib/utils";
 
 // Defining the port where the gateway will run
-const port = 3001;
-const app = server.makeApp("/");
+// const port = 3001;
+// const app = NewServer.makeApp("/");
 
 // Creating an example of Bytes32 variable to represent the Node.
-const node = createBytes32("node");
-const TEST_ADDRESS = "0x1234567890123456789012345678901234567890";
+// const node = createBytes32("node");
+// const TEST_ADDRESS = "0x1234567890123456789012345678901234567890";
 
 // Function to convert string into bytes32
-function createBytes32(data: string): string {
-  return ethers.utils.id(data);
-}
+// function createBytes32(data: string): string {
+//   return ethers.utils.id(data);
+// }
 
 /**
  * Executes a function call on the specified server using the provided ABI and arguments.
@@ -77,15 +77,19 @@ async function doCall(
 
 // Testing calls to the gateway
 describe("Gateway", () => {
-  // Setting up the server before running tests
-  beforeAll(() => {
-    app.listen(port, () => {
-      console.log(`Gateway is running!`);
-    });
-  });
+  // let server: ccipread.Server;
+
+  // Setting up the server before running each test
+  // beforeEach(() => {
+  //   app.listen(port, () => {
+  //     console.log(`Gateway is running!`);
+  //   });
+  // });
 
   // Test case for handling GET request for getSignedBalance
   it("should handle GET request for getSignedBalance", async () => {
+    // const server = NewServer()
+
     const result = await doCall(server, abi, TEST_ADDRESS, "getSignedBalance", [
       TEST_ADDRESS,
     ]);
