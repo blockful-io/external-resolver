@@ -1,23 +1,41 @@
-import { AddressProps, AddressResponse, SetAddressProps } from "../types";
+import ethers from "ethers";
+import * as ccip from "@chainlink/ccip-read-server";
+
+import { GetAddressProps, AddressResponse, SetAddressProps } from "../types";
 
 interface WriteRepository {
-  setAddr(SetAddressProps): Promise<AddressResponse>;
+  setAddr(params: SetAddressProps): Promise<AddressResponse>;
 }
 
-export async function withSetAddr(
-  repo: WriteRepository,
-  args: SetAddressProps
-): Promise<AddressResponse> {
-  return await repo.setAddr(args);
+export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
+  return {
+    type: "setAddr",
+    func: async (args: ethers.utils.Result) => {
+      const params: SetAddressProps = {
+        node: args["node"],
+        coin: args["coin"],
+        addr: args["address"],
+      };
+      const { addr, ttl } = await repo.setAddr(params);
+      return [addr, ttl];
+    },
+  };
 }
 
 interface ReadRepository {
-  addr(AddressProps): Promise<AddressResponse>;
+  addr(params: GetAddressProps): Promise<AddressResponse>;
 }
 
-export async function withAddr(
-  repo: ReadRepository,
-  args: AddressProps
-): Promise<AddressResponse> {
-  return await repo.addr(args);
+export function withAddr(repo: ReadRepository): ccip.HandlerDescription {
+  return {
+    type: "addr",
+    func: async (args: ethers.utils.Result) => {
+      const params: GetAddressProps = {
+        node: args["node"],
+        coin: args["coin"],
+      };
+      const { addr, ttl } = await repo.addr(params);
+      return [addr, ttl];
+    },
+  };
 }

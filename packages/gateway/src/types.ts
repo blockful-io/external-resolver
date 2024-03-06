@@ -10,7 +10,7 @@ export type SetAddressProps = {
   coin?: number;
 };
 
-export type AddressProps = {
+export type GetAddressProps = {
   node: string;
   coin?: number;
 };

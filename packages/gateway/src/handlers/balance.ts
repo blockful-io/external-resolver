@@ -1,12 +1,23 @@
+import ethers from "ethers";
+import * as ccip from "@chainlink/ccip-read-server";
+
 import { BalanceResponse, NodeProps } from "../types";
 
 interface ReadRepository {
-  getSignedBalance(GetSignedBalanceProps): Promise<BalanceResponse>;
+  getSignedBalance(params: NodeProps): Promise<BalanceResponse>;
 }
 
-export async function withSignedBalance(
-  repo: ReadRepository,
-  args: NodeProps
-): Promise<BalanceResponse> {
-  return await repo.getSignedBalance(args);
+export function withGetSignedBalance(
+  repo: ReadRepository
+): ccip.HandlerDescription {
+  return {
+    type: "",
+    func: async (args: ethers.utils.Result) => {
+      const params: NodeProps = {
+        node: args["node"],
+      };
+      const { balance, ttl } = await repo.getSignedBalance(params);
+      return [balance, ttl];
+    },
+  };
 }
