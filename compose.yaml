@@ -10,7 +10,7 @@ services:
     env_file:
       - .env
   mongo:
-    image: mongo
+    image: mongo:5.0
     container_name: gateway-db
     ports:
       - "27017:27017"

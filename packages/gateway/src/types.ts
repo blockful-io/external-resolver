@@ -2,8 +2,6 @@ export type NodeProps = {
   node: string;
 };
 
-export type AddressResponse = { addr: string; ttl: number };
-
 export type SetAddressProps = {
   node: string;
   addr: string;
@@ -15,9 +13,7 @@ export type GetAddressProps = {
   coin?: number;
 };
 
-export type BalanceResponse = { balance: number; ttl: number };
-
-export type TextResponse = { value: string; ttl: number };
+export type Response = { value?: string; ttl?: number };
 
 export type SetTextProps = {
   node: string;

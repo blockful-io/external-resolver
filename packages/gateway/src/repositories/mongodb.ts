@@ -1,35 +1,51 @@
+import { Address, PrismaClient } from "@prisma/client";
+
 import {
   SetAddressProps,
   NodeProps,
   SetTextProps,
   GetTextProps,
-  AddressResponse,
-  TextResponse,
-  BalanceResponse,
+  Response,
+  GetAddressProps,
 } from "../types";
 
 export class MongoDBRepository {
-  async setAddr({
-    node,
-    addr,
-    coin,
-  }: SetAddressProps): Promise<AddressResponse> {
-    return;
+  private client: PrismaClient;
+
+  constructor(client: PrismaClient) {
+    this.client = client;
   }
 
-  async addr({ node }: NodeProps): Promise<AddressResponse> {
-    return;
+  async setAddr({ node, addr, coin }: SetAddressProps): Promise<Response> {
+    return {};
   }
 
-  async getSignedBalance({ node }: NodeProps): Promise<BalanceResponse> {
-    return;
+  async addr({ node, coin }: GetAddressProps): Promise<Response> {
+    const dbAddress: Pick<Address, "address"> | null =
+      await this.client.address.findUnique({
+        where: {
+          domainHash: node,
+          coin,
+        },
+        select: { address: true },
+      });
+
+    if (!dbAddress) return {};
+
+    const { address } = dbAddress;
+
+    return { value: address, ttl: 40 };
   }
 
-  async setText({ node, key, value }: SetTextProps): Promise<TextResponse> {
-    return;
+  async getSignedBalance({ node }: NodeProps): Promise<Response> {
+    return {};
   }
 
-  async getText({ node, key }: GetTextProps): Promise<TextResponse> {
-    return;
+  async setText({ node, key, value }: SetTextProps): Promise<Response> {
+    return {};
+  }
+
+  async getText({ node, key }: GetTextProps): Promise<Response> {
+    return {};
   }
 }

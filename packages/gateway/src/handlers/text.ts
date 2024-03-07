@@ -1,10 +1,10 @@
 import ethers from "ethers";
 import * as ccip from "@chainlink/ccip-read-server";
 
-import { TextResponse, SetTextProps, GetTextProps } from "../types";
+import { Response, SetTextProps, GetTextProps } from "../types";
 
 interface WriteRepository {
-  setText(params: SetTextProps): Promise<TextResponse>;
+  setText(params: SetTextProps): Promise<Response>;
 }
 
 export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
@@ -24,7 +24,7 @@ export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
 }
 
 interface ReadRepository {
-  getText(params: GetTextProps): Promise<TextResponse>;
+  getText(params: GetTextProps): Promise<Response>;
 }
 
 export function withGetText(repo: ReadRepository): ccip.HandlerDescription {

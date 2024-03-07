@@ -8,15 +8,22 @@ datasource db {
 }
 
 model Domain {
-  namehash  String    @id @map("_id")
-  addresses Address[]
-  avatar    String?
-  text      Json?
+  namehash    String    @id @map("_id")
+  contenthash String?
+  addresses   Address[]
+  texts       Text[]
 }
 
 model Address {
-  address    String @id @map("_id")
-  coin       Int?
+  coin       Int    @id @default(60) @map("_id")
+  address    String
+  domainHash String
+  domain     Domain @relation(fields: [domainHash], references: [namehash])
+}
+
+model Text {
+  key        String @id @map("_id")
+  value      String
   domainHash String
   domain     Domain @relation(fields: [domainHash], references: [namehash])
 }

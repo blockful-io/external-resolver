@@ -1,10 +1,10 @@
 import ethers from "ethers";
 import * as ccip from "@chainlink/ccip-read-server";
 
-import { GetAddressProps, AddressResponse, SetAddressProps } from "../types";
+import { GetAddressProps, Response, SetAddressProps } from "../types";
 
 interface WriteRepository {
-  setAddr(params: SetAddressProps): Promise<AddressResponse>;
+  setAddr(params: SetAddressProps): Promise<Response>;
 }
 
 export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
@@ -16,14 +16,14 @@ export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
         coin: args["coin"],
         addr: args["address"],
       };
-      const { addr, ttl } = await repo.setAddr(params);
-      return [addr, ttl];
+      const { value, ttl } = await repo.setAddr(params);
+      return [value, ttl];
     },
   };
 }
 
 interface ReadRepository {
-  addr(params: GetAddressProps): Promise<AddressResponse>;
+  addr(params: GetAddressProps): Promise<Response>;
 }
 
 export function withAddr(repo: ReadRepository): ccip.HandlerDescription {
@@ -34,8 +34,8 @@ export function withAddr(repo: ReadRepository): ccip.HandlerDescription {
         node: args["node"],
         coin: args["coin"],
       };
-      const { addr, ttl } = await repo.addr(params);
-      return [addr, ttl];
+      const { value, ttl } = await repo.addr(params);
+      return [value, ttl];
     },
   };
 }
