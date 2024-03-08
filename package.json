@@ -12,12 +12,16 @@
     "start": "dotenvx run -- turbo run start",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
-    "build": "turbo run build"
+    "build": "turbo run build",
+    "lint": "turbo run lint"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^0.20.2"
   },
   "devDependencies": {
+    "@rocketseat/eslint-config": "^2.2.2",
+    "@types/eslint": "^8",
+    "eslint": "^8.57.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "turbo": "^1.12.4"
