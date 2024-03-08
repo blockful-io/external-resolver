@@ -4,7 +4,7 @@ import * as ccip from "@chainlink/ccip-read-server";
 import { Response, SetTextProps, GetTextProps } from "../types";
 
 interface WriteRepository {
-  setText(params: SetTextProps): Promise<Response>;
+  setText(params: SetTextProps): Promise<Response | undefined>;
 }
 
 export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
@@ -17,14 +17,15 @@ export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
         value: args["value"]!,
       };
 
-      const { value, ttl } = await repo.setText(params);
-      return [value, ttl];
+      const text = await repo.setText(params);
+      if (!text) return [];
+      return [text.value, text.ttl];
     },
   };
 }
 
 interface ReadRepository {
-  getText(params: GetTextProps): Promise<Response>;
+  getText(params: GetTextProps): Promise<Response | undefined>;
 }
 
 export function withGetText(repo: ReadRepository): ccip.HandlerDescription {
@@ -35,8 +36,9 @@ export function withGetText(repo: ReadRepository): ccip.HandlerDescription {
         node: args["node"]!,
         key: args["key"]!,
       };
-      const { value, ttl } = await repo.getText(params);
-      return [value, ttl];
+      const text = await repo.getText(params);
+      if (!text) return [];
+      return [text.value, text.ttl];
     },
   };
 }

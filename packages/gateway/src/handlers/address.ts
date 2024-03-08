@@ -4,7 +4,7 @@ import * as ccip from "@chainlink/ccip-read-server";
 import { GetAddressProps, Response, SetAddressProps } from "../types";
 
 interface WriteRepository {
-  setAddr(params: SetAddressProps): Promise<Response>;
+  setAddr(params: SetAddressProps): Promise<Response | undefined>;
 }
 
 export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
@@ -16,14 +16,16 @@ export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
         coin: args["coin"],
         addr: args["address"],
       };
-      const { value, ttl } = await repo.setAddr(params);
-      return [value, ttl];
+      const addr = await repo.setAddr(params);
+      if (!addr) return [];
+
+      return [addr.value, addr.ttl];
     },
   };
 }
 
 interface ReadRepository {
-  addr(params: GetAddressProps): Promise<Response>;
+  addr(params: GetAddressProps): Promise<Response | undefined>;
 }
 
 export function withAddr(repo: ReadRepository): ccip.HandlerDescription {
@@ -34,8 +36,10 @@ export function withAddr(repo: ReadRepository): ccip.HandlerDescription {
         node: args["node"],
         coin: args["coin"],
       };
-      const { value, ttl } = await repo.addr(params);
-      return [value, ttl];
+      const addr = await repo.addr(params);
+      if (!addr) return [];
+
+      return [addr.value, addr.ttl];
     },
   };
 }

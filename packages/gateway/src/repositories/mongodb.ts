@@ -1,8 +1,7 @@
-import { Address, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 import {
   SetAddressProps,
-  NodeProps,
   SetTextProps,
   GetTextProps,
   Response,
@@ -16,36 +15,64 @@ export class MongoDBRepository {
     this.client = client;
   }
 
-  async setAddr({ node, addr, coin }: SetAddressProps): Promise<Response> {
-    return {};
+  async setAddr({
+    node: domainHash,
+    addr: address,
+    coin,
+  }: SetAddressProps): Promise<Response | undefined> {
+    const newAddr = await this.client.address.create({
+      data: {
+        domainHash,
+        address,
+        coin,
+      },
+    });
+    return { value: newAddr.address, ttl: 40 };
   }
 
-  async addr({ node, coin }: GetAddressProps): Promise<Response> {
-    const dbAddress: Pick<Address, "address"> | null =
-      await this.client.address.findUnique({
-        where: {
-          domainHash: node,
-          coin,
-        },
-        select: { address: true },
-      });
+  async addr({ node, coin }: GetAddressProps): Promise<Response | undefined> {
+    const dbAddress = await this.client.address.findUnique({
+      where: {
+        domainHash: node,
+        coin,
+      },
+      select: { address: true },
+    });
 
-    if (!dbAddress) return {};
+    if (!dbAddress) return;
 
     const { address } = dbAddress;
 
     return { value: address, ttl: 40 };
   }
 
-  async getSignedBalance({ node }: NodeProps): Promise<Response> {
-    return {};
+  async setText({
+    node: domainHash,
+    key,
+    value,
+  }: SetTextProps): Promise<Response | undefined> {
+    const newText = await this.client.text.create({
+      data: {
+        domainHash,
+        key,
+        value,
+      },
+    });
+    return { value: newText.value, ttl: 40 };
   }
 
-  async setText({ node, key, value }: SetTextProps): Promise<Response> {
-    return {};
-  }
+  async getText({
+    node: domainHash,
+    key,
+  }: GetTextProps): Promise<Response | undefined> {
+    const text = await this.client.text.findUnique({
+      where: {
+        domainHash,
+        key,
+      },
+    });
+    if (!text) return;
 
-  async getText({ node, key }: GetTextProps): Promise<Response> {
-    return {};
+    return { value: text.value, ttl: 40 };
   }
 }

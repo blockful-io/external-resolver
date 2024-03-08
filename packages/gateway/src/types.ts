@@ -1,6 +1,4 @@
-export type NodeProps = {
-  node: string;
-};
+export type Response = { value: string; ttl: number };
 
 export type SetAddressProps = {
   node: string;
@@ -12,8 +10,6 @@ export type GetAddressProps = {
   node: string;
   coin?: number;
 };
-
-export type Response = { value?: string; ttl?: number };
 
 export type SetTextProps = {
   node: string;

@@ -18,7 +18,6 @@ import * as ccip from "@chainlink/ccip-read-server";
 
 // Application Binary Interfaces
 const abi: string[] = [
-  "function getSignedBalance(address addr) public view returns(uint256 balance, bytes memory sig)",
   "function setText(address addr, string text) public view returns(string result, string returned_args)",
   "function setAddr(bytes32 node, address addr) public view returns(string result, string returned_args)",
   "function addr(bytes32 node, uint coinType) public view returns(bytes memory result)",
