@@ -6,7 +6,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "start": "ts-node ./src/index.ts",
-    "lint": "eslint src --ext .ts --fix"
+    "lint": "eslint . --ext .ts --fix"
   },
   "keywords": [],
   "author": "",
