@@ -1,21 +1,27 @@
 /**
  * Script for running the server locally exposing the API
  */
-import { PrismaClient } from "@prisma/client";
-import { withGetText, withSetText, withAddr, withSetAddr } from "./handlers";
-import { MongoDBRepository } from "./repositories/mongodb";
+import { AppDataSource } from "./datasources/typeorm";
+
+import { withGetText, withSetText, withAddr, withSetAddr, withContentHash, withSetContentHash } from "./handlers";
+import { TypeORMRepository } from "./repositories/typeorm";
 import { NewServer } from "./server";
 
-const dbclient = new PrismaClient();
-const repo = new MongoDBRepository(dbclient);
+(async () => {
+  const dbclient = await AppDataSource.initialize();
+  const repo = new TypeORMRepository(dbclient);
 
-const app = NewServer(
-  withSetText(repo),
-  withGetText(repo),
-  withAddr(repo),
-  withSetAddr(repo)
-).makeApp("/");
+  const app = NewServer(
+    withSetText(repo),
+    withGetText(repo),
+    withAddr(repo),
+    withSetAddr(repo),
+    withContentHash(repo),
+    withSetContentHash(repo)
+  ).makeApp("/");
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`Gateway is running!`);
-});
+  app.listen(process.env.PORT || 3000, () => {
+    console.log(`Gateway is running!`);
+  });
+})()
+

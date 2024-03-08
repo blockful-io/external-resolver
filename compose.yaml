@@ -9,21 +9,22 @@ services:
       - local
     env_file:
       - .env
-  mongo:
-    image: mongo:5.0
+
+  db:
+    image: postgres:16.2
     container_name: gateway-db
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongodb_data:/data/db
+      - db_data:/data/db
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: blockful
-      MONGO_INITDB_ROOT_PASSWORD: ensdomains
-      MONGO_INITDB_DATABASE: ensdomains
+      POSTGRES_USER: blockful
+      POSTGRES_PASSWORD: ensdomains
+      POSTGRES_DB: ensdomains
 
 networks:
   local:
 
 volumes:
-  mongodb_data:
+  db_data:

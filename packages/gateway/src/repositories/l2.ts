@@ -4,10 +4,23 @@ import {
   GetTextProps,
   Response,
   GetAddressProps,
+  DomainProps,
+  SetContentHashProps,
 } from "../types";
 
 export class L2Repository {
-  constructor() {}
+  constructor() { }
+
+  async setContentHash({
+    node,
+    contenthash
+  }: SetContentHashProps): Promise<Response | undefined> {
+    return
+  }
+
+  async contentHash({ node }: GetAddressProps): Promise<Response | undefined> {
+    return
+  }
 
   async setAddr({
     node,

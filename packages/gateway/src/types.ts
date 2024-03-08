@@ -1,5 +1,14 @@
 export type Response = { value: string; ttl: number };
 
+export type DomainProps = {
+  node: string;
+}
+
+export type SetContentHashProps = {
+  node: string;
+  contenthash: string;
+}
+
 export type SetAddressProps = {
   node: string;
   addr: string;
