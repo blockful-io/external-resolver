@@ -14,23 +14,23 @@
  * It utilizes the 'vitest' testing framework for organizing and running the tests.
  *
  */
-import { describe, it, beforeAll, expect } from "vitest";
-import { server, abi } from "../src/server";
-import ethers from "ethers";
-import * as ccipread from "@chainlink/ccip-read-server";
-import { Interface } from "ethers/lib/utils";
+import { describe, it, beforeAll, expect } from 'vitest'
+import { server, abi } from '../src/server'
+import ethers from 'ethers'
+import * as ccipread from '@chainlink/ccip-read-server'
+import { Interface } from 'ethers/lib/utils'
 
 // Defining the port where the gateway will run
-const port = 3001;
-const app = server.makeApp("/");
+const port = 3001
+const app = server.makeApp('/')
 
 // Creating an example of Bytes32 variable to represent the Node.
-const node = createBytes32("node");
-const TEST_ADDRESS = "0x1234567890123456789012345678901234567890";
+const node = createBytes32('node')
+const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 
 // Function to convert string into bytes32
 function createBytes32(data: string): string {
-  return ethers.utils.id(data);
+  return ethers.utils.id(data)
 }
 
 /**
@@ -48,99 +48,99 @@ async function doCall(
   abi: string[],
   path: string,
   type: string,
-  args: any[]
+  args: any[], // eslint-disable-line
 ) {
-  const iface = new Interface(abi);
-  const handler = server.handlers[iface.getSighash(type)];
+  const iface = new Interface(abi)
+  const handler = server.handlers[iface.getSighash(type)]
 
   // Check if the handler for the specified function type is registered
   if (!handler) {
-    throw Error("Unknown handler");
+    throw Error('Unknown handler')
   }
   // Encode function data using ABI and arguments
-  const calldata = iface.encodeFunctionData(type, args);
+  const calldata = iface.encodeFunctionData(type, args)
 
   // Make a server call with encoded function data
-  const result = await server.call({ to: path, data: calldata });
+  const result = await server.call({ to: path, data: calldata })
 
   // Check if the server response has a non-200 status
   if (result.status !== 200) {
-    throw Error(result.body.message);
+    throw Error(result.body.message)
   }
   // Decode the function result if the function has outputs, otherwise return an empty array
   if (handler.type.outputs !== undefined) {
-    return iface.decodeFunctionResult(handler.type, result.body.data);
+    return iface.decodeFunctionResult(handler.type, result.body.data)
   } else {
-    return [];
+    return []
   }
 }
 
 // Testing calls to the gateway
-describe("Gateway", () => {
+describe('Gateway', () => {
   // Setting up the server before running tests
   beforeAll(() => {
     app.listen(port, () => {
-      console.log(`Gateway is running!`);
-    });
-  });
+      console.log(`Gateway is running!`)
+    })
+  })
 
   // Test case for handling GET request for getSignedBalance
-  it("should handle GET request for getSignedBalance", async () => {
-    const result = await doCall(server, abi, TEST_ADDRESS, "getSignedBalance", [
+  it('should handle GET request for getSignedBalance', async () => {
+    const result = await doCall(server, abi, TEST_ADDRESS, 'getSignedBalance', [
       TEST_ADDRESS,
-    ]);
+    ])
 
     // Assertions for the expected results
-    expect(result.length).to.equal(2);
-    expect(result[0].toNumber()).to.equal(1000);
-    expect(result[1]).to.equal("0x123456");
-  });
+    expect(result.length).to.equal(2)
+    expect(result[0].toNumber()).to.equal(1000)
+    expect(result[1]).to.equal('0x123456')
+  })
 
   // Test case for handling set request for setText
-  it("should handle set request for setText", async () => {
-    const result = await doCall(server, abi, TEST_ADDRESS, "setText", [
+  it('should handle set request for setText', async () => {
+    const result = await doCall(server, abi, TEST_ADDRESS, 'setText', [
       TEST_ADDRESS,
-      "New String",
-    ]);
+      'New String',
+    ])
 
     // Assertions for the expected results
-    expect(result.length).to.equal(2);
-    expect(result[0]).to.equal("Did it!");
-    expect(result[1]).to.equal("New String");
-  });
+    expect(result.length).to.equal(2)
+    expect(result[0]).to.equal('Did it!')
+    expect(result[1]).to.equal('New String')
+  })
 
   // Test case for handling set request for setAddr
-  it("should handle set request for setAddr", async () => {
-    const address = "0x1234567890123456789012345678901234567890";
-    const result = await doCall(server, abi, TEST_ADDRESS, "setAddr", [
+  it('should handle set request for setAddr', async () => {
+    const address = '0x1234567890123456789012345678901234567890'
+    const result = await doCall(server, abi, TEST_ADDRESS, 'setAddr', [
       node,
       address,
-    ]);
+    ])
 
     // Assertions for the expected results
-    expect(result.length).to.equal(2);
-    expect(result[0]).to.equal("Address Set");
-    expect(result[1]).to.equal(`Node: ${node}, Address: ${address}`);
-  });
+    expect(result.length).to.equal(2)
+    expect(result[0]).to.equal('Address Set')
+    expect(result[1]).to.equal(`Node: ${node}, Address: ${address}`)
+  })
 
   // Test case for handling GET request for addr
-  it("should handle GET request for addr", async () => {
-    const result = await doCall(server, abi, TEST_ADDRESS, "addr", [node, 42]);
+  it('should handle GET request for addr', async () => {
+    const result = await doCall(server, abi, TEST_ADDRESS, 'addr', [node, 42])
 
     // Assertions for the expected results
-    expect(result.length).to.equal(1);
-    expect(result[0]).to.equal("0x123456");
-  });
+    expect(result.length).to.equal(1)
+    expect(result[0]).to.equal('0x123456')
+  })
 
   // Test case for handling GET request for text
-  it("should handle GET request for text", async () => {
-    const result = await doCall(server, abi, TEST_ADDRESS, "text", [
+  it('should handle GET request for text', async () => {
+    const result = await doCall(server, abi, TEST_ADDRESS, 'text', [
       node,
-      "Key123",
-    ]);
+      'Key123',
+    ])
 
     // Assertions for the expected results
-    expect(result.length).to.equal(1);
-    expect(result[0]).to.equal("This is the text value storage.");
-  });
-});
+    expect(result.length).to.equal(1)
+    expect(result[0]).to.equal('This is the text value storage.')
+  })
+})

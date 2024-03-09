@@ -13,15 +13,19 @@
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
     "build": "turbo run build",
+    "prepare": "husky",
     "lint": "turbo run lint"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^0.20.2"
   },
   "devDependencies": {
+    "@commitlint/config-conventional": "^19.0.3",
     "@rocketseat/eslint-config": "^2.2.2",
     "@types/eslint": "^8",
+    "commitlint": "^19.0.3",
     "eslint": "^8.57.0",
+    "husky": "^9.0.11",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "turbo": "^1.12.4"
