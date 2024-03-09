@@ -3795,7 +3795,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "client@workspace:packages/client"
   dependencies:
-    "@babel/core": "npm:^7.23.9"
     "@babel/preset-env": "npm:^7.23.9"
     "@babel/preset-typescript": "npm:^7.23.3"
     "@jest/globals": "npm:^29.7.0"
@@ -4765,6 +4764,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "external-resolver@workspace:."
   dependencies:
+    "@babel/preset-env": "npm:^7.23.9"
+    "@babel/preset-typescript": "npm:^7.23.3"
     "@dotenvx/dotenvx": "npm:^0.20.2"
     ts-node: "npm:^10.9.2"
     tsconfig-paths: "npm:^4.2.0"

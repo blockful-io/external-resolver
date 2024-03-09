@@ -18,6 +18,8 @@
     "@dotenvx/dotenvx": "^0.20.2"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.23.9",
+    "@babel/preset-typescript": "^7.23.3",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "turbo": "^1.12.4"
