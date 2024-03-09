@@ -1,32 +1,32 @@
-export type Response = { value: string; ttl: number };
+export type Response = { value: string; ttl: number }
 
 export type DomainProps = {
-  node: string;
+  node: string
 }
 
 export type SetContentHashProps = {
-  node: string;
-  contenthash: string;
+  node: string
+  contenthash: string
 }
 
 export type SetAddressProps = {
-  node: string;
-  addr: string;
-  coin?: number;
-};
+  node: string
+  addr: string
+  coin?: number
+}
 
 export type GetAddressProps = {
-  node: string;
-  coin?: number;
-};
+  node: string
+  coin?: number
+}
 
 export type SetTextProps = {
-  node: string;
-  key: string;
-  value: string;
-};
+  node: string
+  key: string
+  value: string
+}
 
 export type GetTextProps = {
-  node: string;
-  key: string;
-};
+  node: string
+  key: string
+}

@@ -1,15 +1,22 @@
 /**
  * Script for running the server locally exposing the API
  */
-import { AppDataSource } from "./datasources/typeorm";
+import { AppDataSource } from './datasources/typeorm'
+import {
+  withGetText,
+  withSetText,
+  withAddr,
+  withSetAddr,
+  withContentHash,
+  withSetContentHash,
+} from './handlers'
+import { TypeORMRepository } from './repositories/typeorm'
+import { NewServer } from './server'
 
-import { withGetText, withSetText, withAddr, withSetAddr, withContentHash, withSetContentHash } from "./handlers";
-import { TypeORMRepository } from "./repositories/typeorm";
-import { NewServer } from "./server";
-
-(async () => {
-  const dbclient = await AppDataSource.initialize();
-  const repo = new TypeORMRepository(dbclient);
+// eslint-disable-next-line
+const _ = (async () => {
+  const dbclient = await AppDataSource.initialize()
+  const repo = new TypeORMRepository(dbclient)
 
   const app = NewServer(
     withSetText(repo),
@@ -17,11 +24,10 @@ import { NewServer } from "./server";
     withAddr(repo),
     withSetAddr(repo),
     withContentHash(repo),
-    withSetContentHash(repo)
-  ).makeApp("/");
+    withSetContentHash(repo),
+  ).makeApp('/')
 
   app.listen(process.env.PORT || 3000, () => {
-    console.log(`Gateway is running!`);
-  });
+    console.log(`Gateway is running!`)
+  })
 })()
-

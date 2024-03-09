@@ -1,4 +1,4 @@
-import "reflect-metadata"
+import 'reflect-metadata'
 
 import {
   SetAddressProps,
@@ -7,10 +7,9 @@ import {
   Response,
   GetAddressProps,
   SetContentHashProps,
-  DomainProps,
-} from "../types";
-import { DataSource } from "typeorm";
-import { Address, Text, Domain } from "../entities";
+} from '../types'
+import { DataSource } from 'typeorm'
+import { Address, Text, Domain } from '../entities'
 
 export class TypeORMRepository {
   private client: DataSource
@@ -21,7 +20,7 @@ export class TypeORMRepository {
 
   async setContentHash({
     node,
-    contenthash
+    contenthash,
   }: SetContentHashProps): Promise<Response | undefined> {
     const repo = this.client.getRepository(Domain)
     const domain = await repo.findOneBy({
@@ -39,7 +38,7 @@ export class TypeORMRepository {
   async contentHash({ node }: GetAddressProps): Promise<Response | undefined> {
     const repo = this.client.getRepository(Domain)
     const domain = await repo.findOneBy({
-      namehash: node
+      namehash: node,
     })
 
     if (!domain) return
@@ -56,7 +55,7 @@ export class TypeORMRepository {
     const addr = await repo.findOneBy({
       domainHash: node,
       address,
-      coin
+      coin,
     })
 
     if (!addr) return
@@ -71,7 +70,7 @@ export class TypeORMRepository {
     const repo = this.client.getRepository(Address)
     const addr = await repo.findOneBy({
       domainHash: node,
-      coin
+      coin,
     })
 
     if (!addr) return
@@ -87,7 +86,7 @@ export class TypeORMRepository {
     const repo = this.client.getRepository(Text)
     const text = await repo.findOneBy({
       domainHash: node,
-      key
+      key,
     })
 
     if (!text) return
@@ -98,14 +97,11 @@ export class TypeORMRepository {
     return { value: text.value, ttl: text.ttl }
   }
 
-  async getText({
-    node,
-    key,
-  }: GetTextProps): Promise<Response | undefined> {
+  async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
     const repo = this.client.getRepository(Text)
     const text = await repo.findOneBy({
       domainHash: node,
-      key
+      key,
     })
 
     if (!text) return

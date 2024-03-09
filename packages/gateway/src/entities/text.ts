@@ -1,5 +1,5 @@
-import { Entity, PrimaryColumn, Column, ManyToOne } from "typeorm"
-import { Domain } from "./domain"
+import { Entity, PrimaryColumn, Column, ManyToOne } from 'typeorm'
+import { Domain } from './domain'
 
 @Entity()
 export class Text {
@@ -9,7 +9,7 @@ export class Text {
   @Column()
   value: string
 
-  @ManyToOne(() => Domain, domain => domain.texts)
+  @ManyToOne(() => Domain, (domain) => domain.texts)
   domainHash: string
 
   @Column()

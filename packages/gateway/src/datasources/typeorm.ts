@@ -1,8 +1,8 @@
-import "reflect-metadata"
-import { DataSource } from "typeorm"
+import 'reflect-metadata'
+import { DataSource } from 'typeorm'
 import * as dotenvx from '@dotenvx/dotenvx'
 
-import { Address, Domain, Text } from "../entities"
+import { Address, Domain, Text } from '../entities'
 
 dotenvx.config()
 
@@ -10,11 +10,9 @@ dotenvx.config()
 // and "synchronize" database schema, call "initialize()" method of a newly created database
 // once in your application bootstrap
 export const AppDataSource = new DataSource({
-  type: "postgres",
+  type: 'postgres',
   url: process.env.DATABASE_URL,
   entities: [Address, Domain, Text],
   synchronize: true,
   logging: false,
 })
-
-

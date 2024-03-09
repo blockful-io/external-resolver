@@ -1,19 +1,17 @@
+/* eslint-disable */
 import {
   SetAddressProps,
   SetTextProps,
   GetTextProps,
   Response,
   GetAddressProps,
-  DomainProps,
   SetContentHashProps,
-} from "../types";
+} from '../types'
 
 export class L2Repository {
-  constructor() { }
-
   async setContentHash({
     node,
-    contenthash
+    contenthash,
   }: SetContentHashProps): Promise<Response | undefined> {
     return
   }
@@ -27,11 +25,11 @@ export class L2Repository {
     addr,
     coin,
   }: SetAddressProps): Promise<Response | undefined> {
-    return;
+    return
   }
 
   async addr({ node, coin }: GetAddressProps): Promise<Response | undefined> {
-    return;
+    return
   }
 
   async setText({
@@ -39,10 +37,10 @@ export class L2Repository {
     key,
     value,
   }: SetTextProps): Promise<Response | undefined> {
-    return;
+    return
   }
 
   async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
-    return;
+    return
   }
 }

@@ -1,5 +1,5 @@
-import * as ccipread from "@chainlink/ccip-read-server";
-import { Interface } from "ethers/lib/utils";
+import * as ccipread from '@chainlink/ccip-read-server'
+import { Interface } from 'ethers/lib/utils'
 
 /**
  * Executes a function call on the specified server using the provided ABI and arguments.
@@ -16,25 +16,25 @@ export async function doCall(
   abi: string[],
   path: string,
   type: string,
-  args: any[]
+  args: any[], // eslint-disable-line
 ) {
-  const iface = new Interface(abi);
-  const handler = server.handlers[iface.getSighash(type)];
+  const iface = new Interface(abi)
+  const handler = server.handlers[iface.getSighash(type)]
 
   // Check if the handler for the specified function type is registered
-  if (!handler) throw Error("Unknown handler");
+  if (!handler) throw Error('Unknown handler')
 
   // Encode function data using ABI and arguments
-  const calldata = iface.encodeFunctionData(type, args);
+  const calldata = iface.encodeFunctionData(type, args)
 
   // Make a server call with encoded function data
-  const result = await server.call({ to: path, data: calldata });
+  const result = await server.call({ to: path, data: calldata })
 
   // Check if the server response has a non-200 status
-  if (result.status !== 200) throw Error(result.body.message);
+  if (result.status !== 200) throw Error(result.body.message)
 
   // Returns an empty array if the function has no outputs
-  if (!handler.type.outputs !== undefined) return [];
+  if (!handler.type.outputs !== undefined) return []
 
-  return iface.decodeFunctionResult(handler.type, result.body.data);
+  return iface.decodeFunctionResult(handler.type, result.body.data)
 }
