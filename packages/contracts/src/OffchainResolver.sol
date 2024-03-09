@@ -17,20 +17,14 @@ contract OffchainResolver is IExtendedResolver, IERC165, Ownable {
     event NewSigners(address indexed signer, bool isSigner);
     event UpdateUrl(string url);
 
-    error OffchainLookup(
-        address sender,
-        string[] urls,
-        bytes callData,
-        bytes4 callbackFunction,
-        bytes extraData
-    );
+    error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
 
     constructor(string memory _url, address[] memory _signers) {
         url = _url;
         emit UpdateUrl(_url);
 
         uint256 arrayLength = _signers.length;
-        for (uint256 i; i < arrayLength; ) {
+        for (uint256 i; i < arrayLength;) {
             signers[_signers[i]] = true;
             emit NewSigners(_signers[i], true);
 
@@ -40,53 +34,31 @@ contract OffchainResolver is IExtendedResolver, IERC165, Ownable {
         }
     }
 
-    function makeSignatureHash(
-        address target,
-        uint64 expires,
-        bytes memory request,
-        bytes memory result
-    ) external pure returns (bytes32) {
-        return
-            SignatureVerifier.makeSignatureHash(
-                target,
-                expires,
-                request,
-                result
-            );
+    function makeSignatureHash(address target, uint64 expires, bytes memory request, bytes memory result)
+        external
+        pure
+        returns (bytes32)
+    {
+        return SignatureVerifier.makeSignatureHash(target, expires, request, result);
     }
 
     /**
      * Resolves a name, as specified by ENSIP 10 (wildcard).
      * @param name The DNS-encoded name to resolve.
-     * @param data The ABI encoded data for the underlying resolution function (Eg, addr(bytes32), text(bytes32,string), etc).
+     * @param data The ABI encoded data for the underlying resolution function
+     * (Eg, addr(bytes32), text(bytes32,string), etc).
      * @return The return data, ABI encoded identically to the underlying function.
      */
-    function resolve(
-        bytes calldata name,
-        bytes calldata data
-    ) external view override returns (bytes memory) {
-        bytes memory callData = abi.encodeWithSelector(
-            IExtendedResolver.resolve.selector,
-            name,
-            data
-        );
+    function resolve(bytes calldata name, bytes calldata data) external view override returns (bytes memory) {
+        bytes memory callData = abi.encodeWithSelector(IExtendedResolver.resolve.selector, name, data);
         string[] memory urls = new string[](1);
         urls[0] = url;
 
         // revert with the OffchainLookup error, which will be caught by the client
-        revert OffchainLookup(
-            address(this),
-            urls,
-            callData,
-            OffchainResolver.resolveWithProof.selector,
-            callData
-        );
+        revert OffchainLookup(address(this), urls, callData, OffchainResolver.resolveWithProof.selector, callData);
     }
 
-    function updateSigners(
-        address[] calldata _signers,
-        bool[] calldata _isSigner
-    ) external onlyOwner {
+    function updateSigners(address[] calldata _signers, bool[] calldata _isSigner) external onlyOwner {
         for (uint256 i = 0; i < _signers.length; i++) {
             signers[_signers[i]] = _isSigner[i];
             emit NewSigners(_signers[i], _isSigner[i]);
@@ -101,14 +73,8 @@ contract OffchainResolver is IExtendedResolver, IERC165, Ownable {
     /**
      * Callback used by CCIP read compatible clients to verify and parse the response.
      */
-    function resolveWithProof(
-        bytes calldata response,
-        bytes calldata extraData
-    ) external view returns (bytes memory) {
-        (address signer, bytes memory result) = SignatureVerifier.verify(
-            extraData,
-            response
-        );
+    function resolveWithProof(bytes calldata response, bytes calldata extraData) external view returns (bytes memory) {
+        (address signer, bytes memory result) = SignatureVerifier.verify(extraData, response);
 
         require(signers[signer], "SignatureVerifier: Invalid sigature");
 
@@ -116,8 +82,6 @@ contract OffchainResolver is IExtendedResolver, IERC165, Ownable {
     }
 
     function supportsInterface(bytes4 interfaceID) public pure returns (bool) {
-        return
-            interfaceID == type(IExtendedResolver).interfaceId ||
-            interfaceID == type(IERC165).interfaceId;
+        return interfaceID == type(IExtendedResolver).interfaceId || interfaceID == type(IERC165).interfaceId;
     }
 }
