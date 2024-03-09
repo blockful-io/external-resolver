@@ -5,9 +5,11 @@
     "test": "forge test -vvv",
     "test:watch": "forge test -vvv --watch",
     "start": "anvil & copyfiles ../../.env contracts/.env && forge script script/*.sol --rpc-url http://localhost:8545 --broadcast -vv",
-    "postinstall": "forge install"
+    "postinstall": "forge install",
+    "lint": "solhint src/**/*.sol --fix --noPrompt"
   },
   "devDependencies": {
-    "copyfiles": "^2.4.1"
+    "copyfiles": "^2.4.1",
+    "solhint": "^4.1.1"
   }
 }
