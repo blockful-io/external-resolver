@@ -3,6 +3,10 @@
   "compilerOptions": {
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "outDir": "./dist"
   },
+  "include": [
+    "./src/**/*.ts"
+  ]
 }

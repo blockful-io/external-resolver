@@ -4,6 +4,7 @@
  * This script contains a series of tests for the Gateway. The tests cover various
  * function calls, including handling GET requests and setting values for different function types.
  */
+import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 import { describe, it, expect } from 'vitest'
 import { hash as namehash } from 'eth-ens-namehash'
@@ -18,11 +19,11 @@ const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 describe('Gateway', () => {
   it('should handle set request for setText', async () => {
     const repo = new TypeORMRepository(
-      new DataSource({
+      await new DataSource({
         type: 'better-sqlite3',
-        database: './db',
+        database: './test/db',
         entities: [Text, Domain, Address],
-      }),
+      }).initialize(),
     )
     const server = NewServer(withSetText(repo))
     const result = await doCall(

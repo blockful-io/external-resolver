@@ -67,7 +67,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/helper-create-class-features-plugin@npm:^7.22.15, @babel/helper-create-class-features-plugin@npm:^7.23.6, @babel/helper-create-class-features-plugin@npm:^7.24.0":
+"@babel/helper-create-class-features-plugin@npm:^7.18.6, @babel/helper-create-class-features-plugin@npm:^7.22.15, @babel/helper-create-class-features-plugin@npm:^7.23.6, @babel/helper-create-class-features-plugin@npm:^7.24.0":
   version: 7.24.0
   resolution: "@babel/helper-create-class-features-plugin@npm:7.24.0"
   dependencies:
@@ -342,6 +342,18 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0
   checksum: 10c0/355746e21ad7f43e4f4daef54cfe2ef461ecd19446b2afedd53c39df1bf9aa2eeeeaabee2279b1321de89a97c9360e4f76e9ba950fee50ff1676c25f6929d625
+  languageName: node
+  linkType: hard
+
+"@babel/plugin-proposal-class-properties@npm:^7.18.6":
+  version: 7.18.6
+  resolution: "@babel/plugin-proposal-class-properties@npm:7.18.6"
+  dependencies:
+    "@babel/helper-create-class-features-plugin": "npm:^7.18.6"
+    "@babel/helper-plugin-utils": "npm:^7.18.6"
+  peerDependencies:
+    "@babel/core": ^7.0.0-0
+  checksum: 10c0/d5172ac6c9948cdfc387e94f3493ad86cb04035cf7433f86b5d358270b1b9752dc25e176db0c5d65892a246aca7bdb4636672e15626d7a7de4bc0bd0040168d9
   languageName: node
   linkType: hard
 
@@ -1365,11 +1377,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@blockful/config@workspace:packages/config"
   dependencies:
+    "@babel/plugin-proposal-class-properties": "npm:^7.18.6"
     "@babel/plugin-proposal-decorators": "npm:^7.24.0"
     "@babel/preset-env": "npm:^7.23.9"
     "@babel/preset-typescript": "npm:^7.23.3"
     babel-plugin-transform-typescript-metadata: "npm:^0.3.2"
-    typescript: "npm:^5.4.2"
   languageName: unknown
   linkType: soft
 
@@ -1379,6 +1391,24 @@ __metadata:
   dependencies:
     copyfiles: "npm:^2.4.1"
     solhint: "npm:^4.1.1"
+  languageName: unknown
+  linkType: soft
+
+"@blockful/external-resolver@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@blockful/external-resolver@workspace:."
+  dependencies:
+    "@commitlint/config-conventional": "npm:^19.0.3"
+    "@dotenvx/dotenvx": "npm:^0.20.2"
+    "@rocketseat/eslint-config": "npm:^2.2.2"
+    "@types/eslint": "npm:^8"
+    "@types/node": "npm:^20.11.25"
+    commitlint: "npm:^19.0.3"
+    eslint: "npm:^8.57.0"
+    husky: "npm:^9.0.11"
+    ts-node: "npm:^10.9.2"
+    tsconfig-paths: "npm:^4.2.0"
+    turbo: "npm:^1.12.4"
   languageName: unknown
   linkType: soft
 
@@ -1395,6 +1425,7 @@ __metadata:
     reflect-metadata: "npm:^0.2.1"
     ts-node: "npm:^10.9.2"
     typeorm: "npm:^0.3.20"
+    typescript: "npm:^5.4.2"
     vitest: "npm:^1.3.1"
   peerDependencies:
     "@blockful/config": "workspace:^"
@@ -2890,7 +2921,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^20.10.7, @types/node@npm:^20.11.24":
+"@types/node@npm:*, @types/node@npm:^20.10.7, @types/node@npm:^20.11.24, @types/node@npm:^20.11.25":
   version: 20.11.25
   resolution: "@types/node@npm:20.11.25"
   dependencies:
@@ -5647,23 +5678,6 @@ __metadata:
   checksum: 10c0/c98f1ba3efdfa3c561db4447ff366a6adb5c1e2581462522c56a18bf90dfe4da382f9cd1feee3e330108c3595a854b218272539f311ba1b3298f841eb0fbf339
   languageName: node
   linkType: hard
-
-"external-resolver@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "external-resolver@workspace:."
-  dependencies:
-    "@commitlint/config-conventional": "npm:^19.0.3"
-    "@dotenvx/dotenvx": "npm:^0.20.2"
-    "@rocketseat/eslint-config": "npm:^2.2.2"
-    "@types/eslint": "npm:^8"
-    commitlint: "npm:^19.0.3"
-    eslint: "npm:^8.57.0"
-    husky: "npm:^9.0.11"
-    ts-node: "npm:^10.9.2"
-    tsconfig-paths: "npm:^4.2.0"
-    turbo: "npm:^1.12.4"
-  languageName: unknown
-  linkType: soft
 
 "fast-deep-equal@npm:^3.1.1, fast-deep-equal@npm:^3.1.3":
   version: 3.1.3

@@ -3,21 +3,15 @@ import { Domain } from './domain'
 
 @Entity()
 export class Address {
-  @PrimaryColumn({
-    type: 'number',
-  })
+  @PrimaryColumn()
   coin: number
 
-  @Column({
-    type: 'string',
-  })
+  @Column()
   address: string
+
+  @Column()
+  ttl: number
 
   @ManyToOne(() => Domain, (domain) => domain.addresses)
   domainHash: string
-
-  @Column({
-    type: 'number',
-  })
-  ttl: number
 }
