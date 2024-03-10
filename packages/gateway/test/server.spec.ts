@@ -23,6 +23,7 @@ describe('Gateway', () => {
         type: 'better-sqlite3',
         database: './test/db',
         entities: [Text, Domain, Address],
+        synchronize: true,
       }).initialize(),
     )
     const server = NewServer(withSetText(repo))
