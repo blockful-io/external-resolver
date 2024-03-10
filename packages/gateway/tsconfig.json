@@ -1,0 +1,8 @@
+{
+  "extends": "@blockful/config/tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false
+  },
+}

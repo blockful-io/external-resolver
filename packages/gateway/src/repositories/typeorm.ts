@@ -84,7 +84,7 @@ export class TypeORMRepository {
     value,
   }: SetTextProps): Promise<Response | undefined> {
     const repo = this.client.getRepository(Text)
-    const text = await repo.upsert(
+    await repo.upsert(
       [
         {
           key,
@@ -98,8 +98,7 @@ export class TypeORMRepository {
       },
     )
 
-    console.log({ text })
-
+    return undefined
     // if (!text)
 
     // text.value = value

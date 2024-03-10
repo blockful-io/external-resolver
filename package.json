@@ -6,9 +6,9 @@
     "packages/*"
   ],
   "scripts": {
-    "client": "yarn workspace client",
-    "gateway": "yarn workspace gateway",
-    "contracts": "yarn workspace contracts",
+    "client": "yarn workspace @blockful/client",
+    "gateway": "yarn workspace @blockful/gateway",
+    "contracts": "yarn workspace @blockful/contracts",
     "start": "dotenvx run -- turbo run start",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
@@ -20,13 +20,9 @@
     "@dotenvx/dotenvx": "^0.20.2"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-decorators": "^7.24.0",
-    "@babel/preset-env": "^7.23.9",
-    "@babel/preset-typescript": "^7.23.3",
     "@commitlint/config-conventional": "^19.0.3",
     "@rocketseat/eslint-config": "^2.2.2",
     "@types/eslint": "^8",
-    "babel-plugin-transform-typescript-metadata": "^0.3.2",
     "commitlint": "^19.0.3",
     "eslint": "^8.57.0",
     "husky": "^9.0.11",

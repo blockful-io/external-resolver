@@ -2,7 +2,6 @@
  * Script for running the server locally exposing the API
  */
 import 'reflect-metadata'
-import * as dotenvx from '@dotenvx/dotenvx'
 
 import { NewDataSource } from './datasources/typeorm'
 import {
@@ -16,11 +15,14 @@ import {
 import { TypeORMRepository } from './repositories/typeorm'
 import { NewServer } from './server'
 
-dotenvx.config()
-
 // eslint-disable-next-line
 const _ = (async () => {
-  const dbclient = await NewDataSource(process.env.DATABASE_URL).initialize()
+  const dbUrl = process.env.DATABASE_URL
+  if (!dbUrl) {
+    throw new Error('Database URL is required')
+  }
+
+  const dbclient = await NewDataSource(dbUrl).initialize()
   const repo = new TypeORMRepository(dbclient)
 
   const app = NewServer(
