@@ -84,17 +84,28 @@ export class TypeORMRepository {
     value,
   }: SetTextProps): Promise<Response | undefined> {
     const repo = this.client.getRepository(Text)
-    const text = await repo.findOneBy({
-      domainHash: node,
-      key,
-    })
+    const text = await repo.upsert(
+      [
+        {
+          key,
+          value,
+          domainHash: node,
+        },
+      ],
+      {
+        conflictPaths: ['key'],
+        skipUpdateIfNoValuesChanged: true,
+      },
+    )
 
-    if (!text) return
+    console.log({ text })
 
-    text.value = value
-    await repo.save(text)
+    // if (!text)
 
-    return { value: text.value, ttl: text.ttl }
+    // text.value = value
+    // await repo.save(text)
+
+    // return { value: text.value, ttl: text.ttl }
   }
 
   async getText({ node, key }: GetTextProps): Promise<Response | undefined> {

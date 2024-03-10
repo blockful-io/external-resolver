@@ -1,7 +1,10 @@
 /**
  * Script for running the server locally exposing the API
  */
-import { AppDataSource } from './datasources/typeorm'
+import 'reflect-metadata'
+import * as dotenvx from '@dotenvx/dotenvx'
+
+import { NewDataSource } from './datasources/typeorm'
 import {
   withGetText,
   withSetText,
@@ -13,9 +16,11 @@ import {
 import { TypeORMRepository } from './repositories/typeorm'
 import { NewServer } from './server'
 
+dotenvx.config()
+
 // eslint-disable-next-line
 const _ = (async () => {
-  const dbclient = await AppDataSource.initialize()
+  const dbclient = await NewDataSource(process.env.DATABASE_URL).initialize()
   const repo = new TypeORMRepository(dbclient)
 
   const app = NewServer(

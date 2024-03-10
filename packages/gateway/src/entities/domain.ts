@@ -4,10 +4,14 @@ import { Text } from './text'
 
 @Entity()
 export class Domain {
-  @PrimaryColumn()
+  @PrimaryColumn({
+    type: 'string',
+  })
   namehash: string
 
-  @Column()
+  @Column({
+    type: 'string',
+  })
   contenthash: string
 
   @OneToMany(() => Address, (addr) => addr.domainHash)
@@ -16,6 +20,8 @@ export class Domain {
   @OneToMany(() => Text, (text) => text.domainHash)
   texts: Text[]
 
-  @Column()
+  @Column({
+    type: 'number',
+  })
   ttl: number
 }

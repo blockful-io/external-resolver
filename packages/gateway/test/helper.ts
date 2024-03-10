@@ -16,7 +16,7 @@ export async function doCall(
   abi: string[],
   path: string,
   type: string,
-  args: any[], // eslint-disable-line
+  ...args: any[] // eslint-disable-line
 ) {
   const iface = new Interface(abi)
   const handler = server.handlers[iface.getSighash(type)]
