@@ -90,7 +90,9 @@ export class TypeORMRepository {
           key,
           value,
           ttl: 40,
-          domainHash: node,
+          domain: {
+            namehash: node,
+          },
         },
       ],
       {
@@ -104,9 +106,13 @@ export class TypeORMRepository {
 
   async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
     const repo = this.client.getRepository(Text)
-    const text = await repo.findOneBy({
-      domainHash: node,
-      key,
+    const text = await repo.findOne({
+      where: {
+        domain: {
+          namehash: node,
+        },
+        key,
+      },
     })
 
     if (!text) return

@@ -13,9 +13,9 @@ export class Domain {
   @Column()
   ttl: number
 
-  @OneToMany(() => Address, (addr) => addr.domainHash)
+  @OneToMany(() => Address, (addr) => addr.domain)
   addresses: Address[]
 
-  @OneToMany(() => Text, (text) => text.domainHash)
+  @OneToMany(() => Text, (text) => text.domain)
   texts: Text[]
 }

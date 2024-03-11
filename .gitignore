@@ -141,4 +141,4 @@ dist
 **/broadcast/**
 **/cache/**
 **/bin/**
-**/db
+*.db

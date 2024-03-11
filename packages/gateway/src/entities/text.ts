@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, ManyToOne } from 'typeorm'
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from 'typeorm'
 import { Domain } from './domain'
 
 @Entity()
@@ -12,6 +12,7 @@ export class Text {
   @Column()
   ttl: number
 
+  @JoinColumn({ name: 'domain', referencedColumnName: 'namehash' })
   @ManyToOne(() => Domain, (domain) => domain.texts)
-  domainHash: string
+  domain: Domain
 }
