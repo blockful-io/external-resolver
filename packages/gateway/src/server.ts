@@ -18,7 +18,7 @@ import * as ccip from '@chainlink/ccip-read-server'
 
 // Application Binary Interfaces
 const abi: string[] = [
-  'function setText(bytes32 node, string calldata key, string calldata value)',
+  'function setText(bytes32 node, string calldata key, string calldata value) returns (string, uint256)',
   // 'function text(bytes32 node, string key) view returns (string memory)',
   // 'function setAddr(bytes32 node, address addr)',
   // 'function setAddr(bytes32 node, uint coinType, bytes calldata addr)',

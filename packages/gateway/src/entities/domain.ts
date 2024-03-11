@@ -7,8 +7,8 @@ export class Domain {
   @PrimaryColumn()
   namehash: string
 
-  @Column()
-  contenthash: string
+  @Column({ nullable: true })
+  contenthash?: string
 
   @Column()
   ttl: number

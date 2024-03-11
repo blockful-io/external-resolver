@@ -34,7 +34,7 @@ export async function doCall(
   if (result.status !== 200) throw Error(result.body.message)
 
   // Returns an empty array if the function has no outputs
-  if (!handler.type.outputs !== undefined) return []
+  if (!handler.type.outputs) return []
 
   return iface.decodeFunctionResult(handler.type, result.body.data)
 }

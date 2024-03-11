@@ -41,7 +41,7 @@ export class TypeORMRepository {
       namehash: node,
     })
 
-    if (!domain) return
+    if (!domain || !domain.contenthash) return
 
     return { value: domain.contenthash, ttl: domain.ttl }
   }
@@ -83,12 +83,13 @@ export class TypeORMRepository {
     key,
     value,
   }: SetTextProps): Promise<Response | undefined> {
-    const repo = this.client.getRepository(Text)
-    await repo.upsert(
+    const textRepo = this.client.getRepository(Text)
+    const text = await textRepo.upsert(
       [
         {
           key,
           value,
+          ttl: 40,
           domainHash: node,
         },
       ],
@@ -98,13 +99,7 @@ export class TypeORMRepository {
       },
     )
 
-    return undefined
-    // if (!text)
-
-    // text.value = value
-    // await repo.save(text)
-
-    // return { value: text.value, ttl: text.ttl }
+    return { value: text.identifiers[0].key, ttl: 40 }
   }
 
   async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
