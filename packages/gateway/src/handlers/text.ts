@@ -19,7 +19,7 @@ export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
 
       const text = await repo.setText(params)
       if (!text) return []
-      return [text.value, text.ttl]
+      return [text.value]
     },
   }
 }
@@ -38,7 +38,7 @@ export function withGetText(repo: ReadRepository): ccip.HandlerDescription {
       }
       const text = await repo.getText(params)
       if (!text) return []
-      return [text.value, text.ttl]
+      return [text.value]
     },
   }
 }

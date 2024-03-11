@@ -11,12 +11,16 @@ import { hash as namehash } from 'eth-ens-namehash'
 
 import { doCall } from './helper'
 import { NewServer, abi } from '../src/server'
-import { withGetText, withSetText } from '../src/handlers'
+import {
+  withGetAddr,
+  withGetText,
+  withSetAddr,
+  withSetText,
+} from '../src/handlers'
 import { TypeORMRepository } from '../src/repositories'
 import { Address, Text, Domain } from '../src/entities'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
-const TTL = '40'
 
 describe('Gateway', () => {
   let repo: TypeORMRepository
@@ -40,76 +44,92 @@ describe('Gateway', () => {
   })
 
   afterEach(async () => {
-    const entities = datasource.entityMetadatas
-
-    for (const entity of entities) {
-      const repository = datasource.getRepository(entity.name)
+    for (const entity of ['Text', 'Address', 'Domain']) {
+      const repository = datasource.getRepository(entity)
       await repository.clear() // Clear each entity table's content
     }
   })
 
-  it('should handle set request for setText', async () => {
-    const server = NewServer(withSetText(repo))
-    const result = await doCall(
-      server,
-      abi,
-      TEST_ADDRESS,
-      'setText',
-      domain.namehash,
-      'avatar',
-      'blockful.png',
-    )
+  describe('Text', () => {
+    it('should handle set request for setText', async () => {
+      const server = NewServer(withSetText(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'setText',
+        domain.namehash,
+        'avatar',
+        'blockful.png',
+      )
 
-    expect(result.length).toEqual(2)
-    const [value, ttl] = result
-    expect(value).toEqual('avatar')
-    expect((ttl as bigint).toString()).toEqual(TTL)
+      expect(result.length).toEqual(1)
+      const [value] = result
+      expect(value).toEqual('blockful.png')
+    })
+
+    it('should handle GET request for text', async () => {
+      const textRepo = datasource.getRepository(Text)
+      const text = new Text()
+      text.key = 'avatar'
+      text.value = 'blockful.png'
+      text.domain = domain
+      await textRepo.save(text)
+
+      const server = NewServer(withGetText(repo))
+
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'text',
+        domain.namehash,
+        'avatar',
+      )
+
+      expect(result.length).toEqual(1)
+      const [avatar] = result
+      expect(avatar).toEqual('blockful.png')
+    })
   })
 
-  it('should handle GET request for text', async () => {
-    const textRepo = datasource.getRepository(Text)
-    const text = new Text()
-    text.key = 'avatar'
-    text.value = 'blockful.png'
-    text.domain = domain
-    text.ttl = 40
-    await textRepo.save(text)
+  describe('Address', () => {
+    it('should handle set request for setAddr on ethereum', async () => {
+      const server = NewServer(withSetAddr(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'setAddr',
+        domain.namehash,
+        '0x1234567890123456789012345678901234567890',
+      )
 
-    const server = NewServer(withGetText(repo))
+      expect(result.length).toEqual(1)
+      const [value] = result
+      expect(value).toEqual('0x1234567890123456789012345678901234567890')
+    })
 
-    const result = await doCall(
-      server,
-      abi,
-      TEST_ADDRESS,
-      'text',
-      domain.namehash,
-      'avatar',
-    )
+    it('should handle GET request for addr on ethereum', async () => {
+      const addrRepo = datasource.getRepository(Address)
+      const addr = new Address()
+      addr.coin = 60
+      addr.address = '0x1234567890123456789012345678901234567890'
+      addr.domain = domain
+      await addrRepo.save(addr)
 
-    expect(result.length).toEqual(2)
-    const [avatar, ttl] = result
-    expect(avatar).toEqual('blockful.png')
-    expect((ttl as bigint).toString()).toEqual(TTL)
+      const server = NewServer(withGetAddr(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'addr',
+        domain.namehash,
+      )
+
+      expect(result.length).toEqual(1)
+      const [value] = result
+      expect(value).toEqual('0x1234567890123456789012345678901234567890')
+    })
   })
-
-  // it('should handle set request for setAddr', async () => {
-  //   const address = '0x1234567890123456789012345678901234567890'
-  //   const result = await doCall(server, abi, TEST_ADDRESS, 'setAddr', [
-  //     node,
-  //     address,
-  //   ])
-
-  //   // Assertions for the expected results
-  //   expect(result.length).toEqual(2)
-  //   expect(result[0]).toEqual('Address Set')
-  //   expect(result[1]).toEqual(`Node: ${node}, Address: ${address}`)
-  // })
-
-  // it('should handle GET request for addr', async () => {
-  //   const result = await doCall(server, abi, TEST_ADDRESS, 'addr', [node, 42])
-
-  //   // Assertions for the expected results
-  //   expect(result.length).toEqual(1)
-  //   expect(result[0]).toEqual('0x123456')
-  // })
 })

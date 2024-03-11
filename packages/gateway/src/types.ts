@@ -1,4 +1,4 @@
-export type Response = { value: string; ttl: number }
+export type Response = { value: string }
 
 export type DomainProps = {
   node: string

@@ -20,7 +20,7 @@ export function withSetContentHash(
       const addr = await repo.setContentHash(params)
       if (!addr) return []
 
-      return [addr.value, addr.ttl]
+      return [addr.value]
     },
   }
 }
@@ -39,7 +39,7 @@ export function withContentHash(repo: ReadRepository): ccip.HandlerDescription {
       const addr = await repo.contentHash(params)
       if (!addr) return []
 
-      return [addr.value, addr.ttl]
+      return [addr.value]
     },
   }
 }

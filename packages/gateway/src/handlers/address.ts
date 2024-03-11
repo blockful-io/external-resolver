@@ -14,12 +14,13 @@ export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
       const params: SetAddressProps = {
         node: args.node,
         coin: args.coin,
-        addr: args.address,
+        addr: args.addr,
       }
+      if (!params.coin) params.coin = 60 // default: ether
       const addr = await repo.setAddr(params)
       if (!addr) return []
 
-      return [addr.value, addr.ttl]
+      return [addr.value]
     },
   }
 }
@@ -28,7 +29,7 @@ interface ReadRepository {
   addr(params: GetAddressProps): Promise<Response | undefined>
 }
 
-export function withAddr(repo: ReadRepository): ccip.HandlerDescription {
+export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
   return {
     type: 'addr',
     func: async (args: ethers.utils.Result) => {
@@ -36,10 +37,11 @@ export function withAddr(repo: ReadRepository): ccip.HandlerDescription {
         node: args.node,
         coin: args.coin,
       }
+      if (!params.coin) params.coin = 60 // default: ether
       const addr = await repo.addr(params)
       if (!addr) return []
 
-      return [addr.value, addr.ttl]
+      return [addr.value]
     },
   }
 }

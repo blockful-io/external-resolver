@@ -9,9 +9,6 @@ export class Address {
   @Column()
   address: string
 
-  @Column()
-  ttl: number
-
   @JoinColumn({ name: 'domain', referencedColumnName: 'namehash' })
   @ManyToOne(() => Domain, (domain) => domain.addresses)
   domain: Domain

@@ -7,7 +7,7 @@ import { NewDataSource } from './datasources/typeorm'
 import {
   withGetText,
   withSetText,
-  withAddr,
+  withGetAddr,
   withSetAddr,
   withContentHash,
   withSetContentHash,
@@ -28,7 +28,7 @@ const _ = (async () => {
   const app = NewServer(
     withSetText(repo),
     withGetText(repo),
-    withAddr(repo),
+    withGetAddr(repo),
     withSetAddr(repo),
     withContentHash(repo),
     withSetContentHash(repo),

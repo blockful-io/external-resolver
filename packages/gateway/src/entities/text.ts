@@ -9,9 +9,6 @@ export class Text {
   @Column()
   value: string
 
-  @Column()
-  ttl: number
-
   @JoinColumn({ name: 'domain', referencedColumnName: 'namehash' })
   @ManyToOne(() => Domain, (domain) => domain.texts)
   domain: Domain
