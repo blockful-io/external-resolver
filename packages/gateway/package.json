@@ -30,6 +30,6 @@
     "typeorm": "^0.3.20"
   },
   "peerDependencies": {
-    "@blockful/config": "workspace:^"
+    "@blockful/tsconfig": "workspace:^"
   }
 }

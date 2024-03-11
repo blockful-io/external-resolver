@@ -1,5 +1,5 @@
 {
-  "extends": "@blockful/config/tsconfig.json",
+  "extends": "@blockful/tsconfig/tsconfig.json",
   "compilerOptions": {
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
