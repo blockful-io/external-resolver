@@ -15,6 +15,7 @@ import {
   withGetAddr,
   withGetText,
   withSetAddr,
+  withSetContentHash,
   withSetText,
 } from '../src/handlers'
 import { TypeORMRepository } from '../src/repositories'
@@ -40,7 +41,6 @@ describe('Gateway', () => {
   beforeEach(async () => {
     domain = new Domain()
     domain.namehash = namehash('public.eth')
-    domain.ttl = 40
     await datasource.manager.save(domain)
   })
 
@@ -48,6 +48,53 @@ describe('Gateway', () => {
     for (const entity of ['Text', 'Address', 'Domain']) {
       await datasource.getRepository(entity).clear()
     }
+  })
+
+  describe('Domain', () => {
+    it('should handle set contenthash', async () => {
+      const contenthash =
+        '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
+      const server = NewServer(withSetContentHash(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'setContenthash',
+        domain.namehash,
+        contenthash,
+      )
+
+      expect(result.length).toEqual(0)
+
+      const d = await datasource.getRepository(Domain).findOneBy({
+        namehash: domain.namehash,
+        contenthash,
+      })
+      expect(d).not.toBeNull()
+      expect(d?.namehash).toEqual(domain.namehash)
+      expect(d?.contenthash).toEqual(contenthash)
+    })
+
+    it('should handle GET contenthash', async () => {
+      const addr = new Address()
+      addr.coin = 60
+      addr.address = '0x1234567890123456789012345678901234567890'
+      addr.domain = domain
+      await datasource.manager.save(addr)
+
+      const server = NewServer(withGetAddr(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'addr',
+        domain.namehash,
+      )
+
+      expect(result.length).toEqual(1)
+      const [value] = result
+      expect(value).toEqual('0x1234567890123456789012345678901234567890')
+    })
   })
 
   describe('Text', () => {
@@ -63,9 +110,7 @@ describe('Gateway', () => {
         'blockful.png',
       )
 
-      expect(result.length).toEqual(1)
-      const [value] = result
-      expect(value).toEqual('blockful.png')
+      expect(result.length).toEqual(0)
 
       const text = await datasource.getRepository(Text).findOne({
         relations: ['domain'],
@@ -98,9 +143,7 @@ describe('Gateway', () => {
         'ethereum.png',
       )
 
-      expect(result.length).toEqual(1)
-      const [value] = result
-      expect(value).toEqual('ethereum.png')
+      expect(result.length).toEqual(0)
 
       const updatedText = await datasource.getRepository(Text).findOne({
         relations: ['domain'],
@@ -120,6 +163,7 @@ describe('Gateway', () => {
       const text = new Text()
       text.key = 'avatar'
       text.value = 'blockful.png'
+      text.domain = domain
       await datasource.manager.save(text)
 
       const server = NewServer(withGetText(repo))
@@ -153,9 +197,7 @@ describe('Gateway', () => {
         '0x1234567890123456789012345678901234567890',
       )
 
-      expect(result.length).toEqual(1)
-      const [value] = result
-      expect(value).toEqual('0x1234567890123456789012345678901234567890')
+      expect(result.length).toEqual(0)
 
       const addr = await datasource.getRepository(Address).findOne({
         relations: ['domain'],

@@ -4,7 +4,7 @@ import * as ccip from '@chainlink/ccip-read-server'
 import { Response, SetTextProps, GetTextProps } from '../types'
 
 interface WriteRepository {
-  setText(params: SetTextProps): Promise<Response | undefined>
+  setText(params: SetTextProps): Promise<void>
 }
 
 export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
@@ -17,9 +17,8 @@ export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
         value: args.value!,
       }
 
-      const text = await repo.setText(params)
-      if (!text) return []
-      return [text.value]
+      await repo.setText(params)
+      return []
     },
   }
 }

@@ -4,7 +4,7 @@ import * as ccip from '@chainlink/ccip-read-server'
 import { DomainProps, Response, SetContentHashProps } from '../types'
 
 interface WriteRepository {
-  setContentHash(params: SetContentHashProps): Promise<Response | undefined>
+  setContentHash(params: SetContentHashProps): Promise<void>
 }
 
 export function withSetContentHash(
@@ -17,10 +17,8 @@ export function withSetContentHash(
         node: args.node,
         contenthash: args.contenthash,
       }
-      const addr = await repo.setContentHash(params)
-      if (!addr) return []
-
-      return [addr.value]
+      await repo.setContentHash(params)
+      return []
     },
   }
 }
@@ -38,7 +36,6 @@ export function withContentHash(repo: ReadRepository): ccip.HandlerDescription {
       }
       const addr = await repo.contentHash(params)
       if (!addr) return []
-
       return [addr.value]
     },
   }

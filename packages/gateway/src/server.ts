@@ -18,14 +18,14 @@ import * as ccip from '@chainlink/ccip-read-server'
 
 // Application Binary Interfaces
 const abi: string[] = [
-  'function setText(bytes32 node, string calldata key, string calldata value) returns (string)',
+  'function setText(bytes32 node, string calldata key, string calldata value)',
   'function text(bytes32 node, string key) view returns (string)',
-  'function setAddr(bytes32 node, address addr) returns (address)',
+  'function setAddr(bytes32 node, address addr)',
   'function addr(bytes32 node) view returns (address)',
   // 'function setAddr(bytes32 node, uint coinType, bytes calldata addr)',
   // 'function addr(bytes32 node, uint coinType) view returns (byte memory)',
-  // 'function contenthash(bytes32 node) view returns (bytes memory)',
-  // 'function setContenthash(bytes32 node, bytes calldata hash)',
+  'function contenthash(bytes32 node) view returns (bytes memory)',
+  'function setContenthash(bytes32 node, bytes calldata contenthash)',
 ]
 
 function NewServer(...opts: ccip.HandlerDescription[]): ccip.Server {

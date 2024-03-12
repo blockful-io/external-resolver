@@ -12,7 +12,7 @@ export class L2Repository {
   async setContentHash({
     node,
     contenthash,
-  }: SetContentHashProps): Promise<Response | undefined> {
+  }: SetContentHashProps): Promise<void> {
     return
   }
 
@@ -24,7 +24,7 @@ export class L2Repository {
     node,
     addr,
     coin,
-  }: SetAddressProps): Promise<Response | undefined> {
+  }: SetAddressProps): Promise<void> {
     return
   }
 
@@ -36,7 +36,7 @@ export class L2Repository {
     node,
     key,
     value,
-  }: SetTextProps): Promise<Response | undefined> {
+  }: SetTextProps): Promise<void> {
     return
   }
 
