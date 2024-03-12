@@ -104,7 +104,7 @@ export class TypeORMRepository {
         },
       ],
       {
-        conflictPaths: ['domain.namehash', 'key'],
+        conflictPaths: ['key'],
         skipUpdateIfNoValuesChanged: true,
       },
     )
