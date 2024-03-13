@@ -1,0 +1,6 @@
+{
+  "extends": "solhint:default",
+  "rules": {
+    "avoid-suicide": "error"
+  }
+}
