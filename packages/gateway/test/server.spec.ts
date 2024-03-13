@@ -3,144 +3,237 @@
  *
  * This script contains a series of tests for the Gateway. The tests cover various
  * function calls, including handling GET requests and setting values for different function types.
- * The tested function types include:
- * - getSignedBalance
- * - setText
- * - setAddr
- * - addr
- * - setTextRecord
- * - text
- *
- * It utilizes the 'vitest' testing framework for organizing and running the tests.
- *
  */
-import { describe, it, beforeAll, expect } from 'vitest'
-import { server, abi } from '../src/server'
-import ethers from 'ethers'
-import * as ccipread from '@chainlink/ccip-read-server'
-import { Interface } from 'ethers/lib/utils'
+import 'reflect-metadata'
+import { DataSource } from 'typeorm'
+import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest'
+import { hash as namehash } from 'eth-ens-namehash'
 
-// Defining the port where the gateway will run
-const port = 3001
-const app = server.makeApp('/')
+import { doCall } from './helper'
+import { NewServer, abi } from '../src/server'
+import {
+  withGetAddr,
+  withGetText,
+  withSetAddr,
+  withSetContentHash,
+  withSetText,
+} from '../src/handlers'
+import { TypeORMRepository } from '../src/repositories'
+import { Address, Text, Domain } from '../src/entities'
 
-// Creating an example of Bytes32 variable to represent the Node.
-const node = createBytes32('node')
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 
-// Function to convert string into bytes32
-function createBytes32(data: string): string {
-  return ethers.utils.id(data)
-}
-
-/**
- * Executes a function call on the specified server using the provided ABI and arguments.
- *
- * @param {ccipread.Server} server - The server instance to perform the function call.
- * @param {string[]} abi - The ABI (Application Binary Interface) array describing the function.
- * @param {string} path - The path or address to which the call is made.
- * @param {string} type - The type of the function to be called.
- * @param {any[]} args - The arguments required for the function call.
- * @throws {Error} - Throws an error if the handler for the specified function type is unknown or if the server response has a non-200 status.
- */
-async function doCall(
-  server: ccipread.Server,
-  abi: string[],
-  path: string,
-  type: string,
-  args: any[], // eslint-disable-line
-) {
-  const iface = new Interface(abi)
-  const handler = server.handlers[iface.getSighash(type)]
-
-  // Check if the handler for the specified function type is registered
-  if (!handler) {
-    throw Error('Unknown handler')
-  }
-  // Encode function data using ABI and arguments
-  const calldata = iface.encodeFunctionData(type, args)
-
-  // Make a server call with encoded function data
-  const result = await server.call({ to: path, data: calldata })
-
-  // Check if the server response has a non-200 status
-  if (result.status !== 200) {
-    throw Error(result.body.message)
-  }
-  // Decode the function result if the function has outputs, otherwise return an empty array
-  if (handler.type.outputs !== undefined) {
-    return iface.decodeFunctionResult(handler.type, result.body.data)
-  } else {
-    return []
-  }
-}
-
-// Testing calls to the gateway
 describe('Gateway', () => {
-  // Setting up the server before running tests
-  beforeAll(() => {
-    app.listen(port, () => {
-      console.log(`Gateway is running!`)
+  let repo: TypeORMRepository
+  let datasource: DataSource
+  let domain: Domain
+
+  beforeAll(async () => {
+    datasource = new DataSource({
+      type: 'better-sqlite3',
+      database: './test.db',
+      entities: [Text, Domain, Address],
+      synchronize: true,
+    })
+    repo = new TypeORMRepository(await datasource.initialize())
+  })
+
+  beforeEach(async () => {
+    domain = new Domain()
+    domain.namehash = namehash('public.eth')
+    await datasource.manager.save(domain)
+  })
+
+  afterEach(async () => {
+    for (const entity of ['Text', 'Address', 'Domain']) {
+      await datasource.getRepository(entity).clear()
+    }
+  })
+
+  describe('Domain', () => {
+    it('should handle set contenthash', async () => {
+      const contenthash =
+        '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
+      const server = NewServer(withSetContentHash(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'setContenthash',
+        domain.namehash,
+        contenthash,
+      )
+
+      expect(result.length).toEqual(0)
+
+      const d = await datasource.getRepository(Domain).findOneBy({
+        namehash: domain.namehash,
+        contenthash,
+      })
+      expect(d).not.toBeNull()
+      expect(d?.namehash).toEqual(domain.namehash)
+      expect(d?.contenthash).toEqual(contenthash)
+    })
+
+    it('should handle GET contenthash', async () => {
+      const addr = new Address()
+      addr.coin = 60
+      addr.address = '0x1234567890123456789012345678901234567890'
+      addr.domain = domain
+      await datasource.manager.save(addr)
+
+      const server = NewServer(withGetAddr(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'addr',
+        domain.namehash,
+      )
+
+      expect(result.length).toEqual(1)
+      const [value] = result
+      expect(value).toEqual('0x1234567890123456789012345678901234567890')
     })
   })
 
-  // Test case for handling GET request for getSignedBalance
-  it('should handle GET request for getSignedBalance', async () => {
-    const result = await doCall(server, abi, TEST_ADDRESS, 'getSignedBalance', [
-      TEST_ADDRESS,
-    ])
+  describe('Text', () => {
+    it('should handle request for set new text', async () => {
+      const server = NewServer(withSetText(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'setText',
+        domain.namehash,
+        'avatar',
+        'blockful.png',
+      )
 
-    // Assertions for the expected results
-    expect(result.length).to.equal(2)
-    expect(result[0].toNumber()).to.equal(1000)
-    expect(result[1]).to.equal('0x123456')
+      expect(result.length).toEqual(0)
+
+      const text = await datasource.getRepository(Text).findOne({
+        relations: ['domain'],
+        where: {
+          key: 'avatar',
+          domain: {
+            namehash: domain.namehash,
+          },
+        },
+      })
+      expect(text?.key).toEqual('avatar')
+      expect(text?.value).toEqual('blockful.png')
+      expect(text?.domain.namehash).toEqual(domain.namehash)
+    })
+
+    it('should handle request for update text', async () => {
+      const server = NewServer(withSetText(repo))
+      const text = new Text()
+      text.key = 'avatar'
+      text.value = 'blockful.png'
+      await datasource.manager.save(text)
+
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'setText',
+        domain.namehash,
+        'avatar',
+        'ethereum.png',
+      )
+
+      expect(result.length).toEqual(0)
+
+      const updatedText = await datasource.getRepository(Text).findOne({
+        relations: ['domain'],
+        where: {
+          key: 'avatar',
+          domain: {
+            namehash: domain.namehash,
+          },
+        },
+      })
+      expect(updatedText?.key).toEqual('avatar')
+      expect(updatedText?.value).toEqual('ethereum.png')
+      expect(updatedText?.domain.namehash).toEqual(domain.namehash)
+    })
+
+    it('should handle GET request for text', async () => {
+      const text = new Text()
+      text.key = 'avatar'
+      text.value = 'blockful.png'
+      text.domain = domain
+      await datasource.manager.save(text)
+
+      const server = NewServer(withGetText(repo))
+
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'text',
+        domain.namehash,
+        'avatar',
+      )
+
+      expect(result.length).toEqual(1)
+      const [avatar] = result
+      expect(avatar).toEqual('blockful.png')
+    })
   })
 
-  // Test case for handling set request for setText
-  it('should handle set request for setText', async () => {
-    const result = await doCall(server, abi, TEST_ADDRESS, 'setText', [
-      TEST_ADDRESS,
-      'New String',
-    ])
+  describe('Address', () => {
+    // TODO: test multicoin read/write when issue is solved: https://github.com/smartcontractkit/ccip-read/issues/32
 
-    // Assertions for the expected results
-    expect(result.length).to.equal(2)
-    expect(result[0]).to.equal('Did it!')
-    expect(result[1]).to.equal('New String')
-  })
+    it('should handle set request for setAddr on ethereum', async () => {
+      const server = NewServer(withSetAddr(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'setAddr',
+        domain.namehash,
+        '0x1234567890123456789012345678901234567890',
+      )
 
-  // Test case for handling set request for setAddr
-  it('should handle set request for setAddr', async () => {
-    const address = '0x1234567890123456789012345678901234567890'
-    const result = await doCall(server, abi, TEST_ADDRESS, 'setAddr', [
-      node,
-      address,
-    ])
+      expect(result.length).toEqual(0)
 
-    // Assertions for the expected results
-    expect(result.length).to.equal(2)
-    expect(result[0]).to.equal('Address Set')
-    expect(result[1]).to.equal(`Node: ${node}, Address: ${address}`)
-  })
+      const addr = await datasource.getRepository(Address).findOne({
+        relations: ['domain'],
+        where: {
+          domain: {
+            namehash: domain.namehash,
+          },
+          coin: 60,
+        },
+      })
+      expect(addr?.address).toEqual(
+        '0x1234567890123456789012345678901234567890',
+      )
+      expect(addr?.coin).toEqual(60)
+      expect(addr?.domain.namehash).toEqual(domain.namehash)
+    })
 
-  // Test case for handling GET request for addr
-  it('should handle GET request for addr', async () => {
-    const result = await doCall(server, abi, TEST_ADDRESS, 'addr', [node, 42])
+    it('should handle GET request for addr on ethereum', async () => {
+      const addr = new Address()
+      addr.coin = 60
+      addr.address = '0x1234567890123456789012345678901234567890'
+      addr.domain = domain
+      await datasource.manager.save(addr)
 
-    // Assertions for the expected results
-    expect(result.length).to.equal(1)
-    expect(result[0]).to.equal('0x123456')
-  })
+      const server = NewServer(withGetAddr(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'addr',
+        domain.namehash,
+      )
 
-  // Test case for handling GET request for text
-  it('should handle GET request for text', async () => {
-    const result = await doCall(server, abi, TEST_ADDRESS, 'text', [
-      node,
-      'Key123',
-    ])
-
-    // Assertions for the expected results
-    expect(result.length).to.equal(1)
-    expect(result[0]).to.equal('This is the text value storage.')
+      expect(result.length).toEqual(1)
+      const [value] = result
+      expect(value).toEqual('0x1234567890123456789012345678901234567890')
+    })
   })
 })
