@@ -50,12 +50,11 @@ contract OffchainResolver is IExtendedResolver, IERC165, Ownable {
      * @return The return data, ABI encoded identically to the underlying function.
      */
     function resolve(bytes calldata name, bytes calldata data) external view override returns (bytes memory) {
-        bytes memory callData = abi.encodeWithSelector(IExtendedResolver.resolve.selector, name, data);
         string[] memory urls = new string[](1);
         urls[0] = url;
 
         // revert with the OffchainLookup error, which will be caught by the client
-        revert OffchainLookup(address(this), urls, callData, OffchainResolver.resolveWithProof.selector, callData);
+        revert OffchainLookup(address(this), urls, data, OffchainResolver.resolveWithProof.selector, data);
     }
 
     function updateSigners(address[] calldata _signers, bool[] calldata _isSigner) external onlyOwner {

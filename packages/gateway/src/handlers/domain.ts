@@ -27,7 +27,9 @@ interface ReadRepository {
   contentHash(params: DomainProps): Promise<Response | undefined>
 }
 
-export function withContentHash(repo: ReadRepository): ccip.HandlerDescription {
+export function withGetContentHash(
+  repo: ReadRepository,
+): ccip.HandlerDescription {
   return {
     type: 'contenthash',
     func: async (args: ethers.utils.Result) => {
