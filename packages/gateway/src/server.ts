@@ -14,63 +14,27 @@
  * ```
  *
  */
-import * as ccipread from '@chainlink/ccip-read-server'
+import * as ccip from '@chainlink/ccip-read-server'
 
 // Application Binary Interfaces
-export const abi: string[] = [
-  'function getSignedBalance(address addr) public view returns(uint256 balance, bytes memory sig)',
-  'function setText(address addr, string text) public view returns(string result, string returned_args)',
-  'function setAddr(bytes32 node, address addr) public view returns(string result, string returned_args)',
-  'function addr(bytes32 node, uint coinType) public view returns(bytes memory result)',
-  'function text(bytes32 node, string key) public view returns(string memory result)',
+const abi: string[] = [
+  'function setText(bytes32 node, string calldata key, string calldata value)',
+  'function text(bytes32 node, string key) view returns (string)',
+  'function setAddr(bytes32 node, address addr)',
+  'function addr(bytes32 node) view returns (address)',
+  // 'function setAddr(bytes32 node, uint coinType, bytes calldata addr)',
+  // 'function addr(bytes32 node, uint coinType) view returns (byte memory)',
+  'function contenthash(bytes32 node) view returns (bytes memory)',
+  'function setContenthash(bytes32 node, bytes calldata contenthash)',
 ]
 
-// Creating a ccip-read server
-const server = new ccipread.Server()
+function NewServer(...opts: ccip.HandlerDescription[]): ccip.Server {
+  const server = new ccip.Server()
 
-// Adding a handlers for the gateway
-server.add(abi, [
-  {
-    type: 'getSignedBalance',
-    func: () => {
-      // Implement logic or call dataBase / Contract
-      return Promise.resolve([1000, '0x123456'])
-    },
-  },
-  {
-    type: 'setText',
-    func: (_args) => {
-      const [, newText] = _args
-      // Implement logic or call dataBase / Contract
-      return Promise.resolve(['Did it!', newText])
-    },
-  },
-  {
-    type: 'setAddr',
-    func: (args) => {
-      const [node, addr] = args
-      // Implement logic or call dataBase / Contract
-      return Promise.resolve(['Address Set', `Node: ${node}, Address: ${addr}`])
-    },
-  },
-  {
-    type: 'addr',
-    func: () => {
-      // Implement logic or call dataBase / Contract
-      const multicoinAddress = '0x123456'
-      return Promise.resolve([multicoinAddress])
-    },
-  },
+  server.add(abi, opts)
 
-  {
-    type: 'text',
-    func: () => {
-      // Implement logic or call dataBase / Contract
-      const textValue = 'This is the text value storage.'
-      return Promise.resolve([textValue])
-    },
-  },
-])
+  return server
+}
 
 // Exporting the created gateway and the function that allow communication with it.
-export { server }
+export { NewServer, abi }

@@ -1,0 +1,3 @@
+{
+  "extends": "@blockful/tsconfig/tsconfig.json"
+}

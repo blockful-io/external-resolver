@@ -141,3 +141,4 @@ dist
 **/broadcast/**
 **/cache/**
 **/bin/**
+*.db
