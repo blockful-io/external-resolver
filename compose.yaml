@@ -1,6 +1,6 @@
 services:
-   contracts:
-    build: 
+  contracts:
+    build:
       context: packages/contracts
     container_name: contracts
     ports:
@@ -10,5 +10,21 @@ services:
     env_file:
       - .env
 
+  db:
+    image: postgres:16.2
+    container_name: gateway-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/data/db
+    restart: always
+    environment:
+      POSTGRES_USER: blockful
+      POSTGRES_PASSWORD: ensdomains
+      POSTGRES_DB: ensdomains
+
 networks:
   local:
+
+volumes:
+  db_data:

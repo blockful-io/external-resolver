@@ -1,5 +1,5 @@
 {
-  "name": "contracts",
+  "name": "@blockful/contracts",
   "packageManager": "yarn@4.1.0",
   "scripts": {
     "test": "forge test -vvv",
