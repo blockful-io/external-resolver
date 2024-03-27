@@ -8,6 +8,7 @@ import "@ens-contracts/registry/ENSRegistry.sol";
 import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import "@ens-contracts/utils/UniversalResolver.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
+import {OffchainResolver} from "../src/OffchainResolver.sol";
 
 contract PublicResolverScript is Script, ENSHelper {
     function run() external {
@@ -17,7 +18,7 @@ contract PublicResolverScript is Script, ENSHelper {
 
         ENSRegistry registry = new ENSRegistry();
         string[] memory urls = new string[](1);
-        urls[0] = "localhost:8080";
+        urls[0] = "http://localhost:3000/{sender}/{data}.json";
         new UniversalResolver(address(registry), urls);
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
@@ -38,12 +39,20 @@ contract PublicResolverScript is Script, ENSHelper {
         );
         registrar.setDefaultResolver(address(resolver));
 
+        address[] memory t = new address[](1);
+        t[0] = 0x06b0e4af848d3EB6A44517e8ebca54fD220ca91b;
+
+        OffchainResolver off_resolver = new OffchainResolver(
+            "http://localhost:3000/{sender}/{data}.json",
+            t
+        );
+
         // .eth
         registry.setSubnodeRecord(
             rootNode,
             labelhash("eth"),
             publicKey,
-            address(resolver),
+            address(off_resolver),
             100000
         );
         // public.eth
@@ -51,7 +60,7 @@ contract PublicResolverScript is Script, ENSHelper {
             namehash("eth"),
             labelhash("public"),
             publicKey,
-            address(resolver),
+            address(off_resolver),
             100000
         );
 

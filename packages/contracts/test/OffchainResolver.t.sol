@@ -36,7 +36,7 @@ contract OffchainResolverTest is Test, ENSHelper {
         // OffchainResolver contract setup
         address[] memory signers = new address[](1);
         signers[0] = address(0x1337);
-        string memory url = "https://gateway.com";
+        string memory url = "http://localhost:3000/{sender}/{data}.json";
         resolver = new OffchainResolver(url, signers);
         registrar.setDefaultResolver(address(resolver));
 
@@ -84,7 +84,7 @@ contract OffchainResolverTest is Test, ENSHelper {
     // Test the resolver setup from the constructor
     function testResolverSetupFromConstructor() public {
         assertTrue(resolver.signers(address(0x1337)));
-        assertEq(resolver.url(), "https://gateway.com");
+        assertEq(resolver.url(), "http://localhost:3000/{sender}/{data}.json");
     }
 
     // Test updating the URL by the owner

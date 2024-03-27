@@ -13,7 +13,7 @@ export class Text {
   @Column()
   value: string
 
-  @JoinColumn({ name: 'domain', referencedColumnName: 'namehash' })
+  @JoinColumn({ name: 'domain', referencedColumnName: 'node' })
   @ManyToOne(() => Domain, (domain) => domain.texts)
   domain: Domain
 }

@@ -3,7 +3,6 @@ import {
   SetAddressProps,
   SetTextProps,
   GetTextProps,
-  Response,
   GetAddressProps,
   SetContentHashProps,
 } from '../types'
@@ -16,7 +15,7 @@ export class L2Repository {
     return
   }
 
-  async contentHash({ node }: GetAddressProps): Promise<Response | undefined> {
+  async contentHash({ node }: GetAddressProps): Promise<string | undefined> {
     return
   }
 
@@ -28,7 +27,7 @@ export class L2Repository {
     return
   }
 
-  async addr({ node, coin }: GetAddressProps): Promise<Response | undefined> {
+  async addr({ node, coin }: GetAddressProps): Promise<string | undefined> {
     return
   }
 
@@ -40,7 +39,7 @@ export class L2Repository {
     return
   }
 
-  async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
+  async getText({ node, key }: GetTextProps): Promise<string | undefined> {
     return
   }
 }

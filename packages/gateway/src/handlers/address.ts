@@ -1,7 +1,7 @@
 import ethers from 'ethers'
 import * as ccip from '@chainlink/ccip-read-server'
 
-import { GetAddressProps, Response, SetAddressProps } from '../types'
+import { GetAddressProps, SetAddressProps, Signer } from '../types'
 
 interface WriteRepository {
   setAddr(params: SetAddressProps): Promise<void>
@@ -16,7 +16,7 @@ export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
         coin: args.coin,
         addr: args.addr,
       }
-      if (!params.coin) params.coin = 60 // default: ether
+      if (params.coin === undefined) params.coin = 60 // default: ether
       await repo.setAddr(params)
       return []
     },
@@ -24,10 +24,13 @@ export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
 }
 
 interface ReadRepository {
-  addr(params: GetAddressProps): Promise<Response | undefined>
+  addr(params: GetAddressProps): Promise<string | undefined>
 }
 
-export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
+export function withGetAddr(
+  signer: Signer,
+  repo: ReadRepository,
+): ccip.HandlerDescription {
   return {
     type: 'addr',
     func: async (args: ethers.utils.Result) => {
@@ -35,10 +38,11 @@ export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
         node: args.node,
         coin: args.coin,
       }
-      if (!params.coin) params.coin = 60 // default: ether
+      if (params.coin === undefined) params.coin = 60 // default: ether
       const addr = await repo.addr(params)
       if (!addr) return []
-      return [addr.value]
+      const signature = await signer.sign(addr)
+      return [addr, 0, signature]
     },
   }
 }

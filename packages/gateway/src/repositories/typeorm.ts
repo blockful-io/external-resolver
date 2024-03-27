@@ -2,7 +2,6 @@ import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 
 import {
-  Response,
   SetTextProps,
   GetTextProps,
   SetAddressProps,
@@ -30,12 +29,12 @@ export class TypeORMRepository {
         },
       ],
       {
-        conflictPaths: ['namehash'],
+        conflictPaths: ['node'],
       },
     )
   }
 
-  async contentHash({ node }: GetAddressProps): Promise<Response | undefined> {
+  async contentHash({ node }: GetAddressProps): Promise<string | undefined> {
     const repo = this.client.getRepository(Domain)
     const domain = await repo.findOneBy({
       node,
@@ -43,7 +42,7 @@ export class TypeORMRepository {
 
     if (!domain || !domain.contenthash) return
 
-    return { value: domain.contenthash }
+    return domain.contenthash
   }
 
   async setAddr({ node, addr: address, coin }: SetAddressProps): Promise<void> {
@@ -64,7 +63,7 @@ export class TypeORMRepository {
     )
   }
 
-  async addr({ node, coin }: GetAddressProps): Promise<Response | undefined> {
+  async addr({ node, coin }: GetAddressProps): Promise<string | undefined> {
     const repo = this.client.getRepository(Address)
     const addr = await repo.findOneBy({
       domain: {
@@ -75,7 +74,7 @@ export class TypeORMRepository {
 
     if (!addr) return
 
-    return { value: addr.address }
+    return addr.address
   }
 
   async setText({ node, key, value }: SetTextProps): Promise<void> {
@@ -96,7 +95,7 @@ export class TypeORMRepository {
     )
   }
 
-  async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
+  async getText({ node, key }: GetTextProps): Promise<string | undefined> {
     const repo = this.client.getRepository(Text)
     const text = await repo.findOneBy({
       domain: {
@@ -107,6 +106,6 @@ export class TypeORMRepository {
 
     if (!text) return
 
-    return { value: text.value }
+    return text.value
   }
 }

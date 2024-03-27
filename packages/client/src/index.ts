@@ -32,18 +32,18 @@ const _ = (async () => {
     name: ensAddress,
     universalResolverAddress: resolver,
   })
-  const address = await client.getEnsAddress({
-    name: ensAddress,
-    universalResolverAddress: resolver,
-  })
-  const name = await client.getEnsName({
-    address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-    universalResolverAddress: resolver,
-  })
+  // const address = await client.getEnsAddress({
+  //   name: ensAddress,
+  //   universalResolverAddress: resolver,
+  // })
+  // const name = await client.getEnsName({
+  //   address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+  //   universalResolverAddress: resolver,
+  // })
 
   console.log({
     avatar,
-    name,
-    address,
+    //   name,
+    //   address,
   })
 })()

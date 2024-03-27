@@ -1,7 +1,7 @@
 import ethers from 'ethers'
 import * as ccip from '@chainlink/ccip-read-server'
 
-import { DomainProps, Response, SetContentHashProps } from '../types'
+import { DomainProps, SetContentHashProps, Signer } from '../types'
 
 interface WriteRepository {
   setContentHash(params: SetContentHashProps): Promise<void>
@@ -24,10 +24,11 @@ export function withSetContentHash(
 }
 
 interface ReadRepository {
-  contentHash(params: DomainProps): Promise<Response | undefined>
+  contentHash(params: DomainProps): Promise<string | undefined>
 }
 
 export function withGetContentHash(
+  signer: Signer,
   repo: ReadRepository,
 ): ccip.HandlerDescription {
   return {
@@ -36,9 +37,10 @@ export function withGetContentHash(
       const params: DomainProps = {
         node: args.node,
       }
-      const addr = await repo.contentHash(params)
-      if (!addr) return []
-      return [addr.value]
+      const content = await repo.contentHash(params)
+      if (!content) return []
+      const signature = await signer.sign(content)
+      return [content, 0, signature]
     },
   }
 }

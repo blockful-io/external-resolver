@@ -7,7 +7,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "debug ts",
+      "name": "debug client",
       "skipFiles": [
         "<node_internals>/**"
       ],
@@ -66,7 +66,8 @@
       "env": {
         "NODE_ENV": "development",
         "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
-        "DATABASE_URL": "postgresql://blockful:ensdomains@localhost:5432/ensdomains"
+        "DATABASE_URL": "postgresql://blockful:ensdomains@localhost:5432/ensdomains",
+        "ENV_FILE": "${workspaceFolder}/.env"
       },
       "console": "integratedTerminal",
       "outFiles": [
