@@ -1409,6 +1409,7 @@ __metadata:
     better-sqlite3: "npm:^9.4.3"
     dotenv: "npm:^16.4.5"
     eth-ens-namehash: "npm:^2.0.8"
+    nodemon: "npm:^3.1.0"
     pg: "npm:^8.11.3"
     reflect-metadata: "npm:^0.2.1"
     ts-node: "npm:^10.9.2"
