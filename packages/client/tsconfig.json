@@ -2,13 +2,5 @@
   "extends": "@blockful/tsconfig/tsconfig.json",
   "compilerOptions": {
     "resolveJsonModule": true,
-    "outDir": "./"
   },
-  "include": [
-    "./src",
-    "./test",
-  ],
-  "files": [
-    "./hardhat.config.cjs"
-  ]
 }

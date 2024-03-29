@@ -23,11 +23,12 @@ import {
 
 import { ethers as eth } from 'hardhat'
 import { BaseContract, Contract } from 'ethers'
-import { beforeAll, it, describe, expect } from 'vitest'
+// import { beforeAll, it, describe, expect } from 'vitest'
 import { normalize, labelhash, namehash } from 'viem/ens'
 import { localhost } from 'viem/chains'
 import { createTestClient, http, publicActions, BaseError } from 'viem'
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
+import { expect } from 'chai'
 
 const gatewayUrl = 'http://127.0.0.1:3001'
 // Creating an example of Bytes32 variable to represent the Node.
@@ -103,7 +104,7 @@ async function deployUniversalResolver(): Promise<void> {
 }
 
 describe('SeuContrato', () => {
-  beforeAll(async () => {
+  before(async () => {
     signers = await eth.getSigners()
     // Deploying the contracts
     await deployOffchainResolver()
@@ -133,7 +134,8 @@ describe('SeuContrato', () => {
       })
     } catch (error) {
       const customError = error as BaseError
-      expect(customError.message).toContain('HTTP request failed')
+      console.log(customError.message)
+      expect(customError.message).contain('HTTP request failed')
     }
   })
 })
