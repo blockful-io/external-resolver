@@ -54,7 +54,13 @@ contract OffchainResolver is IExtendedResolver, IERC165, Ownable {
         urls[0] = url;
 
         // revert with the OffchainLookup error, which will be caught by the client
-        revert OffchainLookup(address(this), urls, data, OffchainResolver.resolveWithProof.selector, data);
+        revert OffchainLookup(
+            address(this),
+            urls,
+            data,
+            OffchainResolver.resolveWithProof.selector,
+            abi.encode(data, address(this))
+        );
     }
 
     function updateSigners(address[] calldata _signers, bool[] calldata _isSigner) external onlyOwner {
