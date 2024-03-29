@@ -15,6 +15,7 @@
   "license": "ISC",
   "devDependencies": {
     "@swc/core": "^1.4.6",
+    "@types/express-mung": "^0.5.5",
     "@types/node": "^20.11.24",
     "@types/pg": "^8",
     "better-sqlite3": "^9.4.3",
@@ -28,6 +29,8 @@
     "@chainlink/ccip-read-server": "^0.2.1",
     "@ensdomains/offchain-resolver-contracts": "^0.2.1",
     "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-mung": "^0.5.1",
     "pg": "^8.11.3",
     "reflect-metadata": "^0.2.1",
     "ts-node": "^10.9.2",

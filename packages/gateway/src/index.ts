@@ -2,7 +2,7 @@
  * Script for running the server locally exposing the API
  */
 import 'reflect-metadata'
-import { Hex } from 'viem'
+import { Hex, parseAbi } from 'viem'
 import { config } from 'dotenv'
 
 import { NewDataSource } from './datasources/typeorm'
@@ -14,10 +14,15 @@ import {
   withGetContentHash,
   withSetContentHash,
   withQuery,
+  httpCreateAddress,
+  httpGetAddress,
+  httpCreateText,
+  httpGetText,
 } from './handlers'
 import { TypeORMRepository } from './repositories/typeorm'
-import { NewServer } from './server'
+import { NewServer, abi } from './server'
 import { Signer } from './signer'
+import { withSigner } from './middlewares'
 
 config({
   path: process.env.ENV_FILE || './env',
@@ -27,28 +32,32 @@ config({
 const _ = (async () => {
   const dbUrl = process.env.DATABASE_URL
   if (!dbUrl) {
-    throw new Error('Database URL is required')
+    throw new Error('DATABASE_URL is required')
   }
-
-  const dbclient = await NewDataSource(dbUrl).initialize()
-  const repo = new TypeORMRepository(dbclient)
-
   const privateKey = process.env.GATEWAY_PRIVATE_KEY
   if (!privateKey) {
     throw new Error('GATEWAY_PRIVATE_KEY is required')
   }
 
-  const signer = new Signer(privateKey as Hex)
+  const dbclient = await NewDataSource(dbUrl).initialize()
+  const repo = new TypeORMRepository(dbclient)
 
   const app = NewServer(
     withSetText(repo),
-    withGetText(signer, repo),
+    withGetText(repo),
     withSetAddr(repo),
-    withGetAddr(signer, repo),
+    withGetAddr(repo),
     withSetContentHash(repo),
-    withGetContentHash(signer, repo),
+    withGetContentHash(repo),
     withQuery(), // required for Viem integration
   ).makeApp('/')
+
+  app.use(withSigner(new Signer(privateKey as Hex), parseAbi(abi)))
+
+  app.post(`/addrs/:node`, httpCreateAddress(repo))
+  app.get(`/addrs/:node`, httpGetAddress(repo))
+  app.post(`/texts/:node`, httpCreateText(repo))
+  app.get(`/texts/:node`, httpGetText(repo))
 
   const port = process.env.PORT || 3000
   app.listen(port, () => {

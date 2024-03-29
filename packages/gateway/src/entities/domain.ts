@@ -14,6 +14,9 @@ export class Domain {
   @Column({ nullable: true })
   contenthash?: string
 
+  @Column()
+  ttl: number
+
   @OneToMany(() => Address, (addr) => addr.domain, { cascade: true })
   addresses: Address[]
 

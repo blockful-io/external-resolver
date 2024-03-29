@@ -1,7 +1,8 @@
 import ethers from 'ethers'
 import * as ccip from '@chainlink/ccip-read-server'
+import { Request as HttpRequest, Response as HttpResponse } from 'express'
 
-import { GetAddressProps, SetAddressProps, Signer } from '../types'
+import { GetAddressProps, Response, SetAddressProps } from '../types'
 
 interface WriteRepository {
   setAddr(params: SetAddressProps): Promise<void>
@@ -24,13 +25,10 @@ export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
 }
 
 interface ReadRepository {
-  addr(params: GetAddressProps): Promise<string | undefined>
+  addr(params: GetAddressProps): Promise<Response | undefined>
 }
 
-export function withGetAddr(
-  signer: Signer,
-  repo: ReadRepository,
-): ccip.HandlerDescription {
+export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
   return {
     type: 'addr',
     func: async (args: ethers.utils.Result) => {
@@ -41,8 +39,36 @@ export function withGetAddr(
       if (params.coin === undefined) params.coin = 60 // default: ether
       const addr = await repo.addr(params)
       if (!addr) return []
-      const signature = await signer.sign(addr)
-      return [addr, 0, signature]
+      return [addr]
     },
+  }
+}
+
+export function httpCreateAddress(repo: WriteRepository) {
+  return async (req: HttpRequest, res: HttpResponse) => {
+    const { node } = req.params
+    const { address, coin = 60 } = req.body
+
+    await repo.setAddr({
+      node,
+      coin,
+      addr: address,
+    })
+
+    res.status(201).json({ message: 'ok' })
+  }
+}
+
+export function httpGetAddress(repo: ReadRepository) {
+  return async (req: HttpRequest, res: HttpResponse) => {
+    const { node } = req.params
+    const { coin = 60 } = req.query
+
+    const response = await repo.addr({
+      node,
+      coin: parseInt(coin as string),
+    })
+
+    res.json(response)
   }
 }
