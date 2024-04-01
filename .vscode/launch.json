@@ -18,6 +18,10 @@
         "-r",
         "tsconfig-paths/register"
       ],
+      "env": {
+        "NODE_ENV": "development",
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/client/tsconfig.json",
+      },
       "console": "integratedTerminal",
       "outFiles": [
         "${workspaceFolder}/**/*.js",
@@ -44,6 +48,31 @@
       ],
       "smartStep": true,
       "console": "integratedTerminal"
-    }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "gateway debug ts",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/packages/gateway/src/index.ts",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
+        "DATABASE_URL": "postgresql://blockful:ensdomains@localhost:5432/ensdomains"
+      },
+      "console": "integratedTerminal",
+      "outFiles": [
+        "${workspaceFolder}/**/*.js",
+        "!**/node_modules/**"
+      ]
+    },
   ]
 }

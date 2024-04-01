@@ -1,14 +1,14 @@
 import 'reflect-metadata'
+import { DataSource } from 'typeorm'
 
 import {
-  SetAddressProps,
+  Response,
   SetTextProps,
   GetTextProps,
-  Response,
+  SetAddressProps,
   GetAddressProps,
   SetContentHashProps,
 } from '../types'
-import { DataSource } from 'typeorm'
 import { Address, Text, Domain } from '../entities'
 
 export class TypeORMRepository {
@@ -25,7 +25,7 @@ export class TypeORMRepository {
     await this.client.getRepository(Domain).upsert(
       [
         {
-          namehash: node,
+          node,
           contenthash,
         },
       ],
@@ -38,7 +38,7 @@ export class TypeORMRepository {
   async contentHash({ node }: GetAddressProps): Promise<Response | undefined> {
     const repo = this.client.getRepository(Domain)
     const domain = await repo.findOneBy({
-      namehash: node,
+      node,
     })
 
     if (!domain || !domain.contenthash) return
@@ -51,7 +51,7 @@ export class TypeORMRepository {
       [
         {
           domain: {
-            namehash: node,
+            node,
           },
           address,
           coin,
@@ -68,7 +68,7 @@ export class TypeORMRepository {
     const repo = this.client.getRepository(Address)
     const addr = await repo.findOneBy({
       domain: {
-        namehash: node,
+        node,
       },
       coin,
     })
@@ -85,7 +85,7 @@ export class TypeORMRepository {
           key,
           value,
           domain: {
-            namehash: node,
+            node,
           },
         },
       ],
@@ -100,7 +100,7 @@ export class TypeORMRepository {
     const repo = this.client.getRepository(Text)
     const text = await repo.findOneBy({
       domain: {
-        namehash: node,
+        node,
       },
       key,
     })

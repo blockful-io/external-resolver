@@ -9,7 +9,7 @@ import {
   withSetText,
   withGetAddr,
   withSetAddr,
-  withContentHash,
+  withGetContentHash,
   withSetContentHash,
 } from './handlers'
 import { TypeORMRepository } from './repositories/typeorm'
@@ -30,7 +30,7 @@ const _ = (async () => {
     withGetText(repo),
     withGetAddr(repo),
     withSetAddr(repo),
-    withContentHash(repo),
+    withGetContentHash(repo),
     withSetContentHash(repo),
   ).makeApp('/')
 
