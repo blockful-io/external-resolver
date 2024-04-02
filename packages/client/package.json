@@ -29,8 +29,6 @@
     "hardhat-ethers": "^1.0.1",
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.1",
-    "ts-node": "^10.9.2",
-    "typechain": "^8.3.0",
     "viem": "^2.7.15"
   },
   "peerDependencies": {
