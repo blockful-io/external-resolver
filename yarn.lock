@@ -1365,7 +1365,6 @@ __metadata:
     "@dotenvx/dotenvx": "npm:^0.20.2"
     "@rocketseat/eslint-config": "npm:^2.2.2"
     "@types/eslint": "npm:^8"
-    "@types/express": "npm:^4.17.21"
     "@types/node": "npm:^20.11.25"
     commitlint: "npm:^19.0.3"
     eslint: "npm:^8.57.0"
@@ -1382,6 +1381,7 @@ __metadata:
   dependencies:
     "@ensdomains/offchain-resolver-contracts": "npm:^0.2.1"
     "@swc/core": "npm:^1.4.6"
+    "@types/express": "npm:^4.17.21"
     "@types/express-mung": "npm:^0.5.5"
     "@types/node": "npm:^20.11.24"
     "@types/pg": "npm:^8"

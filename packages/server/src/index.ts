@@ -165,11 +165,7 @@ export class Server {
     return app
   }
 
-  async handleRequest(
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction,
-  ) {
+  async handleRequest(req: express.Request, res: express.Response) {
     let sender: string
     let callData: string
 

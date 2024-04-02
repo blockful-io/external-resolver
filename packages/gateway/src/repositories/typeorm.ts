@@ -35,14 +35,14 @@ export class TypeORMRepository {
   }
 
   async contentHash({ node }: GetAddressProps): Promise<string | undefined> {
-    const repo = this.client.getRepository(Domain)
-    const domain = await repo.findOneBy({
-      node,
-    })
+    const domain = await this.client
+      .getRepository(Domain)
+      .createQueryBuilder('domain')
+      .where('domain.node = :node ', { node })
+      .select('domain.contenthash')
+      .getOne()
 
-    if (!domain || !domain.contenthash) return
-
-    return domain.contenthash
+    return domain?.contenthash
   }
 
   async setAddr({ node, addr: address, coin }: SetAddressProps): Promise<void> {
@@ -64,17 +64,15 @@ export class TypeORMRepository {
   }
 
   async addr({ node, coin }: GetAddressProps): Promise<string | undefined> {
-    const repo = this.client.getRepository(Address)
-    const addr = await repo.findOneBy({
-      domain: {
-        node,
-      },
-      coin,
-    })
+    const addr = await this.client
+      .getRepository(Address)
+      .createQueryBuilder('addr')
+      .where('addrr.domain = :node ', { node })
+      .andWhere('addr.coin = :coin', { coin })
+      .select('addr.address')
+      .getOne()
 
-    if (!addr) return
-
-    return addr.address
+    return addr?.address
   }
 
   async setText({ node, key, value }: SetTextProps): Promise<void> {
@@ -96,16 +94,14 @@ export class TypeORMRepository {
   }
 
   async getText({ node, key }: GetTextProps): Promise<string | undefined> {
-    const repo = this.client.getRepository(Text)
-    const text = await repo.findOneBy({
-      domain: {
-        node,
-      },
-      key,
-    })
+    const text = await this.client
+      .getRepository(Text)
+      .createQueryBuilder('text')
+      .where('text.domain = :node ', { node })
+      .andWhere('text.key = :key', { key })
+      .select('text.value')
+      .getOne()
 
-    if (!text) return
-
-    return text.value
+    return text?.value
   }
 }

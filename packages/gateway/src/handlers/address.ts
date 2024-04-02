@@ -3,7 +3,7 @@ import ethers from 'ethers'
 import * as ccip from '@chainlink/ccip-read-server'
 import { Request as HttpRequest, Response as HttpResponse } from 'express'
 
-import { GetAddressProps, Response, SetAddressProps } from '../types'
+import { GetAddressProps, SetAddressProps } from '../types'
 
 interface WriteRepository {
   setAddr(params: SetAddressProps): Promise<void>
@@ -26,7 +26,7 @@ export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
 }
 
 interface ReadRepository {
-  addr(params: GetAddressProps): Promise<Response | undefined>
+  addr(params: GetAddressProps): Promise<string | undefined>
 }
 
 export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {

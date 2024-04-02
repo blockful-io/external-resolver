@@ -3,6 +3,14 @@ import * as ccip from '@chainlink/ccip-read-server'
 import { ccipRequest } from 'viem/utils'
 import { Hex } from 'viem'
 
+/**
+ * Handler for Universal Resolver's
+ * function query(OffchainLookupCallData[] memory data)
+ * see docs: https://github.com/ensdomains/ens-contracts/blob/staging/contracts/utils/UniversalResolver.sol#L70
+ *
+ * @returns array of failures
+ * @returns array of responses from the gateway
+ */
 export function withQuery(): ccip.HandlerDescription {
   return {
     type: 'query',

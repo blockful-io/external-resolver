@@ -3,7 +3,7 @@ import ethers from 'ethers'
 import * as ccip from '@chainlink/ccip-read-server'
 import { Request as HttpRequest, Response as HttpResponse } from 'express'
 
-import { SetTextProps, GetTextProps, Response } from '../types'
+import { SetTextProps, GetTextProps } from '../types'
 
 interface WriteRepository {
   setText(params: SetTextProps): Promise<void>
@@ -26,7 +26,7 @@ export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
 }
 
 interface ReadRepository {
-  getText(params: GetTextProps): Promise<Response | undefined>
+  getText(params: GetTextProps): Promise<string | undefined>
 }
 
 export function withGetText(repo: ReadRepository): ccip.HandlerDescription {
@@ -39,7 +39,7 @@ export function withGetText(repo: ReadRepository): ccip.HandlerDescription {
       }
       const text = await repo.getText(params)
       if (!text) return []
-      return [text.value]
+      return [text]
     },
   }
 }

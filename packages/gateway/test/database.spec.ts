@@ -22,7 +22,6 @@ import {
 } from '../src/handlers'
 import { TypeORMRepository } from '../src/repositories'
 import { Address, Text, Domain } from '../src/entities'
-import { Signer } from '../src/signer'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 
@@ -30,7 +29,6 @@ describe('Gateway', () => {
   let repo: TypeORMRepository,
     datasource: DataSource,
     domain: Domain,
-    signer: Signer,
     privateKey: Hex
 
   beforeAll(async () => {
@@ -42,7 +40,6 @@ describe('Gateway', () => {
     })
     repo = new TypeORMRepository(await datasource.initialize())
     privateKey = generatePrivateKey()
-    signer = new Signer(privateKey)
   })
 
   beforeEach(async () => {
@@ -89,7 +86,7 @@ describe('Gateway', () => {
       addr.domain = domain
       await datasource.manager.save(addr)
 
-      const server = NewServer(withGetAddr(signer, repo))
+      const server = NewServer(withGetAddr(repo))
       const result = await doCall(
         server,
         abi,
@@ -173,7 +170,7 @@ describe('Gateway', () => {
       text.domain = domain
       await datasource.manager.save(text)
 
-      const server = NewServer(withGetText(signer, repo))
+      const server = NewServer(withGetText(repo))
 
       const result = await doCall(
         server,
@@ -237,7 +234,7 @@ describe('Gateway', () => {
       addr.domain = domain
       await datasource.manager.save(addr)
 
-      const server = NewServer(withGetAddr(signer, repo))
+      const server = NewServer(withGetAddr(repo))
       const result = await doCall(
         server,
         abi,

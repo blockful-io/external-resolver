@@ -2,7 +2,7 @@ import ethers from 'ethers'
 // @ts-expect-error askfmaklmf
 import * as ccip from '@chainlink/ccip-read-server'
 
-import { DomainProps, Response, SetContentHashProps } from '../types'
+import { DomainProps, SetContentHashProps } from '../types'
 
 interface WriteRepository {
   setContentHash(params: SetContentHashProps): Promise<void>
@@ -25,7 +25,7 @@ export function withSetContentHash(
 }
 
 interface ReadRepository {
-  contentHash(params: DomainProps): Promise<Response | undefined>
+  contentHash(params: DomainProps): Promise<string | undefined>
 }
 
 export function withGetContentHash(

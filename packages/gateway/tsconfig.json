@@ -6,8 +6,7 @@
     "strictPropertyInitialization": false,
     "sourceMap": true,
     "declarationMap": true,
-    "noImplicitAny": false,
-    "resolveJsonModule": true
+    "noImplicitAny": false
   },
   "include": [
     "src"
