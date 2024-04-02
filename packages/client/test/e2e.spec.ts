@@ -11,19 +11,18 @@
 import {
   abi as abiOffchainResolver,
   bytecode as bytecodeOffchainResolver,
-} from '../../contracts/out/OffchainResolver.sol/OffchainResolver.json'
+} from '@blockful/contracts/out/OffchainResolver.sol/OffchainResolver.json'
 import {
   abi as abiRegistry,
   bytecode as bytecodeRegistry,
-} from '../../contracts/out/ENSRegistry.sol/ENSRegistry.json'
+} from '@blockful/contracts/out/ENSRegistry.sol/ENSRegistry.json'
 import {
   abi as abiUniversalResolver,
   bytecode as bytecodeUniversalResolver,
-} from '../../contracts/out/UniversalResolver.sol/UniversalResolver.json'
+} from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
 import { ethers as eth } from 'hardhat'
 import { BaseContract, Contract } from 'ethers'
-// import { beforeAll, it, describe, expect } from 'vitest'
 import { normalize, labelhash, namehash } from 'viem/ens'
 import { localhost } from 'viem/chains'
 import { createTestClient, http, publicActions, BaseError } from 'viem'
