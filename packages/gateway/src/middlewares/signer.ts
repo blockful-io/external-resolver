@@ -6,7 +6,6 @@ import {
   Hex,
   encodeAbiParameters,
   parseAbiParameters,
-  verifyMessage,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 
@@ -25,8 +24,6 @@ export function withSigner(privateKey: Hex) {
       }
 
       const ttl = 1711975661 + 100000
-      // const hexCalldata = keccak256(callData)
-      // const hexData = keccak256(body.data as Hex)
       const msgHash = keccak256(
         encodePacked(
           ['bytes', 'address', 'uint64', 'bytes', 'bytes'],
@@ -40,12 +37,7 @@ export function withSigner(privateKey: Hex) {
         ),
       )
 
-      const sig = await signer.signMessage({ message: msgHash })
-      // const verified = await verifyMessage({
-      //   address: signer.address,
-      //   message: msgHash,
-      //   signature: sig,
-      // })
+      const sig = await signer.signMessage({ message: { raw: msgHash } })
 
       return encodeAbiParameters(parseAbiParameters('bytes,uint64,bytes'), [
         body.data as Hex,

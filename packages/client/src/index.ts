@@ -28,6 +28,11 @@ const client = createPublicClient({
 const _ = (async () => {
   const ensAddress = normalize('public.eth')
 
+  const twitter = await client.getEnsText({
+    name: ensAddress,
+    key: 'com.twitter',
+    universalResolverAddress: resolver,
+  })
   const avatar = await client.getEnsAvatar({
     name: ensAddress,
     universalResolverAddress: resolver,
@@ -42,6 +47,7 @@ const _ = (async () => {
   })
 
   console.log({
+    twitter,
     avatar,
     name,
     address,
