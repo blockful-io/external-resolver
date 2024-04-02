@@ -6,7 +6,7 @@
 import { Command } from 'commander'
 import { createPublicClient, http } from 'viem'
 import { normalize } from 'viem/ens'
-import { localhost } from 'viem/chains'
+import { anvil } from 'viem/chains'
 
 // Define command-line options using Commander
 const program = new Command()
@@ -20,7 +20,7 @@ program.parse(process.argv)
 const { resolver, provider } = program.opts()
 
 const client = createPublicClient({
-  chain: localhost,
+  chain: anvil,
   transport: http(provider),
 })
 
@@ -32,18 +32,18 @@ const _ = (async () => {
     name: ensAddress,
     universalResolverAddress: resolver,
   })
-  // const address = await client.getEnsAddress({
-  //   name: ensAddress,
-  //   universalResolverAddress: resolver,
-  // })
-  // const name = await client.getEnsName({
-  //   address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-  //   universalResolverAddress: resolver,
-  // })
+  const address = await client.getEnsAddress({
+    name: ensAddress,
+    universalResolverAddress: resolver,
+  })
+  const name = await client.getEnsName({
+    address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+    universalResolverAddress: resolver,
+  })
 
   console.log({
     avatar,
-    //   name,
-    //   address,
+    name,
+    address,
   })
 })()

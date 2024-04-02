@@ -1,4 +1,5 @@
 import ethers from 'ethers'
+// @ts-expect-error askfmaklmf
 import * as ccip from '@chainlink/ccip-read-server'
 import { Request as HttpRequest, Response as HttpResponse } from 'express'
 
@@ -38,7 +39,7 @@ export function withGetText(repo: ReadRepository): ccip.HandlerDescription {
       }
       const text = await repo.getText(params)
       if (!text) return []
-      return [text]
+      return [text.value]
     },
   }
 }

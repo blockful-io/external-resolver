@@ -14,7 +14,7 @@
  * ```
  *
  */
-import * as ccip from '@chainlink/ccip-read-server'
+import * as ccip from '../../server/src'
 
 // Application Binary Interfaces
 const abi: string[] = [

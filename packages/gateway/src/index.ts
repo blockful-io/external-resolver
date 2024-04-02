@@ -2,7 +2,7 @@
  * Script for running the server locally exposing the API
  */
 import 'reflect-metadata'
-import { Hex, parseAbi } from 'viem'
+import { Hex } from 'viem'
 import { config } from 'dotenv'
 
 import { NewDataSource } from './datasources/typeorm'
@@ -20,8 +20,7 @@ import {
   httpGetText,
 } from './handlers'
 import { TypeORMRepository } from './repositories/typeorm'
-import { NewServer, abi } from './server'
-import { Signer } from './signer'
+import { NewServer } from './server'
 import { withSigner } from './middlewares'
 
 config({
@@ -50,9 +49,7 @@ const _ = (async () => {
     withSetContentHash(repo),
     withGetContentHash(repo),
     withQuery(), // required for Viem integration
-  ).makeApp('/')
-
-  app.use(withSigner(new Signer(privateKey as Hex), parseAbi(abi)))
+  ).makeApp('/', withSigner(privateKey as Hex))
 
   app.post(`/addrs/:node`, httpCreateAddress(repo))
   app.get(`/addrs/:node`, httpGetAddress(repo))
