@@ -38,7 +38,7 @@
     "viem": "^2.9.3"
   },
   "peerDependencies": {
-    "@blockful/tsconfig": "workspace:^",
-    "@chainlink/ccip-read-server": "workspace:^"
+    "@blockful/ccip-server": "workspace:^",
+    "@blockful/tsconfig": "workspace:^"
   }
 }

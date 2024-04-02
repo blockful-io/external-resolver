@@ -1,6 +1,5 @@
 import ethers from 'ethers'
-// @ts-expect-error askfmaklmf
-import * as ccip from '@chainlink/ccip-read-server'
+import * as ccip from '@blockful/ccip-server'
 
 import { DomainProps, SetContentHashProps } from '../types'
 

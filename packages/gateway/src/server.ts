@@ -14,7 +14,7 @@
  * ```
  *
  */
-import * as ccip from '../../server/src'
+import * as ccip from '@blockful/ccip-server'
 
 // Application Binary Interfaces
 const abi: string[] = [

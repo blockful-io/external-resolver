@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "ccip-server": "yarn workspace @blockful/ccip-server",
     "client": "yarn workspace @blockful/client",
     "gateway": "yarn workspace @blockful/gateway",
     "contracts": "yarn workspace @blockful/contracts",

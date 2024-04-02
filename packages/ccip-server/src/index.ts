@@ -49,7 +49,7 @@ export interface HandlerDescription {
  *
  * Example usage:
  * ```javascript
- * const ccipread = require('@chainlink/ccip-read-server');
+ * const ccipread = require('@blockful/ccip-server');
  * const server = new ccipread.Server();
  * const abi = [
  *   'function getSignedBalance(address addr) public view returns(uint256 balance, bytes memory sig)',

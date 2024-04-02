@@ -1,4 +1,4 @@
-import * as ccipread from '@chainlink/ccip-read-server'
+import * as ccipread from '@blockful/ccip-server'
 import { Interface } from 'ethers/lib/utils'
 
 /**

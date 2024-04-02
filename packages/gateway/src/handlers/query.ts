@@ -1,5 +1,4 @@
-// @ts-expect-error askfmaklmf
-import * as ccip from '@chainlink/ccip-read-server'
+import * as ccip from '@blockful/ccip-server'
 import { ccipRequest } from 'viem/utils'
 import { Hex } from 'viem'
 
