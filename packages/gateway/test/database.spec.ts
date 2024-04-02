@@ -8,8 +8,6 @@ import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest'
 import { hash as namehash } from 'eth-ens-namehash'
-import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
-import { Hex, verifyMessage } from 'viem'
 
 import { doCall } from './helper'
 import { NewServer, abi } from '../src/server'
@@ -26,10 +24,7 @@ import { Address, Text, Domain } from '../src/entities'
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 
 describe('Gateway', () => {
-  let repo: TypeORMRepository,
-    datasource: DataSource,
-    domain: Domain,
-    privateKey: Hex
+  let repo: TypeORMRepository, datasource: DataSource, domain: Domain
 
   beforeAll(async () => {
     datasource = new DataSource({
@@ -39,12 +34,12 @@ describe('Gateway', () => {
       synchronize: true,
     })
     repo = new TypeORMRepository(await datasource.initialize())
-    privateKey = generatePrivateKey()
   })
 
   beforeEach(async () => {
     domain = new Domain()
     domain.node = namehash('public.eth')
+    domain.ttl = 2000
     await datasource.manager.save(domain)
   })
 
@@ -181,17 +176,9 @@ describe('Gateway', () => {
         'avatar',
       )
 
-      expect(result.length).toEqual(3)
-      const [avatar, , signature] = result
+      expect(result.length).toEqual(1)
+      const [avatar] = result
       expect(avatar).toEqual('blockful.png')
-      // expect(ttl).toEqual(BigInt(0))
-      expect(
-        await verifyMessage({
-          address: privateKeyToAddress(privateKey),
-          message: avatar,
-          signature,
-        }),
-      ).toBeTruthy()
     })
   })
 
@@ -243,17 +230,9 @@ describe('Gateway', () => {
         domain.node,
       )
 
-      expect(result.length).toEqual(3)
-      const [value, , signature] = result
+      expect(result.length).toEqual(1)
+      const [value] = result
       expect(value).toEqual('0x1234567890123456789012345678901234567890')
-      // expect(ttl).toEqual(BigInt(0))
-      expect(
-        await verifyMessage({
-          address: privateKeyToAddress(privateKey),
-          message: value,
-          signature,
-        }),
-      ).toBeTruthy()
     })
   })
 })

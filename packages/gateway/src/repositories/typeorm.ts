@@ -21,17 +21,9 @@ export class TypeORMRepository {
     node,
     contenthash,
   }: SetContentHashProps): Promise<void> {
-    await this.client.getRepository(Domain).upsert(
-      [
-        {
-          node,
-          contenthash,
-        },
-      ],
-      {
-        conflictPaths: ['node'],
-      },
-    )
+    await this.client.getRepository(Domain).update(node, {
+      contenthash,
+    })
   }
 
   async contentHash({ node }: GetAddressProps): Promise<string | undefined> {
@@ -67,7 +59,7 @@ export class TypeORMRepository {
     const addr = await this.client
       .getRepository(Address)
       .createQueryBuilder('addr')
-      .where('addrr.domain = :node ', { node })
+      .where('addr.domain = :node ', { node })
       .andWhere('addr.coin = :coin', { coin })
       .select('addr.address')
       .getOne()
