@@ -1,3 +1,6 @@
 {
-  "extends": "@blockful/tsconfig/tsconfig.json"
+  "extends": "@blockful/tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+  },
 }
