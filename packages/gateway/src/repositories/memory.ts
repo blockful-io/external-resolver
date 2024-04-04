@@ -42,29 +42,6 @@ export class InMemoryRepository {
     }, new Map())
   }
 
-  async mintDomain({
-    node,
-    ttl,
-    contenthash,
-  }: {
-    node: `0x${string}`
-    ttl: number
-    contenthash?: `0x${string}`
-  }): Promise<Domain | undefined> {
-    if (this.domains.get(node)) {
-      throw new Error('Domain already in use')
-    }
-
-    this.domains.set(node, {
-      node,
-      ttl,
-      contenthash,
-      addresses: [],
-      texts: [],
-    })
-    return this.domains.get(node)
-  }
-
   async setContentHash({
     node,
     contenthash,
