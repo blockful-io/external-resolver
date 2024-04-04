@@ -1,4 +1,3 @@
-import ethers from 'ethers'
 import * as ccip from '@blockful/ccip-server'
 import { Request as HttpRequest, Response as HttpResponse } from 'express'
 
@@ -11,7 +10,7 @@ interface WriteRepository {
 export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
   return {
     type: 'setText',
-    func: async (args: ethers.utils.Result) => {
+    func: async (args) => {
       const params: SetTextProps = {
         node: args.node!,
         key: args.key!,
@@ -31,7 +30,7 @@ interface ReadRepository {
 export function withGetText(repo: ReadRepository): ccip.HandlerDescription {
   return {
     type: 'text',
-    func: async (args: ethers.utils.Result) => {
+    func: async (args) => {
       const params: GetTextProps = {
         node: args.node!,
         key: args.key!,

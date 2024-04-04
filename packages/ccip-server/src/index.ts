@@ -187,7 +187,6 @@ export class Server {
     try {
       const response = await this.call({ to: sender, data: callData })
       res.status(response.status).json(response.body)
-      // next()
     } catch (e) {
       res.status(500).json({
         message: `Internal server error: ${(e as any).toString()}`,

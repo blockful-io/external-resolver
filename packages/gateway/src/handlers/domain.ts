@@ -1,4 +1,3 @@
-import ethers from 'ethers'
 import * as ccip from '@blockful/ccip-server'
 
 import { DomainProps, SetContentHashProps } from '../types'
@@ -12,7 +11,7 @@ export function withSetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'setContenthash',
-    func: async (args: ethers.utils.Result) => {
+    func: async (args) => {
       const params: SetContentHashProps = {
         node: args.node,
         contenthash: args.contenthash,
@@ -32,7 +31,7 @@ export function withGetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'contenthash',
-    func: async (args: ethers.utils.Result) => {
+    func: async (args) => {
       const params: DomainProps = {
         node: args.node,
       }

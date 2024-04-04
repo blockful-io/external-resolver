@@ -1,4 +1,3 @@
-import ethers from 'ethers'
 import * as ccip from '@blockful/ccip-server'
 import { Request as HttpRequest, Response as HttpResponse } from 'express'
 
@@ -11,7 +10,7 @@ interface WriteRepository {
 export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
   return {
     type: 'setAddr',
-    func: async (args: ethers.utils.Result) => {
+    func: async (args) => {
       const params: SetAddressProps = {
         node: args.node,
         coin: args.coin,
@@ -31,7 +30,7 @@ interface ReadRepository {
 export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
   return {
     type: 'addr',
-    func: async (args: ethers.utils.Result) => {
+    func: async (args) => {
       const params: GetAddressProps = {
         node: args.node,
         coin: args.coin,
