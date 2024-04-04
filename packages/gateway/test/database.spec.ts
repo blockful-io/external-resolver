@@ -51,7 +51,7 @@ describe('Gateway Database', () => {
   })
 
   describe('Domain', () => {
-    it('should handle set contenthash', async () => {
+    it('should set new contenthash', async () => {
       const contenthash =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
       const server = NewServer(withSetContentHash(repo))
@@ -64,7 +64,7 @@ describe('Gateway Database', () => {
         contenthash,
       )
 
-      expect(result.length).toEqual(0)
+      expect(result.data.length).toEqual(0)
 
       const d = await datasource.getRepository(Domain).findOneBy({
         node: domain.node,
@@ -75,7 +75,7 @@ describe('Gateway Database', () => {
       expect(d?.contenthash).toEqual(contenthash)
     })
 
-    it('should handle GET contenthash', async () => {
+    it('should query contenthash', async () => {
       const content =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909'
       domain.contenthash = content
@@ -90,14 +90,15 @@ describe('Gateway Database', () => {
         domain.node,
       )
 
-      expect(result.length).toEqual(1)
-      const [value] = result
+      expect(result.data.length).toEqual(1)
+      const [value] = result.data
       expect(value).toEqual(content)
+      expect(result.ttl).toEqual(domain.ttl)
     })
   })
 
   describe('Text', () => {
-    it('should handle request for set new text', async () => {
+    it('should set new text', async () => {
       const server = NewServer(withSetText(repo))
       const result = await doCall(
         server,
@@ -109,7 +110,7 @@ describe('Gateway Database', () => {
         'blockful.png',
       )
 
-      expect(result.length).toEqual(0)
+      expect(result.data.length).toEqual(0)
 
       const text = await datasource.getRepository(Text).findOne({
         relations: ['domain'],
@@ -125,7 +126,7 @@ describe('Gateway Database', () => {
       expect(text?.domain.node).toEqual(domain.node)
     })
 
-    it('should handle request for update text', async () => {
+    it('should update text', async () => {
       const server = NewServer(withSetText(repo))
       const text = new Text()
       text.key = 'avatar'
@@ -142,7 +143,7 @@ describe('Gateway Database', () => {
         'ethereum.png',
       )
 
-      expect(result.length).toEqual(0)
+      expect(result.data.length).toEqual(0)
 
       const updatedText = await datasource.getRepository(Text).findOne({
         relations: ['domain'],
@@ -158,7 +159,7 @@ describe('Gateway Database', () => {
       expect(updatedText?.domain.node).toEqual(domain.node)
     })
 
-    it('should handle GET request for text', async () => {
+    it('should query text', async () => {
       const text = new Text()
       text.key = 'avatar'
       text.value = 'blockful.png'
@@ -176,16 +177,17 @@ describe('Gateway Database', () => {
         'avatar',
       )
 
-      expect(result.length).toEqual(1)
-      const [avatar] = result
+      expect(result.data.length).toEqual(1)
+      const [avatar] = result.data
       expect(avatar).toEqual('blockful.png')
+      expect(result.ttl).toEqual(domain.ttl)
     })
   })
 
   describe('Address', () => {
     // TODO: test multicoin read/write when issue is solved: https://github.com/smartcontractkit/ccip-read/issues/32
 
-    it('should handle set request for setAddr on ethereum', async () => {
+    it('should set ethereum address', async () => {
       const server = NewServer(withSetAddr(repo))
       const result = await doCall(
         server,
@@ -196,7 +198,7 @@ describe('Gateway Database', () => {
         '0x1234567890123456789012345678901234567890',
       )
 
-      expect(result.length).toEqual(0)
+      expect(result.data.length).toEqual(0)
 
       const addr = await datasource.getRepository(Address).findOne({
         relations: ['domain'],
@@ -214,7 +216,7 @@ describe('Gateway Database', () => {
       expect(addr?.domain.node).toEqual(domain.node)
     })
 
-    it('should handle GET request for addr on ethereum', async () => {
+    it('should query ethereum address', async () => {
       const addr = new Address()
       addr.coin = 60
       addr.address = '0x1234567890123456789012345678901234567890'
@@ -230,9 +232,10 @@ describe('Gateway Database', () => {
         domain.node,
       )
 
-      expect(result.length).toEqual(1)
-      const [value] = result
+      expect(result.data.length).toEqual(1)
+      const [value] = result.data
       expect(value).toEqual('0x1234567890123456789012345678901234567890')
+      expect(result.ttl).toEqual(domain.ttl)
     })
   })
 })

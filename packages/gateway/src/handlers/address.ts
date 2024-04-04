@@ -1,7 +1,7 @@
 import * as ccip from '@blockful/ccip-server'
 import { Request as HttpRequest, Response as HttpResponse } from 'express'
 
-import { GetAddressProps, SetAddressProps } from '../types'
+import { GetAddressProps, Response, SetAddressProps } from '../types'
 
 interface WriteRepository {
   setAddr(params: SetAddressProps): Promise<void>
@@ -18,27 +18,27 @@ export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
       }
       if (params.coin === undefined) params.coin = 60 // default: ether
       await repo.setAddr(params)
-      return []
+      return { data: [] }
     },
   }
 }
 
 interface ReadRepository {
-  getAddr(params: GetAddressProps): Promise<string | undefined>
+  getAddr(params: GetAddressProps): Promise<Response | undefined>
 }
 
 export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
   return {
     type: 'addr',
-    func: async (args) => {
+    func: async (args): Promise<ccip.HandlerResponse> => {
       const params: GetAddressProps = {
         node: args.node,
         coin: args.coin,
       }
       if (params.coin === undefined) params.coin = 60 // default: ether
       const addr = await repo.getAddr(params)
-      if (!addr) return []
-      return [addr]
+      if (!addr) return { data: [] }
+      return { data: [addr.value], extraData: addr.ttl }
     },
   }
 }

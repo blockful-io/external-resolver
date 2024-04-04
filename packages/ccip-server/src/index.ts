@@ -20,10 +20,15 @@ export interface RPCResponse {
   body: any
 }
 
+export interface HandlerResponse {
+  data: Array<any>
+  extraData?: any
+}
+
 export type HandlerFunc = (
   args: ethers.utils.Result,
   req: RPCCall,
-) => Promise<Array<any>> | Array<any>
+) => Promise<HandlerResponse> | HandlerResponse
 
 interface Handler {
   type: FunctionFragment
@@ -93,24 +98,28 @@ export class Server {
       [
         {
           type: 'multicall',
-          func: async (args: ethers.utils.Result, { to }: RPCCall) => [
-            await Promise.all(
-              args[0].map(async (data: any) => {
-                let error
-                try {
-                  const { status, body } = await this.call({ to, data })
-                  if (status === 200) return body.data // Q: should this be 2XX?
-                  error = body.message || 'unknown error'
-                } catch (err) {
-                  error = String(err) // Q: should this include status?
-                }
-                return ethers.utils.hexConcat([
-                  selector,
-                  ethers.utils.defaultAbiCoder.encode(['string'], [error]),
-                ])
-              }),
-            ),
-          ],
+          func: async (args: ethers.utils.Result, { to }: RPCCall) => {
+            return {
+              data: [
+                await Promise.all(
+                  args[0].map(async (data: any) => {
+                    let error
+                    try {
+                      const { status, body } = await this.call({ to, data })
+                      if (status === 200) return body.data // Q: should this be 2XX?
+                      error = body.message || 'unknown error'
+                    } catch (err) {
+                      error = String(err) // Q: should this include status?
+                    }
+                    return ethers.utils.hexConcat([
+                      selector,
+                      ethers.utils.defaultAbiCoder.encode(['string'], [error]),
+                    ])
+                  }),
+                ),
+              ],
+            }
+          },
         },
       ],
     )
@@ -223,14 +232,15 @@ export class Server {
       status: 200,
       body: {
         data:
-          handler.type.outputs && result.length > 0
+          handler.type.outputs && result && result.data.length > 0
             ? hexlify(
                 ethers.utils.defaultAbiCoder.encode(
                   handler.type.outputs,
-                  result,
+                  result.data,
                 ),
               )
             : '0x',
+        ttl: result.extraData,
       },
     }
   }

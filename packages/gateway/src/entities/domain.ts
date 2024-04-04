@@ -14,7 +14,7 @@ export class Domain {
   @Column({ nullable: true, length: 32 })
   contenthash?: `0x${string}`
 
-  @Column()
+  @Column({ type: 'bigint' })
   ttl: number
 
   @OneToMany(() => Address, (addr) => addr.domain, { cascade: true })

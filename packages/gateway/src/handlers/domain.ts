@@ -1,6 +1,6 @@
 import * as ccip from '@blockful/ccip-server'
 
-import { DomainProps, SetContentHashProps } from '../types'
+import { DomainProps, Response, SetContentHashProps } from '../types'
 
 interface WriteRepository {
   setContentHash(params: SetContentHashProps): Promise<void>
@@ -17,13 +17,13 @@ export function withSetContentHash(
         contenthash: args.contenthash,
       }
       await repo.setContentHash(params)
-      return []
+      return { data: [] }
     },
   }
 }
 
 interface ReadRepository {
-  contentHash(params: DomainProps): Promise<`0x${string}` | undefined>
+  getContentHash(params: DomainProps): Promise<Response | undefined>
 }
 
 export function withGetContentHash(
@@ -31,13 +31,13 @@ export function withGetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'contenthash',
-    func: async (args) => {
+    func: async (args): Promise<ccip.HandlerResponse> => {
       const params: DomainProps = {
         node: args.node,
       }
-      const content = await repo.contentHash(params)
-      if (!content) return []
-      return [content]
+      const content = await repo.getContentHash(params)
+      if (!content) return { data: [] }
+      return { data: [content.value], extraData: content.ttl }
     },
   }
 }

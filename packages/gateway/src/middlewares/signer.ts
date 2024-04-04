@@ -33,15 +33,19 @@ export function withSigner(privateKey: Hex, selectors: string[]) {
         return body
       }
 
-      const ttl = 1711975661n + 100000n // TODO receive it from domain
-      const msgHash = makeMessageHash(sender, ttl, callData, body.data as Hex)
+      const msgHash = makeMessageHash(
+        sender,
+        BigInt(body.ttl as number),
+        callData,
+        body.data as Hex,
+      )
 
       const signer = privateKeyToAccount(privateKey)
       const sig = await signer.signMessage({ message: { raw: msgHash } })
 
       return encodeAbiParameters(parseAbiParameters('bytes,uint64,bytes'), [
         body.data as Hex,
-        BigInt(ttl),
+        BigInt(body.ttl as number),
         sig as Hex,
       ])
     },

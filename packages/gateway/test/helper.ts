@@ -24,7 +24,7 @@ export async function doCall(
   path: string,
   type: string,
   ...args: any[] // eslint-disable-line
-): Promise<Array<unknown>> {
+): Promise<{ data: Array<unknown>; ttl?: bigint }> {
   const iface = parseAbi(abi)
   const func = getAbiItem({ abi: iface, name: type })
   if (!func) {
@@ -47,7 +47,7 @@ export async function doCall(
   if (result.status !== 200) throw Error(result.body.message)
 
   // Returns an empty array if the function has no outputs
-  if (!handler.type.outputs) return []
+  if (!handler.type.outputs) return { data: [] }
 
   const decodedResponse = decodeFunctionResult({
     abi: iface,
@@ -56,10 +56,10 @@ export async function doCall(
   })
   switch (decodedResponse) {
     case undefined:
-      return []
+      return { data: [] }
     case Object:
-      return Object.values(decodedResponse)
+      return { data: Object.values(decodedResponse), ttl: result.body?.ttl }
     default:
-      return [decodedResponse]
+      return { data: [decodedResponse], ttl: result.body?.ttl }
   }
 }

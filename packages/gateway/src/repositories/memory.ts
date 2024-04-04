@@ -4,6 +4,7 @@ import {
   SetAddressProps,
   GetAddressProps,
   SetContentHashProps,
+  Response,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -53,11 +54,12 @@ export class InMemoryRepository {
     domain.contenthash = contenthash
   }
 
-  async contentHash({
+  async getContentHash({
     node,
-  }: GetAddressProps): Promise<`0x${string}` | undefined> {
+  }: GetAddressProps): Promise<Response | undefined> {
     const domain = this.domains.get(node)
-    return domain?.contenthash
+    if (!domain) return
+    return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
   async setAddr({
@@ -80,9 +82,11 @@ export class InMemoryRepository {
   async getAddr({
     node,
     coin = 60,
-  }: GetAddressProps): Promise<string | undefined> {
+  }: GetAddressProps): Promise<Response | undefined> {
     const address = this.addresses.get(`${node}-${coin}`)
-    return address?.address
+    const domain = this.domains.get(node)
+    if (!address || !domain) return
+    return { value: address.address, ttl: domain.ttl }
   }
 
   async setText({ node, key, value }: SetTextProps): Promise<void> {
@@ -98,8 +102,10 @@ export class InMemoryRepository {
     this.texts.set(`${node}-${key}`, { key, value, domain })
   }
 
-  async getText({ node, key }: GetTextProps): Promise<string | undefined> {
+  async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
     const text = this.texts.get(`${node}-${key}`)
-    return text?.value
+    const domain = this.domains.get(node)
+    if (!text || !domain) return
+    return { value: text.value, ttl: domain.ttl }
   }
 }

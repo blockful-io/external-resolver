@@ -1,7 +1,7 @@
 import * as ccip from '@blockful/ccip-server'
 import { Request as HttpRequest, Response as HttpResponse } from 'express'
 
-import { SetTextProps, GetTextProps } from '../types'
+import { SetTextProps, GetTextProps, Response } from '../types'
 
 interface WriteRepository {
   setText(params: SetTextProps): Promise<void>
@@ -18,26 +18,26 @@ export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
       }
 
       await repo.setText(params)
-      return []
+      return { data: [] }
     },
   }
 }
 
 interface ReadRepository {
-  getText(params: GetTextProps): Promise<string | undefined>
+  getText(params: GetTextProps): Promise<Response | undefined>
 }
 
 export function withGetText(repo: ReadRepository): ccip.HandlerDescription {
   return {
     type: 'text',
-    func: async (args) => {
+    func: async (args): Promise<ccip.HandlerResponse> => {
       const params: GetTextProps = {
         node: args.node!,
         key: args.key!,
       }
       const text = await repo.getText(params)
-      if (!text) return []
-      return [text]
+      if (!text) return { data: [] }
+      return { data: [text.value], extraData: text.ttl }
     },
   }
 }

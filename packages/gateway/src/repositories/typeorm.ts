@@ -7,6 +7,7 @@ import {
   SetAddressProps,
   GetAddressProps,
   SetContentHashProps,
+  Response,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -26,17 +27,18 @@ export class TypeORMRepository {
     })
   }
 
-  async contentHash({
+  async getContentHash({
     node,
-  }: GetAddressProps): Promise<`0x${string}` | undefined> {
+  }: GetAddressProps): Promise<Response | undefined> {
     const domain = await this.client
       .getRepository(Domain)
       .createQueryBuilder('domain')
       .where('domain.node = :node ', { node })
-      .select('domain.contenthash')
+      .select(['domain.contenthash', 'domain.ttl'])
       .getOne()
 
-    return domain?.contenthash
+    if (!domain) return
+    return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
   async setAddr({ node, addr: address, coin }: SetAddressProps): Promise<void> {
@@ -57,16 +59,21 @@ export class TypeORMRepository {
     )
   }
 
-  async getAddr({ node, coin }: GetAddressProps): Promise<string | undefined> {
+  async getAddr({
+    node,
+    coin,
+  }: GetAddressProps): Promise<Response | undefined> {
     const addr = await this.client
       .getRepository(Address)
       .createQueryBuilder('addr')
+      .innerJoin('addr.domain', 'domain')
       .where('addr.domain = :node ', { node })
       .andWhere('addr.coin = :coin', { coin })
-      .select('addr.address')
+      .select(['addr.address', 'domain.ttl'])
       .getOne()
 
-    return addr?.address
+    if (!addr) return
+    return { value: addr.address, ttl: addr.domain.ttl }
   }
 
   async setText({ node, key, value }: SetTextProps): Promise<void> {
@@ -87,15 +94,17 @@ export class TypeORMRepository {
     )
   }
 
-  async getText({ node, key }: GetTextProps): Promise<string | undefined> {
+  async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
     const text = await this.client
       .getRepository(Text)
       .createQueryBuilder('text')
+      .innerJoin('text.domain', 'domain')
       .where('text.domain = :node ', { node })
       .andWhere('text.key = :key', { key })
-      .select('text.value')
+      .select(['text.value', 'domain.ttl'])
       .getOne()
 
-    return text?.value
+    if (!text) return
+    return { value: text.value, ttl: text.domain.ttl }
   }
 }

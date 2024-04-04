@@ -60,7 +60,7 @@ describe('Gateway API', () => {
 
   afterEach(async () => await repo.clear())
 
-  describe('Domain', () => {
+  describe('API Domain', () => {
     it('should handle set contenthash', async () => {
       const contenthash =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
@@ -78,7 +78,9 @@ describe('Gateway API', () => {
 
       await request(app).get(`/${TEST_ADDRESS}/${calldata}.json`)
 
-      expect(await repo.contentHash({ node: domain.node })).toEqual(contenthash)
+      const response = await repo.getContentHash({ node: domain.node })
+      expect(response?.value).toEqual(contenthash)
+      expect(response?.ttl).toEqual(domain.ttl)
     })
 
     it('should handle GET contenthash', async () => {
@@ -120,11 +122,11 @@ describe('Gateway API', () => {
           data,
         }),
       ).toEqual(domain.contenthash)
-      // expect(ttl).toEqual(domain.ttl)
+      expect(ttl).toEqual(BigInt(domain.ttl))
     })
   })
 
-  describe('Text', () => {
+  describe('API Text', () => {
     it('should handle request for set new text', async () => {
       const key = 'company'
       const value = 'blockful'
@@ -141,7 +143,9 @@ describe('Gateway API', () => {
 
       await request(app).get(`/${TEST_ADDRESS}/${calldata}.json`)
 
-      expect(await repo.getText({ node: domain.node, key })).toEqual(value)
+      const response = await repo.getText({ node: domain.node, key })
+      expect(response?.value).toEqual(value)
+      expect(response?.ttl).toEqual(domain.ttl)
     })
 
     it('should handle request for update text', async () => {
@@ -168,7 +172,9 @@ describe('Gateway API', () => {
 
       await request(app).get(`/${TEST_ADDRESS}/${calldata}.json`)
 
-      expect(await repo.getText({ node: domain.node, key })).toEqual(value)
+      const response = await repo.getText({ node: domain.node, key })
+      expect(response?.value).toEqual(value)
+      expect(response?.ttl).toEqual(domain.ttl)
     })
 
     it('should handle GET request for text', async () => {
@@ -242,7 +248,7 @@ describe('Gateway API', () => {
     })
   })
 
-  describe('Address', () => {
+  describe('API Address', () => {
     // TODO: test multicoin read/write when issue is solved: https://github.com/smartcontractkit/ccip-read/issues/32
 
     it('should handle set request for setAddr on ethereum', async () => {
@@ -260,7 +266,9 @@ describe('Gateway API', () => {
 
       await request(app).get(`/${TEST_ADDRESS}/${calldata}.json`)
 
-      expect(await repo.getAddr({ node: domain.node })).toEqual(address)
+      const response = await repo.getAddr({ node: domain.node })
+      expect(response?.value).toEqual(address)
+      expect(response?.ttl).toEqual(domain.ttl)
     })
 
     it('should handle request for update address', async () => {
@@ -285,7 +293,9 @@ describe('Gateway API', () => {
 
       await request(app).get(`/${TEST_ADDRESS}/${calldata}.json`)
 
-      expect(await repo.getAddr({ node: domain.node })).toEqual(address)
+      const response = await repo.getAddr({ node: domain.node })
+      expect(response?.value).toEqual(address)
+      expect(response?.ttl).toEqual(domain.ttl)
     })
 
     it('should handle GET request for addr on ethereum', async () => {

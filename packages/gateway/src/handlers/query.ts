@@ -26,7 +26,7 @@ export function withQuery(): ccip.HandlerDescription {
           failures.push(true)
         }
       }
-      return [failures, responses]
+      return { data: [failures, responses] }
     },
   }
 }
