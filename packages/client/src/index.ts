@@ -26,19 +26,19 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const ensAddress = normalize('public.eth')
+  const publicAddress = normalize('public.eth')
 
   const twitter = await client.getEnsText({
-    name: ensAddress,
+    name: publicAddress,
     key: 'com.twitter',
     universalResolverAddress: resolver,
   })
   const avatar = await client.getEnsAvatar({
-    name: ensAddress,
+    name: publicAddress,
     universalResolverAddress: resolver,
   })
   const address = await client.getEnsAddress({
-    name: ensAddress,
+    name: publicAddress,
     universalResolverAddress: resolver,
   })
   const name = await client.getEnsName({
@@ -46,10 +46,32 @@ const _ = (async () => {
     universalResolverAddress: resolver,
   })
 
-  console.log({
+  console.log('public resolver', {
     twitter,
     avatar,
     name,
     address,
+  })
+
+  const databaseAddress = normalize('database.eth')
+
+  const dbTwitter = await client.getEnsText({
+    name: databaseAddress,
+    key: 'com.twitter',
+    universalResolverAddress: resolver,
+  })
+  const dbAvatar = await client.getEnsAvatar({
+    name: databaseAddress,
+    universalResolverAddress: resolver,
+  })
+  const dbAddress = await client.getEnsAddress({
+    name: databaseAddress,
+    universalResolverAddress: resolver,
+  })
+
+  console.log('database resolver', {
+    dbTwitter,
+    dbAvatar,
+    dbAddress,
   })
 })()

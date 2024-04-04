@@ -222,11 +222,15 @@ export class Server {
     return {
       status: 200,
       body: {
-        data: handler.type.outputs
-          ? hexlify(
-            ethers.utils.defaultAbiCoder.encode(handler.type.outputs, result),
-          )
-          : '0x',
+        data:
+          handler.type.outputs && result.length > 0
+            ? hexlify(
+                ethers.utils.defaultAbiCoder.encode(
+                  handler.type.outputs,
+                  result,
+                ),
+              )
+            : '0x',
       },
     }
   }

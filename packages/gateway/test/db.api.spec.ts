@@ -220,6 +220,26 @@ describe('Gateway API', () => {
         }),
       ).toEqual(value)
     })
+
+    it('should handle GET request for not existing text', async () => {
+      const app = NewServer(withGetText(repo)).makeApp(
+        '/',
+        withSigner(privateKey, ['function text(bytes32 node, string key)']),
+      )
+
+      const calldata = encodeFunctionData({
+        abi,
+        functionName: 'text',
+        args: [domain.node, 'Bahia'],
+      })
+
+      const response = await request(app).get(
+        `/${TEST_ADDRESS}/${calldata}.json`,
+      )
+
+      expect(response.body).not.toBeNull()
+      expect(response.body?.data).toEqual('0x')
+    })
   })
 
   describe('Address', () => {
@@ -315,6 +335,26 @@ describe('Gateway API', () => {
           data,
         }),
       ).toEqual(address)
+    })
+
+    it('should handle GET request for invalid address ', async () => {
+      const app = NewServer(withGetAddr(repo)).makeApp(
+        '/',
+        withSigner(privateKey, ['function addr(bytes32 node)']),
+      )
+
+      const calldata = encodeFunctionData({
+        abi,
+        functionName: 'addr',
+        args: [domain.node],
+      })
+
+      const response = await request(app).get(
+        `/${TEST_ADDRESS}/${calldata}.json`,
+      )
+
+      expect(response.body).not.toBeNull()
+      expect(response.body?.data).toEqual('0x')
     })
   })
 })

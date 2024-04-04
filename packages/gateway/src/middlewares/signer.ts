@@ -27,7 +27,8 @@ export function withSigner(privateKey: Hex, selectors: string[]) {
 
       if (
         !callData ||
-        !selectors.map(toFunctionSelector).includes(callData.slice(0, 10))
+        !selectors.map(toFunctionSelector).includes(callData.slice(0, 10)) ||
+        body.data === '0x'
       ) {
         return body
       }
