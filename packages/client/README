@@ -1,0 +1,72 @@
+# Running Tests
+
+This project includes unit tests and end-to-end (E2E) tests. Below are the instructions to run the E2E tests.
+
+## Steps to Run E2E Tests
+
+1. In the terminal, navigate to the contracts directory:
+````cmd
+    cd packages/contracts && forge build
+````
+
+2. After building the contracts, return to the root directory:
+````cmd
+    cd .. && cd ..
+````
+
+3. Start the local Hardhat node:
+````cmd
+    yarn hardhat node
+````
+
+4. With the local Hardhat node running, execute the E2E tests:
+````cmd
+    yarn client hardhat test ./test/l2_e2e.spec.ts --network localhost
+````
+
+    Make sure to edit the command as necessary to adjust the test file path and network, if applicable.
+
+
+
+
+
+# Running Tests with Local Arbitrum Node
+
+To run tests with a local Arbitrum node, follow the steps below:
+
+## Deploying a Local Node
+
+1. Open a new terminal for deploying the local node:
+
+### Step 1: Install prerequisites
+
+You'll need Docker and Docker Compose to run your node. Follow the instructions on their respective websites to install them.
+
+### Step 2: Clone the nitro-testnode repo
+
+You'll need the release branch.
+
+````bash
+git clone -b release --recurse-submodules https://github.com/OffchainLabs/nitro-testnode.git && cd nitro-testnode
+````
+
+
+### Step 3: Run your node
+
+````bash
+./test-node.bash --init
+````
+
+2. After deploying the local node, open another terminal and clone the external resolver from Blockful:
+
+````bash
+git clone https://github.com/blockful-io/external-resolver.git
+`````
+
+3. Finally, run the tests:
+
+````bash
+yarn client hardhat test ./test/l2_e2e.spec.ts --network localhost
+`````
+
+Make sure to edit the command as necessary to adjust the test file path and network, if applicable.
