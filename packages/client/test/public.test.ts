@@ -1,7 +1,7 @@
-import { describe, expect, test } from 'vitest'
 import { foundry } from 'viem/chains'
 import { createTestClient, http, publicActions } from 'viem'
 import { normalize } from 'viem/ens'
+import { expect } from 'chai'
 
 const client = createTestClient({
   chain: foundry,
@@ -18,7 +18,7 @@ describe('ENS reading', () => {
       universalResolverAddress: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
     })
 
-    expect(avatar).toContain('QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ') // blockful.jpeg
+    expect(avatar).contain('QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ') // blockful.jpeg
   })
 
   test('should get address', async () => {
@@ -27,7 +27,7 @@ describe('ENS reading', () => {
       universalResolverAddress: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
     })
 
-    expect(address).toMatch(/0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266/i) // case insensitive
+    expect(address).match(/0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266/i) // case insensitive
   })
 
   test('should get resolver', async () => {
@@ -36,7 +36,7 @@ describe('ENS reading', () => {
       universalResolverAddress: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
     })
 
-    expect(resolver).toBe('0x5FC8d32690cc91D4c39d9d3abcBD16989F875707')
+    expect(resolver).be('0x5FC8d32690cc91D4c39d9d3abcBD16989F875707')
   })
 
   test('should get name', async () => {
@@ -45,6 +45,6 @@ describe('ENS reading', () => {
       universalResolverAddress: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
     })
 
-    expect(name).toBe('public.eth')
+    expect(name).be('public.eth')
   })
 })
