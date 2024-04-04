@@ -49,7 +49,14 @@ const _ = (async () => {
     withSetContentHash(repo),
     withGetContentHash(repo),
     withQuery(), // required for Viem integration
-  ).makeApp('/', withSigner(privateKey as Hex))
+  ).makeApp(
+    '/',
+    withSigner(privateKey as Hex, [
+      'function text(bytes32 node, string key)',
+      'function addr(bytes32 node)',
+      'function contenthash(bytes32 node)',
+    ]),
+  )
 
   app.post(`/addrs/:node`, httpCreateAddress(repo))
   app.get(`/addrs/:node`, httpGetAddress(repo))

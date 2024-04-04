@@ -16,6 +16,7 @@ import {
   withGetText,
   withSetAddr,
   withSetContentHash,
+  withGetContentHash,
   withSetText,
 } from '../src/handlers'
 import { TypeORMRepository } from '../src/repositories'
@@ -23,7 +24,7 @@ import { Address, Text, Domain } from '../src/entities'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 
-describe('Gateway', () => {
+describe('Gateway Database', () => {
   let repo: TypeORMRepository, datasource: DataSource, domain: Domain
 
   beforeAll(async () => {
@@ -75,24 +76,23 @@ describe('Gateway', () => {
     })
 
     it('should handle GET contenthash', async () => {
-      const addr = new Address()
-      addr.coin = 60
-      addr.address = '0x1234567890123456789012345678901234567890'
-      addr.domain = domain
-      await datasource.manager.save(addr)
+      const content =
+        '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909'
+      domain.contenthash = content
+      await datasource.manager.save(domain)
 
-      const server = NewServer(withGetAddr(repo))
+      const server = NewServer(withGetContentHash(repo))
       const result = await doCall(
         server,
         abi,
         TEST_ADDRESS,
-        'addr',
+        'contenthash',
         domain.node,
       )
 
       expect(result.length).toEqual(1)
       const [value] = result
-      expect(value).toEqual('0x1234567890123456789012345678901234567890')
+      expect(value).toEqual(content)
     })
   })
 

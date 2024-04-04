@@ -26,7 +26,9 @@ export class TypeORMRepository {
     })
   }
 
-  async contentHash({ node }: GetAddressProps): Promise<string | undefined> {
+  async contentHash({
+    node,
+  }: GetAddressProps): Promise<`0x${string}` | undefined> {
     const domain = await this.client
       .getRepository(Domain)
       .createQueryBuilder('domain')
@@ -55,7 +57,7 @@ export class TypeORMRepository {
     )
   }
 
-  async addr({ node, coin }: GetAddressProps): Promise<string | undefined> {
+  async getAddr({ node, coin }: GetAddressProps): Promise<string | undefined> {
     const addr = await this.client
       .getRepository(Address)
       .createQueryBuilder('addr')

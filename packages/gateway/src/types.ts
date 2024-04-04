@@ -11,7 +11,7 @@ export type DomainProps = {
 
 export type SetContentHashProps = {
   node: string
-  contenthash: string
+  contenthash: `0x${string}`
 }
 
 export type SetAddressProps = {

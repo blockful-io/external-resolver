@@ -11,8 +11,8 @@ export class Domain {
   @PrimaryColumn()
   node: string
 
-  @Column({ nullable: true })
-  contenthash?: string
+  @Column({ nullable: true, length: 32 })
+  contenthash?: `0x${string}`
 
   @Column()
   ttl: number

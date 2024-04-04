@@ -25,7 +25,7 @@ export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
 }
 
 interface ReadRepository {
-  addr(params: GetAddressProps): Promise<string | undefined>
+  getAddr(params: GetAddressProps): Promise<string | undefined>
 }
 
 export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
@@ -37,7 +37,7 @@ export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
         coin: args.coin,
       }
       if (params.coin === undefined) params.coin = 60 // default: ether
-      const addr = await repo.addr(params)
+      const addr = await repo.getAddr(params)
       if (!addr) return []
       return [addr]
     },
@@ -64,7 +64,7 @@ export function httpGetAddress(repo: ReadRepository) {
     const { node } = req.params
     const { coin = 60 } = req.query
 
-    const response = await repo.addr({
+    const response = await repo.getAddr({
       node,
       coin: parseInt(coin as string),
     })

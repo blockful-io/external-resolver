@@ -24,7 +24,7 @@ export function withSetContentHash(
 }
 
 interface ReadRepository {
-  contentHash(params: DomainProps): Promise<string | undefined>
+  contentHash(params: DomainProps): Promise<`0x${string}` | undefined>
 }
 
 export function withGetContentHash(
