@@ -47,6 +47,10 @@ export function httpCreateText(repo: WriteRepository) {
     const { node } = req.params
     const { key, value } = req.body
 
+    if (!key) {
+      return res.status(400).json({ error: 'key is a required query param' })
+    }
+
     await repo.setText({
       node,
       key,

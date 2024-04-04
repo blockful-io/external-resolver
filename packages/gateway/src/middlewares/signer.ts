@@ -25,7 +25,10 @@ export function withSigner(privateKey: Hex, selectors: string[]) {
       const callData =
         req.method === 'GET' ? req.params.callData : req.body.data
 
-      if (!selectors.map(toFunctionSelector).includes(callData.slice(0, 10))) {
+      if (
+        !callData ||
+        !selectors.map(toFunctionSelector).includes(callData.slice(0, 10))
+      ) {
         return body
       }
 
