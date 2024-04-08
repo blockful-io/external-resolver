@@ -6,28 +6,18 @@ This project includes unit tests and end-to-end (E2E) tests. Below are the instr
 
 1. In the terminal, navigate to the contracts directory:
 ````cmd
-    cd packages/contracts && forge build
+    yarn contracts build
 ````
 
-2. After building the contracts, return to the root directory:
-````cmd
-    cd .. && cd ..
-````
-
-3. Start the local Hardhat node:
+2. Start the local Hardhat node:
 ````cmd
     yarn hardhat node
 ````
 
-4. With the local Hardhat node running, execute the E2E tests:
+3. With the local Hardhat node running, execute the E2E tests:
 ````cmd
-    yarn client hardhat test ./test/l2_e2e.spec.ts --network localhost
+    yarn client test
 ````
-
-    Make sure to edit the command as necessary to adjust the test file path and network, if applicable.
-
-
-
 
 
 # Running Tests with Local Arbitrum Node
@@ -68,5 +58,3 @@ git clone https://github.com/blockful-io/external-resolver.git
 ````bash
 yarn client hardhat test ./test/l2_e2e.spec.ts --network localhost
 `````
-
-Make sure to edit the command as necessary to adjust the test file path and network, if applicable.
