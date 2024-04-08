@@ -11,7 +11,7 @@ import {
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
-export class TypeORMRepository {
+export class PostgresRepository {
   private client: DataSource
 
   constructor(client: DataSource) {

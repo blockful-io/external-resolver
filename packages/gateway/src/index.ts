@@ -5,7 +5,7 @@ import 'reflect-metadata'
 import { Hex } from 'viem'
 import { config } from 'dotenv'
 
-import { NewDataSource } from './datasources/typeorm'
+import { NewDataSource } from './datasources/postgres'
 import {
   httpCreateAddress,
   httpGetAddress,
@@ -18,7 +18,7 @@ import {
   withGetContentHash,
   withSetContentHash,
 } from './handlers'
-import { TypeORMRepository } from './repositories/typeorm'
+import { PostgresRepository } from './repositories/postgres'
 
 import { NewApp } from './app'
 import { withSigner } from './middlewares'
@@ -39,7 +39,7 @@ const _ = (async () => {
   }
 
   const dbclient = await NewDataSource(dbUrl).initialize()
-  const repo = new TypeORMRepository(dbclient)
+  const repo = new PostgresRepository(dbclient)
 
   const app = NewApp(
     [

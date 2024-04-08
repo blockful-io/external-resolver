@@ -19,13 +19,13 @@ import {
   withGetContentHash,
   withSetText,
 } from '../src/handlers'
-import { TypeORMRepository } from '../src/repositories'
+import { PostgresRepository } from '../src/repositories'
 import { Address, Text, Domain } from '../src/entities'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 
 describe('Gateway Database', () => {
-  let repo: TypeORMRepository, datasource: DataSource, domain: Domain
+  let repo: PostgresRepository, datasource: DataSource, domain: Domain
 
   beforeAll(async () => {
     datasource = new DataSource({
@@ -34,7 +34,7 @@ describe('Gateway Database', () => {
       entities: [Text, Domain, Address],
       synchronize: true,
     })
-    repo = new TypeORMRepository(await datasource.initialize())
+    repo = new PostgresRepository(await datasource.initialize())
   })
 
   beforeEach(async () => {
