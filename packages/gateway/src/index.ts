@@ -7,20 +7,20 @@ import { config } from 'dotenv'
 
 import { NewDataSource } from './datasources/typeorm'
 import {
+  httpCreateAddress,
+  httpGetAddress,
+  httpCreateText,
+  httpGetText,
   withGetText,
   withSetText,
   withGetAddr,
   withSetAddr,
   withGetContentHash,
   withSetContentHash,
-  withQuery,
-  httpCreateAddress,
-  httpGetAddress,
-  httpCreateText,
-  httpGetText,
 } from './handlers'
 import { TypeORMRepository } from './repositories/typeorm'
-import { NewServer } from './server'
+
+import { NewApp } from './app'
 import { withSigner } from './middlewares'
 
 config({
@@ -33,29 +33,30 @@ const _ = (async () => {
   if (!dbUrl) {
     throw new Error('DATABASE_URL is required')
   }
-  const privateKey = process.env.GATEWAY_PRIVATE_KEY
+  const privateKey = process.env.PRIVATE_KEY
   if (!privateKey) {
-    throw new Error('GATEWAY_PRIVATE_KEY is required')
+    throw new Error('PRIVATE_KEY is required')
   }
 
   const dbclient = await NewDataSource(dbUrl).initialize()
   const repo = new TypeORMRepository(dbclient)
 
-  const app = NewServer(
-    withSetText(repo),
-    withGetText(repo),
-    withSetAddr(repo),
-    withGetAddr(repo),
-    withSetContentHash(repo),
-    withGetContentHash(repo),
-    withQuery(), // required for Viem integration
-  ).makeApp(
-    '/',
-    withSigner(privateKey as Hex, [
-      'function text(bytes32 node, string key)',
-      'function addr(bytes32 node)',
-      'function contenthash(bytes32 node)',
-    ]),
+  const app = NewApp(
+    [
+      withGetText(repo),
+      withSetText(repo),
+      withGetAddr(repo),
+      withSetAddr(repo),
+      withGetContentHash(repo),
+      withSetContentHash(repo),
+    ],
+    [
+      withSigner(privateKey as Hex, [
+        'function text(bytes32 node, string key)',
+        'function addr(bytes32 node)',
+        'function contenthash(bytes32 node)',
+      ]),
+    ],
   )
 
   app.post(`/addrs/:node`, httpCreateAddress(repo))

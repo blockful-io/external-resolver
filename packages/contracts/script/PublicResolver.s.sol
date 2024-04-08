@@ -43,7 +43,7 @@ contract PublicResolverScript is Script, ENSHelper {
         resolver.setText(namehash("public.eth"), "com.twitter", "@blockful");
 
         address[] memory t = new address[](1);
-        t[0] = 0x06b0e4af848d3EB6A44517e8ebca54fD220ca91b;
+        t[0] = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
         OffchainResolver off_resolver = new OffchainResolver("http://localhost:3000/{sender}/{data}.json", t);
 

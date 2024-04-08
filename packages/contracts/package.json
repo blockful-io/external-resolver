@@ -6,7 +6,8 @@
     "test:watch": "forge test -vvv --watch",
     "start": "anvil & copyfiles ../../.env contracts/.env && forge script script/PublicResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
     "postinstall": "forge install",
-    "lint": "solhint src/**/*.sol --fix --noPrompt"
+    "lint": "solhint src/**/*.sol --fix --noPrompt",
+    "build": "forge build"
   },
   "devDependencies": {
     "copyfiles": "^2.4.1",
