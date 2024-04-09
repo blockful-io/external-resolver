@@ -7,6 +7,10 @@ import { Hex } from 'viem'
  * function query(OffchainLookupCallData[] memory data)
  * see docs: https://github.com/ensdomains/ens-contracts/blob/staging/contracts/utils/UniversalResolver.sol#L70
  *
+ * It works based on recursion given that the Gateway calls itself when its own
+ * URL is given, but redirecting the request to the respective handler.
+ * It may cause weird behavior when debugging, so bare this in mind.
+ *
  * @returns array of failures
  * @returns array of responses from the gateway
  */

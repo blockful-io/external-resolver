@@ -95,6 +95,22 @@ describe('Gateway Database', () => {
       expect(value).toEqual(content)
       expect(result.ttl).toEqual(domain.ttl)
     })
+
+    it('should set new contenthash on invalid domain', async () => {
+      const contenthash =
+        '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
+      const server = NewServer(withSetContentHash(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'setContenthash',
+        namehash('0xiiiiii'),
+        contenthash,
+      )
+
+      expect(result.data.length).toEqual(0)
+    })
   })
 
   describe('Text', () => {

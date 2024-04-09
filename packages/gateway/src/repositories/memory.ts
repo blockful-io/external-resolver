@@ -8,6 +8,9 @@ import {
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
+/* The `InMemoryRepository` is a repository implementation that
+stores domains, addresses, and texts in memory and provides methods for changing values
+for testing purposes. */
 export class InMemoryRepository {
   private domains: Map<string, Domain>
   private addresses: Map<string, Address>

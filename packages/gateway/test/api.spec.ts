@@ -65,10 +65,7 @@ describe('Gateway API', () => {
       const contenthash =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
 
-      const app = NewServer(withSetContentHash(repo)).makeApp(
-        '/',
-        withSigner(privateKey, []),
-      )
+      const app = NewServer(withSetContentHash(repo)).makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
@@ -130,10 +127,7 @@ describe('Gateway API', () => {
     it('should handle request for set new text', async () => {
       const key = 'company'
       const value = 'blockful'
-      const app = NewServer(withSetText(repo)).makeApp(
-        '/',
-        withSigner(privateKey, []),
-      )
+      const app = NewServer(withSetText(repo)).makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
@@ -159,10 +153,7 @@ describe('Gateway API', () => {
           value: 'blockful',
         },
       ])
-      const app = NewServer(withSetText(repo)).makeApp(
-        '/',
-        withSigner(privateKey, []),
-      )
+      const app = NewServer(withSetText(repo)).makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
@@ -253,10 +244,7 @@ describe('Gateway API', () => {
 
     it('should handle set request for setAddr on ethereum', async () => {
       const address = privateKeyToAddress(privateKey)
-      const app = NewServer(withSetAddr(repo)).makeApp(
-        '/',
-        withSigner(privateKey, []),
-      )
+      const app = NewServer(withSetAddr(repo)).makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,

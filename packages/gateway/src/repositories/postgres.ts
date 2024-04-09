@@ -11,6 +11,8 @@ import {
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
+/* The PostgresRepository class provides methods for setting and getting content
+hash, address, and text data in a PostgreSQL database. */
 export class PostgresRepository {
   private client: DataSource
 
