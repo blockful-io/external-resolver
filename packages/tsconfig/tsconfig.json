@@ -9,6 +9,7 @@
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
+    "resolveJsonModule": true
   },
   "exclude": [
     "node_modules",

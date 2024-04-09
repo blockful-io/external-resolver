@@ -8,7 +8,8 @@
     "lint": "eslint . --ext .ts --fix"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.1.0",
+    "typescript": "^5.4.3"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
@@ -24,12 +25,13 @@
     "@types/chai": "^4.2.0",
     "@types/mocha": ">=9.1.0",
     "chai": "^4.2.0",
+    "commander": "^12.0.0",
     "ethers": "^6.11.1",
     "hardhat": "^2.22.2",
     "hardhat-ethers": "^1.0.1",
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.1",
-    "viem": "^2.7.15"
+    "viem": "^2.9.3"
   },
   "peerDependencies": {
     "@blockful/tsconfig": "workspace:^"

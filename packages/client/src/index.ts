@@ -6,7 +6,7 @@
 import { Command } from 'commander'
 import { createPublicClient, http } from 'viem'
 import { normalize } from 'viem/ens'
-import { localhost } from 'viem/chains'
+import { anvil } from 'viem/chains'
 
 // Define command-line options using Commander
 const program = new Command()
@@ -20,20 +20,25 @@ program.parse(process.argv)
 const { resolver, provider } = program.opts()
 
 const client = createPublicClient({
-  chain: localhost,
+  chain: anvil,
   transport: http(provider),
 })
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const ensAddress = normalize('public.eth')
+  const publicAddress = normalize('public.eth')
 
+  const twitter = await client.getEnsText({
+    name: publicAddress,
+    key: 'com.twitter',
+    universalResolverAddress: resolver,
+  })
   const avatar = await client.getEnsAvatar({
-    name: ensAddress,
+    name: publicAddress,
     universalResolverAddress: resolver,
   })
   const address = await client.getEnsAddress({
-    name: ensAddress,
+    name: publicAddress,
     universalResolverAddress: resolver,
   })
   const name = await client.getEnsName({
@@ -41,9 +46,32 @@ const _ = (async () => {
     universalResolverAddress: resolver,
   })
 
-  console.log({
+  console.log('public resolver', {
+    twitter,
     avatar,
     name,
     address,
+  })
+
+  const databaseAddress = normalize('database.eth')
+
+  const dbTwitter = await client.getEnsText({
+    name: databaseAddress,
+    key: 'com.twitter',
+    universalResolverAddress: resolver,
+  })
+  const dbAvatar = await client.getEnsAvatar({
+    name: databaseAddress,
+    universalResolverAddress: resolver,
+  })
+  const dbAddress = await client.getEnsAddress({
+    name: databaseAddress,
+    universalResolverAddress: resolver,
+  })
+
+  console.log('database resolver', {
+    dbTwitter,
+    dbAvatar,
+    dbAddress,
   })
 })()

@@ -1,5 +1,12 @@
-import * as ccipread from '@chainlink/ccip-read-server'
-import { Interface } from 'ethers/lib/utils'
+import * as ccipread from '@blockful/ccip-server'
+import {
+  parseAbi,
+  encodeFunctionData,
+  decodeFunctionResult,
+  toFunctionHash,
+  getAbiItem,
+  AbiFunction,
+} from 'viem'
 
 /**
  * Executes a function call on the specified server using the provided ABI and arguments.
@@ -17,15 +24,21 @@ export async function doCall(
   path: string,
   type: string,
   ...args: any[] // eslint-disable-line
-) {
-  const iface = new Interface(abi)
-  const handler = server.handlers[iface.getSighash(type)]
+): Promise<{ data: Array<unknown>; ttl?: bigint }> {
+  const iface = parseAbi(abi)
+  const func = getAbiItem({ abi: iface, name: type })
+  if (!func) {
+    throw Error('Unknown handler')
+  }
+
+  const funcSelector = toFunctionHash(func as AbiFunction)
+  const handler = server.handlers[funcSelector.slice(0, 10)]
 
   // Check if the handler for the specified function type is registered
   if (!handler) throw Error('Unknown handler')
 
   // Encode function data using ABI and arguments
-  const calldata = iface.encodeFunctionData(type, args)
+  const calldata = encodeFunctionData({ abi: iface, functionName: type, args })
 
   // Make a server call with encoded function data
   const result = await server.call({ to: path, data: calldata })
@@ -34,7 +47,19 @@ export async function doCall(
   if (result.status !== 200) throw Error(result.body.message)
 
   // Returns an empty array if the function has no outputs
-  if (!handler.type.outputs) return []
+  if (!handler.type.outputs) return { data: [] }
 
-  return iface.decodeFunctionResult(handler.type, result.body.data)
+  const decodedResponse = decodeFunctionResult({
+    abi: iface,
+    functionName: type,
+    data: result.body.data,
+  })
+  switch (decodedResponse) {
+    case undefined:
+      return { data: [] }
+    case Object:
+      return { data: Object.values(decodedResponse), ttl: result.body?.ttl }
+    default:
+      return { data: [decodedResponse], ttl: result.body?.ttl }
+  }
 }

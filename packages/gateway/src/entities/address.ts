@@ -13,7 +13,7 @@ export class Address {
   @Column()
   address: string
 
-  @JoinColumn({ name: 'domain', referencedColumnName: 'namehash' })
+  @JoinColumn({ name: 'domain', referencedColumnName: 'node' })
   @ManyToOne(() => Domain, (domain) => domain.addresses)
   domain: Domain
 }

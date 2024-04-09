@@ -1,0 +1,19 @@
+{
+  "name": "@blockful/ccip-server",
+  "packageManager": "yarn@4.1.0",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "cors": "2.8.5",
+    "ethers": "5.3.1",
+    "express": "4.17.1"
+  },
+  "peerDependencies": {
+    "@blockful/tsconfig": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17"
+  }
+}

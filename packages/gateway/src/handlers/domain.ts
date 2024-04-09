@@ -1,5 +1,4 @@
-import ethers from 'ethers'
-import * as ccip from '@chainlink/ccip-read-server'
+import * as ccip from '@blockful/ccip-server'
 
 import { DomainProps, Response, SetContentHashProps } from '../types'
 
@@ -12,19 +11,19 @@ export function withSetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'setContenthash',
-    func: async (args: ethers.utils.Result) => {
+    func: async (args) => {
       const params: SetContentHashProps = {
         node: args.node,
         contenthash: args.contenthash,
       }
       await repo.setContentHash(params)
-      return []
+      return { data: [] }
     },
   }
 }
 
 interface ReadRepository {
-  contentHash(params: DomainProps): Promise<Response | undefined>
+  getContentHash(params: DomainProps): Promise<Response | undefined>
 }
 
 export function withGetContentHash(
@@ -32,13 +31,13 @@ export function withGetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'contenthash',
-    func: async (args: ethers.utils.Result) => {
+    func: async (args): Promise<ccip.HandlerResponse> => {
       const params: DomainProps = {
         node: args.node,
       }
-      const addr = await repo.contentHash(params)
-      if (!addr) return []
-      return [addr.value]
+      const content = await repo.getContentHash(params)
+      if (!content) return { data: [] }
+      return { data: [content.value], extraData: content.ttl }
     },
   }
 }

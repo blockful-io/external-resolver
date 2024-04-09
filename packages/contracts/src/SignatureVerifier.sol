@@ -16,7 +16,9 @@ library SignatureVerifier {
         pure
         returns (bytes32)
     {
-        return keccak256(abi.encodePacked(hex"1900", target, expires, keccak256(request), keccak256(result)));
+        return ECDSA.toEthSignedMessageHash(
+            keccak256(abi.encodePacked(hex"1900", target, expires, keccak256(request), keccak256(result)))
+        );
     }
 
     /**

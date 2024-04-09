@@ -1,0 +1,6 @@
+{
+  "extends": "@blockful/tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "noImplicitAny": false
+  }
+}

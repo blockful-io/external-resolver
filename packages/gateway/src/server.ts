@@ -14,10 +14,11 @@
  * ```
  *
  */
-import * as ccip from '@chainlink/ccip-read-server'
+import * as ccip from '@blockful/ccip-server'
 
 // Application Binary Interfaces
 const abi: string[] = [
+  'function query((address sender, string[] urls,bytes callData)[] memory data) external returns (bool[] memory failures, bytes[] memory responses)',
   'function setText(bytes32 node, string calldata key, string calldata value)',
   'function text(bytes32 node, string key) view returns (string)',
   'function setAddr(bytes32 node, address addr)',

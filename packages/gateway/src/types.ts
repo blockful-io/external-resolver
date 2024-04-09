@@ -1,4 +1,9 @@
-export type Response = { value: string }
+import { Hex, SignableMessage } from 'viem'
+
+export type Response = {
+  value: string
+  ttl: number
+}
 
 export type DomainProps = {
   node: string
@@ -6,7 +11,7 @@ export type DomainProps = {
 
 export type SetContentHashProps = {
   node: string
-  contenthash: string
+  contenthash: `0x${string}`
 }
 
 export type SetAddressProps = {
@@ -29,4 +34,8 @@ export type SetTextProps = {
 export type GetTextProps = {
   node: string
   key: string
+}
+
+export interface Signer {
+  sign: (msg: SignableMessage) => Promise<Hex>
 }
