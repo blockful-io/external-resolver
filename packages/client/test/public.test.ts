@@ -10,7 +10,7 @@ const client = createTestClient({
 }).extend(publicActions)
 
 describe('ENS reading', () => {
-  const ensAddress = normalize('public.eth')
+  const ensAddress = normalize('blockful.eth')
 
   test('should get avatar', async () => {
     const avatar = await client.getEnsAvatar({
@@ -45,6 +45,6 @@ describe('ENS reading', () => {
       universalResolverAddress: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
     })
 
-    expect(name).be('public.eth')
+    expect(name).be('blockful.eth')
   })
 })

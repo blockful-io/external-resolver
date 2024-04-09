@@ -10,7 +10,7 @@ import "./SignatureVerifier.sol";
  * Implements an ENS resolver that directs all queries to a CCIP read gateway.
  * Callers must implement EIP 3668 and ENSIP 10.
  */
-contract OffchainResolver is IExtendedResolver, IERC165, Ownable {
+contract DatabaseResolver is IExtendedResolver, IERC165, Ownable {
     string public url;
     mapping(address => bool) public signers;
 
@@ -55,7 +55,7 @@ contract OffchainResolver is IExtendedResolver, IERC165, Ownable {
 
         // revert with the OffchainLookup error, which will be caught by the client
         revert OffchainLookup(
-            address(this), urls, data, OffchainResolver.resolveWithProof.selector, abi.encode(data, address(this))
+            address(this), urls, data, DatabaseResolver.resolveWithProof.selector, abi.encode(data, address(this))
         );
     }
 

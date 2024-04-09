@@ -11,7 +11,7 @@
 import {
   abi as abiOffchainResolver,
   bytecode as bytecodeOffchainResolver,
-} from '@blockful/contracts/out/OffchainResolver.sol/OffchainResolver.json'
+} from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import {
   abi as abiRegistry,
   bytecode as bytecodeRegistry,
@@ -39,9 +39,6 @@ import { InMemoryRepository } from '@blockful/gateway/src/repositories'
 import { withSigner } from '@blockful/gateway/src/middlewares'
 
 const gatewayUrl = 'http://127.0.0.1:3000/{sender}/{data}.json'
-// Creating an example of Bytes32 variable to represent the Node.
-const root =
-  '0x0000000000000000000000000000000000000000000000000000000000000000'
 
 let dbResolver: Contract,
   registry: Contract,
@@ -80,7 +77,7 @@ async function deployRegistry() {
   )
 
   await registry.setSubnodeRecord(
-    root,
+    eth.ZeroHash,
     labelhash('eth'),
     signers[0],
     await dbResolver.getAddress(),

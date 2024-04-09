@@ -7,11 +7,10 @@ import "@ens-contracts/registry/ENSRegistry.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import "@ens-contracts/utils/UniversalResolver.sol";
-import {OffchainResolver} from "../src/OffchainResolver.sol";
+import {DatabaseResolver} from "../src/DatabaseResolver.sol";
 
-// OffchainResolverTest is a test contract for OffchainResolver
-contract OffchainResolverTest is Test, ENSHelper {
-    OffchainResolver public resolver;
+contract DatabaseResolverTest is Test, ENSHelper {
+    DatabaseResolver public resolver;
     ENSRegistry public registry;
     address constant owner = address(0x1337);
 
@@ -27,17 +26,13 @@ contract OffchainResolverTest is Test, ENSHelper {
         // .reverse
         registry.setSubnodeOwner(rootNode, labelhash("reverse"), owner);
         // addr.reverse
-        registry.setSubnodeOwner(
-            namehash("reverse"),
-            labelhash("addr"),
-            address(registrar)
-        );
+        registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
 
-        // OffchainResolver contract setup
+        // DatabaseResolver contract setup
         address[] memory signers = new address[](1);
         signers[0] = address(0x1337);
         string memory url = "http://localhost:3000/{sender}/{data}.json";
-        resolver = new OffchainResolver(url, signers);
+        resolver = new DatabaseResolver(url, signers);
         registrar.setDefaultResolver(address(resolver));
 
         vm.stopPrank();
@@ -46,13 +41,7 @@ contract OffchainResolverTest is Test, ENSHelper {
     // Test the setSubnodeRecord function for the first level
     function test_SetSubnodeRecord1stLevel() external {
         vm.prank(owner);
-        registry.setSubnodeRecord(
-            rootNode,
-            labelhash("eth"),
-            owner,
-            address(resolver),
-            10000000
-        );
+        registry.setSubnodeRecord(rootNode, labelhash("eth"), owner, address(resolver), 10000000);
 
         assertEq(registry.owner(namehash("eth")), owner);
         assertEq(registry.resolver(namehash("eth")), address(resolver));
@@ -61,24 +50,12 @@ contract OffchainResolverTest is Test, ENSHelper {
     // Test the setSubnodeRecord function for the second level
     function test_SetSubnodeRecord2nLevel() external {
         vm.prank(owner);
-        registry.setSubnodeRecord(
-            rootNode,
-            labelhash("eth"),
-            owner,
-            address(resolver),
-            10000000
-        );
+        registry.setSubnodeRecord(rootNode, labelhash("eth"), owner, address(resolver), 10000000);
         vm.prank(owner);
-        registry.setSubnodeRecord(
-            namehash("eth"),
-            labelhash("public"),
-            owner,
-            address(resolver),
-            10000000
-        );
+        registry.setSubnodeRecord(namehash("eth"), labelhash("blockful"), owner, address(resolver), 10000000);
 
-        assertEq(registry.owner(namehash("public.eth")), owner);
-        assertEq(registry.resolver(namehash("public.eth")), address(resolver));
+        assertEq(registry.owner(namehash("blockful.eth")), owner);
+        assertEq(registry.resolver(namehash("blockful.eth")), address(resolver));
     }
 
     // Test the resolver setup from the constructor
