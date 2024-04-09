@@ -65,8 +65,6 @@ async function deployOffchainResolver() {
     abiOffchainResolver,
     await ResolverContract.getAddress(),
   )
-
-  console.log('Offchain resolver: ', await ResolverContract.getAddress())
 }
 
 async function deployRegistry() {
@@ -80,7 +78,6 @@ async function deployRegistry() {
     abiRegistry,
     await RegistryContract.getAddress(),
   )
-  console.log('Registry: ', await RegistryContract.getAddress())
 
   await registry.setSubnodeRecord(
     root,
@@ -109,7 +106,6 @@ async function deployUniversalResolver() {
     abiUniversalResolver,
     await UniversalResolverContract.getAddress(),
   )
-  console.log('universal resolver: ', await universalResolver.getAddress())
 }
 
 function setupGateway(
@@ -181,7 +177,7 @@ describe('DatabaseResolver', () => {
     )
   })
 
-  it('should read com.twitter text record from database', async () => {
+  it('should read valid text record from database', async () => {
     repo.setTexts([
       {
         domain,
@@ -199,6 +195,17 @@ describe('DatabaseResolver', () => {
     expect(twitter).equal('@database')
   })
 
+  it('should read invalid text record from database', async () => {
+    const twitter = await client.getEnsText({
+      name: normalize(rawNode),
+      key: 'com.twitter',
+      universalResolverAddress:
+        (await universalResolver.getAddress()) as `0x${string}`,
+    })
+
+    expect(twitter).to.be.an('null')
+  })
+
   it('should read ETH address from database', async () => {
     repo.setAddresses([
       {
@@ -214,5 +221,26 @@ describe('DatabaseResolver', () => {
     })
 
     expect(addr).to.match(/0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5/i)
+  })
+
+  it('should read invalid address from database', async () => {
+    const addr = await client.getEnsAddress({
+      name: normalize(rawNode),
+      universalResolverAddress:
+        (await universalResolver.getAddress()) as `0x${string}`,
+    })
+
+    expect(addr).to.be.an('null')
+  })
+
+  it('should handle unsupported method', async () => {
+    const addr = await client.getEnsAddress({
+      name: normalize(rawNode),
+      coinType: 1,
+      universalResolverAddress:
+        (await universalResolver.getAddress()) as `0x${string}`,
+    })
+
+    expect(addr).to.be.an('null')
   })
 })
