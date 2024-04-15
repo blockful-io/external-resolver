@@ -29,7 +29,35 @@
       ],
       "args": [
         "--resolver",
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+        "0x5802F43B310d3B20eEE0303E39F0657f87Aa8BFF"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug l2 client",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/packages/client/src/l2_index.ts",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/client/tsconfig.json",
+      },
+      "console": "integratedTerminal",
+      "outFiles": [
+        "${workspaceFolder}/**/*.js",
+        "!**/node_modules/**"
+      ],
+      "args": [
+        "--resolver",
+        "0x5802F43B310d3B20eEE0303E39F0657f87Aa8BFF"
       ]
     },
     {
@@ -56,7 +84,32 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/packages/gateway/src/index.ts",
+      "program": "${workspaceFolder}/packages/gateway/cmd/database.ts",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
+        "ENV_FILE": "${workspaceFolder}/.env"
+      },
+      "console": "integratedTerminal",
+      "outFiles": [
+        "${workspaceFolder}/**/*.js",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "gateway arbitrum debug ts",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/packages/gateway/cmd/arbitrum.ts",
       "runtimeArgs": [
         "-r",
         "ts-node/register",
