@@ -4,7 +4,8 @@
   "scripts": {
     "test": "forge test -vvv",
     "test:watch": "forge test -vvv --watch",
-    "start": "anvil & copyfiles ../../.env contracts/.env && forge script script/PublicResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
+    "start": "anvil & copyfiles ../../.env contracts/.env && forge script script/PublicResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv ",
+    "start:Arbitrum": "copyfiles ../../.env contracts/.env && forge script script/ArbitrumDeployL1.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vv && forge script script/ArbitrumDeployL2.s.sol --rpc-url http://localhost:8547 --broadcast -vv",
     "postinstall": "forge install",
     "lint": "solhint src/**/*.sol --fix --noPrompt",
     "build": "forge build"
