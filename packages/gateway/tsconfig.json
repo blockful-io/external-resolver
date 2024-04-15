@@ -9,6 +9,8 @@
     "noImplicitAny": false
   },
   "include": [
-    "src"
+    "src",
+    "cmd/database.ts",
+    "cmd/arbitrum.ts"
   ]
 }
