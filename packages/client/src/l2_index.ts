@@ -12,7 +12,7 @@ import { anvil } from 'viem/chains'
 const program = new Command()
 program
   .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
-  .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
+  .option('-p --provider <url>', 'web3 provider URL', process.env.LAYER_ONE_RPC)
   .option('-i --chainId <chainId>', 'chainId', '1337')
 
 program.parse(process.argv)

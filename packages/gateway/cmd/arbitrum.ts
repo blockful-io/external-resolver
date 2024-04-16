@@ -28,11 +28,9 @@ const _ = (async () => {
   const privateKey = process.env.PRIVATE_KEY_ARBITRUM
 
   const repo = new L2Repository(
-    'http://127.0.0.1:8547/',
-    '0xdfF854d7380Cb5aC8Da05b39F431907F963Bdf4F',
+    process.env.LAYER2_RPC as string,
+    process.env.L2_RESOLVER_ADDR as string,
   )
-  // const dbclient = await NewDataSource(dbUrl).initialize()
-  // const repo = new TypeORMRepository(dbclient)
 
   const app = NewServer(
     // withSetText(repo),
