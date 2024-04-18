@@ -6,23 +6,26 @@
 import { Command } from 'commander'
 import { createPublicClient, http } from 'viem'
 import { normalize } from 'viem/ens'
-import { anvil } from 'viem/chains'
+import { sepolia } from 'viem/chains'
+import dotenv from 'dotenv'
 
 // Define command-line options using Commander
 const program = new Command()
 program
   .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
   .option('-p --provider <url>', 'web3 provider URL', process.env.LAYER_ONE_RPC)
-  .option('-i --chainId <chainId>', 'chainId', '1337')
+  .option('-i --chainId <chainId>', 'chainId', process.env.CHAIN_ID)
 
 program.parse(process.argv)
 
 const { provider } = program.opts()
+dotenv.config({ debug: false })
 
 const client = createPublicClient({
-  chain: anvil,
+  chain: sepolia, // use anvil for local RPCs
   transport: http(provider),
 })
+const universalAddress = process.env.L1_UNIVERSAL_RESOLVER as `0x${string}`
 
 // eslint-disable-next-line
 const _ = (async () => {
@@ -31,17 +34,17 @@ const _ = (async () => {
   const dbTwitter = await client.getEnsText({
     name: databaseAddress,
     key: 'com.twitter',
-    universalResolverAddress: '0xB74201731dA171E3276344B3aFDeCB86361F9f99',
+    universalResolverAddress: universalAddress,
   })
 
   const dbAddress = await client.getEnsAddress({
     name: databaseAddress,
-    universalResolverAddress: '0xB74201731dA171E3276344B3aFDeCB86361F9f99',
+    universalResolverAddress: universalAddress,
   })
 
   const avatar = await client.getEnsAvatar({
     name: databaseAddress,
-    universalResolverAddress: '0xB74201731dA171E3276344B3aFDeCB86361F9f99',
+    universalResolverAddress: universalAddress,
   })
 
   console.log('Layer 2 resolver: ', {
