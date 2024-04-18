@@ -5,7 +5,9 @@
     "test": "forge test -vvv",
     "test:watch": "forge test -vvv --watch",
     "start": "anvil & copyfiles ../../.env contracts/.env && forge script script/PublicResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv ",
-    "start:Arbitrum": "copyfiles ../../.env contracts/.env && forge script script/ArbitrumDeployL1.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vv && forge script script/ArbitrumDeployL2.s.sol --rpc-url http://localhost:8547 --broadcast -vv",
+    "start:ArbitrumLocally": "copyfiles ../../.env contracts/.env && forge script script/ArbitrumDeployL1.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vv && forge script script/ArbitrumDeployL2.s.sol --rpc-url http://localhost:8547 --broadcast -vv",
+    "deploy:ArbitrumLayer1": "copyfiles ../../.env contracts/.env && forge script script/ArbitrumDeployL1.s.sol --gas-estimate-multiplier 200 --rpc-url https://sepolia.drpc.org --broadcast -vv",
+    "deploy:ArbitrumLayer2": "copyfiles ../../.env contracts/.env && forge script script/ArbitrumDeployL2.s.sol --gas-estimate-multiplier 700  --rpc-url https://sepolia-rollup.arbitrum.io/rpc --broadcast -vv",
     "postinstall": "forge install",
     "lint": "solhint src/**/*.sol --fix --noPrompt",
     "build": "forge build"
