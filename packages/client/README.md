@@ -28,3 +28,4 @@ yarn gateway start:l2
 ````
 
 4 - Execute "debug l2 client" on the vscode debuger to call the client.
+![debug l2 client](https://github.com/blockful-io/external-resolver/assets/69486932/6695c0df-a6bd-421c-966e-b0accbc4a052)
