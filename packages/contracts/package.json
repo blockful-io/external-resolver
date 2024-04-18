@@ -8,7 +8,7 @@
     "start:db": "anvil & copyfiles ../../.env contracts/.env && forge script script/DatabaseResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
     "start:arb": "anvil & copyfiles ../../.env contracts/.env && forge script script/OffchainResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
     "postinstall": "forge install",
-    "lint": "solhint src/**/*.sol --fix --noPrompt",
+    "lint": "solhint src/**/*.sol --fix",
     "build": "forge build"
   },
   "devDependencies": {
