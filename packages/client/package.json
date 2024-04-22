@@ -2,12 +2,12 @@
   "name": "@blockful/client",
   "packageManager": "yarn@4.1.0",
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test:db:e2e": "hardhat test ./test/db.e2e.spec.ts --network localhost",
     "start": "nodemon src/index.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     "lint": "eslint . --ext .ts --fix"
   },
   "devDependencies": {
+    "@blockful/gateway": "workspace:^",
     "nodemon": "^3.1.0",
     "typescript": "^5.4.3"
   },

@@ -25,18 +25,9 @@ contract PublicResolverTest is Test, ENSHelper {
         // .reverse
         registry.setSubnodeOwner(rootNode, labelhash("reverse"), owner);
         // addr.reverse
-        registry.setSubnodeOwner(
-            namehash("reverse"),
-            labelhash("addr"),
-            address(registrar)
-        );
+        registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
 
-        resolver = new PublicResolver(
-            registry,
-            INameWrapper(owner),
-            owner,
-            address(registrar)
-        );
+        resolver = new PublicResolver(registry, INameWrapper(owner), owner, address(registrar));
         registrar.setDefaultResolver(address(resolver));
 
         vm.stopPrank();
@@ -44,13 +35,7 @@ contract PublicResolverTest is Test, ENSHelper {
 
     function test_SetSubnodeRecord1stLevel() external {
         vm.prank(owner);
-        registry.setSubnodeRecord(
-            rootNode,
-            labelhash("eth"),
-            owner,
-            address(resolver),
-            10000000
-        );
+        registry.setSubnodeRecord(rootNode, labelhash("eth"), owner, address(resolver), 10000000);
 
         assertEq(registry.owner(namehash("eth")), owner);
         assertEq(registry.resolver(namehash("eth")), address(resolver));
@@ -58,59 +43,37 @@ contract PublicResolverTest is Test, ENSHelper {
 
     function test_SetSubnodeRecord2nLevel() external {
         vm.prank(owner);
-        registry.setSubnodeRecord(
-            rootNode,
-            labelhash("eth"),
-            owner,
-            address(resolver),
-            10000000
-        );
+        registry.setSubnodeRecord(rootNode, labelhash("eth"), owner, address(resolver), 10000000);
         vm.prank(owner);
-        registry.setSubnodeRecord(
-            namehash("eth"),
-            labelhash("public"),
-            owner,
-            address(resolver),
-            10000000
-        );
+        registry.setSubnodeRecord(namehash("eth"), labelhash("blockful"), owner, address(resolver), 10000000);
 
-        assertEq(registry.owner(namehash("public.eth")), owner);
-        assertEq(registry.resolver(namehash("public.eth")), address(resolver));
+        assertEq(registry.owner(namehash("blockful.eth")), owner);
+        assertEq(registry.resolver(namehash("blockful.eth")), address(resolver));
     }
 
     function test_Text() public {
         vm.prank(owner);
-        resolver.setText(namehash("public.eth"), "avatar", "blockful.png");
+        resolver.setText(namehash("blockful.eth"), "avatar", "blockful.png");
 
-        assertEq(
-            resolver.text(namehash("public.eth"), "avatar"),
-            "blockful.png"
-        );
+        assertEq(resolver.text(namehash("blockful.eth"), "avatar"), "blockful.png");
     }
 
     function test_Addr() public {
         vm.prank(owner);
-        resolver.setAddr(namehash("public.eth"), owner);
+        resolver.setAddr(namehash("blockful.eth"), owner);
 
-        assertEq(resolver.addr(namehash("public.eth")), owner);
+        assertEq(resolver.addr(namehash("blockful.eth")), owner);
     }
 
     function test_AddrMultiCoin() public {
         vm.prank(owner);
-        resolver.setAddr(
-            namehash("public.eth"),
-            uint256(60),
-            abi.encodePacked(owner)
-        );
-        assertEq(
-            resolver.addr(namehash("public.eth"), uint256(60)),
-            abi.encodePacked(owner)
-        );
+        resolver.setAddr(namehash("blockful.eth"), uint256(60), abi.encodePacked(owner));
+        assertEq(resolver.addr(namehash("blockful.eth"), uint256(60)), abi.encodePacked(owner));
     }
 
     function test_Name() public {
         vm.prank(owner);
-        resolver.setName(namehash("public.eth"), "blockful");
-        assertEq(resolver.name(namehash("public.eth")), "blockful");
+        resolver.setName(namehash("blockful.eth"), "blockful");
+        assertEq(resolver.name(namehash("blockful.eth")), "blockful");
     }
 }

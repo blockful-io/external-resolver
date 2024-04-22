@@ -5,11 +5,11 @@ import {Script, console} from "forge-std/Script.sol";
 import "@ens-contracts/registry/ENSRegistry.sol";
 import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import "@ens-contracts/utils/UniversalResolver.sol";
-import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 
 import "../src/Helper.sol";
+import {DatabaseResolver} from "../src/DatabaseResolver.sol";
 
-contract PublicResolverScript is Script, ENSHelper {
+contract DatabaseResolverScript is Script, ENSHelper {
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         address publicKey = vm.addr(privateKey);
@@ -26,19 +26,14 @@ contract PublicResolverScript is Script, ENSHelper {
         // addr.reverse
         registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
 
-        PublicResolver resolver = new PublicResolver(registry, INameWrapper(publicKey), publicKey, address(registrar));
-        registrar.setDefaultResolver(address(resolver));
+        address[] memory t = new address[](1);
+        t[0] = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+        DatabaseResolver resolver = new DatabaseResolver("http://localhost:3000/{sender}/{data}.json", t);
 
         // .eth
         registry.setSubnodeRecord(rootNode, labelhash("eth"), publicKey, address(resolver), 100000);
         // blockful.eth
         registry.setSubnodeRecord(namehash("eth"), labelhash("blockful"), publicKey, address(resolver), 100000);
-
-        // inital properties
-        // resolver.setAddr(namehash("blockful.eth"), publicKey);
-        // registrar.setName("blockful.eth");
-        // resolver.setText(namehash("blockful.eth"), "avatar", "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ"); // blockful.jpeg
-        // resolver.setText(namehash("blockful.eth"), "com.twitter", "@blockful");
 
         vm.stopBroadcast();
     }

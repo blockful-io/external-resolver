@@ -1,5 +1,5 @@
 import * as ccip from '@blockful/ccip-server'
-import { ccipRequest } from 'viem/utils'
+import { ccipRequest, pad } from 'viem/utils'
 import { Hex } from 'viem'
 
 /**
@@ -26,7 +26,7 @@ export function withQuery(): ccip.HandlerDescription {
           responses.push(result)
           failures.push(false)
         } catch (err) {
-          responses.push('0x0')
+          responses.push(pad('0x'))
           failures.push(true)
         }
       }
