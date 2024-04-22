@@ -25,15 +25,10 @@ contract L1Verifier is IEVMVerifier {
 
     function getStorageValues(address target, bytes32[] memory commands, bytes[] memory constants, bytes memory proof)
         external
-        view
+        pure
         returns (bytes[] memory values)
     {
         (L1WitnessData memory l1Data, StateProof memory stateProof) = abi.decode(proof, (L1WitnessData, StateProof));
-        if (keccak256(l1Data.blockHeader) != blockhash(l1Data.blockNo)) {
-            revert BlockHeaderHashMismatch(
-                block.number, l1Data.blockNo, blockhash(l1Data.blockNo), keccak256(l1Data.blockHeader)
-            );
-        }
         RLPReader.RLPItem[] memory headerFields = RLPReader.readList(l1Data.blockHeader);
         bytes32 stateRoot = bytes32(RLPReader.readBytes(headerFields[3]));
         return EVMProofHelper.getStorageValues(target, commands, constants, stateRoot, stateProof);
