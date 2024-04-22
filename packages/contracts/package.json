@@ -4,9 +4,9 @@
   "scripts": {
     "test": "forge test -vvv",
     "test:watch": "forge test -vvv --watch",
-    "start:l1": "anvil & forge script script/local/PublicResolver.s.sol --rpc-url ${RPC_URL} --broadcast -vv",
-    "start:db": "anvil & forge script script/local/DatabaseResolver.s.sol --rpc-url ${RPC_URL} --broadcast -vv",
-    "start:arb": "anvil & forge script script/local/OffchainResolver.s.sol --rpc-url ${RPC_URL} --broadcast -vv",
+    "start:l1": "anvil & forge script script/local/PublicResolver.s.sol --rpc-url localhost:8545 --broadcast -vv",
+    "start:db": "anvil & forge script script/local/DatabaseResolver.s.sol --rpc-url localhost:8545 --broadcast -vv",
+    "start:arb": "anvil & forge script script/local/OffchainResolver.s.sol --rpc-url localhost:8545 --broadcast -vv",
     "postinstall": "forge install",
     "lint": "solhint src/**/*.sol --fix",
     "build": "forge build"

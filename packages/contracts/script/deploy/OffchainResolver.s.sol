@@ -5,9 +5,9 @@ import {Script, console} from "forge-std/Script.sol";
 import "@ens-contracts/registry/ENSRegistry.sol";
 import {INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 
-import "./Helper.sol";
-import "../src/evmgateway/L1Verifier.sol";
-import {L1Resolver} from "../src/evmgateway/L1Resolver.sol";
+import "../Helper.sol";
+import "../../src/evmgateway/L1Verifier.sol";
+import {L1Resolver} from "../../src/evmgateway/L1Resolver.sol";
 
 contract OffchainResolverScript is Script, ENSHelper {
     function run() external {

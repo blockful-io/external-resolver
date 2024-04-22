@@ -2,11 +2,12 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import "../src/Helper.sol";
 import "@ens-contracts/registry/ENSRegistry.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import "@ens-contracts/utils/UniversalResolver.sol";
+
+import "../script/Helper.sol";
 import {DatabaseResolver} from "../src/DatabaseResolver.sol";
 
 contract DatabaseResolverTest is Test, ENSHelper {
