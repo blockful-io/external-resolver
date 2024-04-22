@@ -9,8 +9,7 @@
     "start:arb": "anvil & copyfiles ../../.env contracts/.env && forge script script/OffchainResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
     "postinstall": "forge install",
     "lint": "solhint src/**/*.sol --fix",
-    "build": "forge build",
-    "deploy:ArbitrumLayer2": "copyfiles ../../.env contracts/.env && forge script script/ArbitrumResolver.s.sol --gas-estimate-multiplier 700 --rpc-url https://sepolia-rollup.arbitrum.io/rpc --broadcast -vv"
+    "build": "forge build"
   },
   "devDependencies": {
     "copyfiles": "^2.4.1",
