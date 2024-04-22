@@ -15,7 +15,7 @@ import "@ens-contracts/resolvers/Multicallable.sol";
  * A simple resolver anyone can use; only allows the owner of a node to set its
  * address.
  */
-contract ArbitrumResolver is
+contract L2Resolver is
     Multicallable,
     ABIResolver,
     AddrResolver,
@@ -29,10 +29,8 @@ contract ArbitrumResolver is
     mapping(bytes32 => address) private _owners;
 
     function isAuthorised(bytes32 node) internal view override returns (bool) {
-        // console.log("_owners[node]", _owners[node]);
-        // console.log("msg.sender", msg.sender);
-        // return _owners[node] == msg.sender;
-        return true;
+        if (_owners[node] == address(0)) return true;
+        return _owners[node] == msg.sender;
     }
 
     function setOwner(bytes32 node, address _owner) public authorised(node) {
