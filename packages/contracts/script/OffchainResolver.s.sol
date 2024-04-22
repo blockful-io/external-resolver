@@ -10,7 +10,7 @@ import "../src/evmgateway/L1Verifier.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 
 import "../src/Helper.sol";
-import {ArbitrumResolver} from "../src/ArbitrumResolver.sol";
+import {L2Resolver} from "../src/L2Resolver.sol";
 
 contract OffchainResolverScript is Script, ENSHelper {
     function run() external {
@@ -38,10 +38,12 @@ contract OffchainResolverScript is Script, ENSHelper {
         // blockful.eth
         registry.setSubnodeRecord(namehash("eth"), labelhash("blockful"), publicKey, address(l1resolver), 100000);
 
-        ArbitrumResolver arbResolver = new ArbitrumResolver();
-        l1resolver.setTarget(namehash("blockful.eth"), address(arbResolver));
+        L2Resolver arbResolver = new L2Resolver();
+        bytes32 node = namehash("blockful.eth");
+        l1resolver.setTarget(node, address(arbResolver));
 
-        arbResolver.setText(namehash("blockful.eth"), "com.twitter", "@blockful");
+        arbResolver.setOwner(node, publicKey);
+        arbResolver.setText(node, "com.twitter", "@blockful");
 
         vm.stopBroadcast();
     }
