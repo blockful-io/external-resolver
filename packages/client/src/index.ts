@@ -6,22 +6,35 @@
 import { Command } from 'commander'
 import { createPublicClient, http } from 'viem'
 import { normalize } from 'viem/ens'
-import { anvil } from 'viem/chains'
+import * as chains from 'viem/chains'
+import { config } from 'dotenv'
 
 // Define command-line options using Commander
 const program = new Command()
 program
   .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
-  .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
-  .option('-i --chainId <chainId>', 'chainId', '1337')
+  .option('-p --provider <url>', 'web3 provider URL', process.env.LAYER_ONE_RPC)
+  .option('-i --chainId <chainId>', 'chainId', process.env.CHAIN_ID)
 
 program.parse(process.argv)
 
-const { resolver, provider } = program.opts()
+const { resolver } = program.opts()
+
+config({
+  path: process.env.ENV_FILE || '../.env',
+})
+
+function getChain(chainId: number) {
+  for (const chain of Object.values(chains)) {
+    if ('id' in chain && chain.id === chainId) {
+      return chain
+    }
+  }
+}
 
 const client = createPublicClient({
-  chain: anvil,
-  transport: http(provider),
+  chain: getChain(parseInt(process.env.CHAIN_ID as string)),
+  transport: http('https://sepolia.drpc.org'),
 })
 
 // eslint-disable-next-line
