@@ -13,9 +13,9 @@ contract DatabaseResolverScript is Script, ENSHelper {
         address publicKey = vm.addr(privateKey);
         vm.startBroadcast(privateKey);
 
-        address[] memory t = new address[](1);
-        t[0] = publicKey;
-        new DatabaseResolver(gatewayUrl, t);
+        address[] memory signers = new address[](1);
+        signers[0] = publicKey;
+        new DatabaseResolver(gatewayUrl, signers);
 
         vm.stopBroadcast();
     }
