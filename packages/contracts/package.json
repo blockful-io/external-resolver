@@ -8,6 +8,7 @@
     "start:db": "anvil & forge script script/local/DatabaseResolver.s.sol --rpc-url localhost:8545 --broadcast -vv",
     "start:arb": "anvil & forge script script/local/OffchainResolver.s.sol --rpc-url localhost:8545 --broadcast -vv",
     "deploy:arb": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --fork-url $RPC_URL -vv",
+    "deploy:Arbitrum:Layer2": "copyfiles ../../.env contracts/.env && forge script script/ArbitrumResolver.s.sol --gas-estimate-multiplier 700 --rpc-url https://sepolia-rollup.arbitrum.io/rpc --broadcast -vv",
     "postinstall": "forge install",
     "lint": "solhint src/**/*.sol --fix",
     "build": "forge build"
