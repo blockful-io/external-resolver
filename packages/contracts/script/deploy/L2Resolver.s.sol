@@ -9,15 +9,7 @@ contract OffchainResolverScript is Script, ENSHelper {
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
-
-        L2Resolver arbResolver = new L2Resolver();
-
-        arbResolver.setText(
-            namehash("blockful.eth"),
-            "com.twitter",
-            "@blockful"
-        );
-
+        new L2Resolver();
         vm.stopBroadcast();
     }
 }

@@ -15,3 +15,6 @@ remappings = [
 ignored_warnings_from = ["lib/ens-contracts/"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+[rpc_endpoints]
+rpc_url = "${RPC_URL}"
