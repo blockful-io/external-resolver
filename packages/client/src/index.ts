@@ -18,7 +18,7 @@ program
 
 program.parse(process.argv)
 
-const { resolver, provider } = program.opts()
+const { resolver, provider, chainId } = program.opts()
 
 config({
   path: process.env.ENV_FILE || '../.env',
@@ -33,7 +33,7 @@ function getChain(chainId: number) {
 }
 
 const client = createPublicClient({
-  chain: getChain(parseInt(process.env.CHAIN_ID as string)),
+  chain: getChain(parseInt(chainId)),
   transport: http(provider),
 })
 
