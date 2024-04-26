@@ -8,7 +8,7 @@ import {
   slice,
   toBytes,
 } from 'viem'
-import { IProofService, ProvableBlock } from '../types'
+import { IProofService, ProvableBlock } from '../interfaces'
 
 const OP_CONSTANT = 0x00
 const OP_BACKREF = 0x20
@@ -130,7 +130,6 @@ async function getDynamicValue<T extends ProvableBlock>(
   // Decode Solidity dynamic value encoding
   if (firstValue[31] & 0x01) {
     // Long value: first slot is `length * 2 + 1`, following slots are data.
-    // const len = (Number(BigInt(firstValue)) - 1) / 2
     const len = firstValue.length
     const hashedSlot = BigInt(keccak256(encodePacked(['uint256'], [slot])))
     const slotNumbers = Array(Math.ceil(len / 32))
