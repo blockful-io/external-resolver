@@ -32,8 +32,12 @@ function getChain(chainId: number) {
   }
 }
 
+const chain = getChain(parseInt(chainId))
+
+console.log(`Connecting to ${chain?.name}.`)
+
 const client = createPublicClient({
-  chain: getChain(parseInt(chainId)),
+  chain,
   transport: http(provider),
 })
 
