@@ -5,12 +5,12 @@ import {Script, console} from "forge-std/Script.sol";
 import "@ens-contracts/registry/ENSRegistry.sol";
 import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import "@ens-contracts/utils/UniversalResolver.sol";
-import {L1Resolver} from "../src/evmgateway/L1Resolver.sol";
-import "../src/evmgateway/L1Verifier.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 
-import "../src/Helper.sol";
-import {L2Resolver} from "../src/L2Resolver.sol";
+import "../Helper.sol";
+import "../../src/evmgateway/L1Verifier.sol";
+import {L2Resolver} from "../../src/L2Resolver.sol";
+import {L1Resolver} from "../../src/evmgateway/L1Resolver.sol";
 
 contract OffchainResolverScript is Script, ENSHelper {
     function run() external {

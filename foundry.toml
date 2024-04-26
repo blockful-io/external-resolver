@@ -1,0 +1,20 @@
+[profile.default]
+src = "packages/contracts/src"
+test = "packages/contracts/test"
+script = "packages/contracts/script"
+out = "packages/contracts/out"
+libs = ["packages/contracts/lib"]
+viaIR = true
+remappings = [
+  "@ens-contracts=packages/contracts/lib/ens-contracts/contracts",
+  "@openzeppelin=packages/contracts/lib/openzeppelin-contracts",
+  "@ensdomains=packages/contracts/lib",
+  "forge-std=packages/contracts/lib/forge-std/src",
+  "@eth-optimism/contracts-bedrock/src/libraries=packages/contracts/lib/optimism-bedrock-contracts"
+]
+ignored_warnings_from = ["lib/ens-contracts/"]
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+[rpc_endpoints]
+rpc_url = "${RPC_URL}"
