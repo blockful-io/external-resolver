@@ -27,7 +27,7 @@ yarn install
 
 1. Run local postgres instance (currently no initial data is inserted)
 
-```bash
+```shell
 docker-compose up db -d
 ```
 
@@ -68,6 +68,18 @@ yarn gateway start:arb
 ```bash
 yarn client start
 ```
+
+## Architecture
+
+### High Level
+
+#### Database
+
+<img width="733" alt="image" src="https://github.com/blockful-io/external-resolver/assets/29408363/02882939-dd54-4fa7-a268-a817403ddd2d">
+
+#### Layer 2
+
+<img width="735" alt="image" src="https://github.com/blockful-io/external-resolver/assets/29408363/48306561-59b4-4ab7-b920-b9a8f50cb325">
 
 ## Conclusion
 
