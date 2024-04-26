@@ -4,11 +4,11 @@
   "scripts": {
     "test": "forge test -vvv",
     "test:watch": "forge test -vvv --watch",
-    "start:l1": "anvil & forge script script/local/PublicResolver.s.sol --rpc-url localhost:8545 --broadcast -vv",
-    "start:db": "anvil & forge script script/local/DatabaseResolver.s.sol --rpc-url localhost:8545 --broadcast -vv",
-    "start:arb": "anvil & forge script script/local/OffchainResolver.s.sol --rpc-url localhost:8545 --broadcast -vv",
-    "deploy:arb": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --fork-url rpc_url --broadcast -vv",
-    "deploy:arb:l2": "forge script script/deploy/L2Resolver.s.sol --gas-estimate-multiplier 200 --rpc-url rpc_url --broadcast -vvvv",
+    "start:public": "anvil & forge script script/local/PublicResolver.s.sol --rpc-url rpc_url --broadcast -vv",
+    "start:db": "anvil & forge script script/local/DatabaseResolver.s.sol --rpc-url rpc_url --broadcast -vv",
+    "start:l1": "anvil & forge script script/local/OffchainResolver.s.sol --rpc-url rpc_url --broadcast -vv",
+    "deploy:arb:l1": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --fork-url rpc_url --broadcast -vv",
+    "deploy:arb:l2": "forge script script/deploy/L2Resolver.s.sol --gas-estimate-multiplier 200 --rpc-url rpc_url --broadcast -vv",
     "postinstall": "forge install",
     "lint": "solhint src/**/*.sol --fix",
     "build": "forge build"

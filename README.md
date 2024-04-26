@@ -21,23 +21,65 @@ To run this application locally, follow these steps:
 
 ```bash
 yarn install
-cd packages/contracts && forge install && cd -
 ```
 
-4. Start the development server:
+### Database setup
+
+1. Run local postgres instance (currently no initial data is inserted)
+
+```shell
+docker-compose up db -d
+```
+
+2. Deploy the contracts locally:
 
 ```bash
-yarn start
+yarn contracts start:db
 ```
 
-5. Run tests:
+3. Start the gateway
 
 ```bash
-docker-compose up -d # start local blockchain node
-yarn test
+yarn gateway start:db
 ```
 
-6. Access the contracts through `http://localhost:8545`
+4. Request the domain properties through the client:
+
+```bash
+yarn client start
+```
+
+### Layer 2 setup
+
+1. Deploy the contracts locally:
+
+```bash
+yarn contracts start:arb
+```
+
+2. Start the gateway
+
+```bash
+yarn gateway start:arb
+```
+
+3. Request the domain properties through the client:
+
+```bash
+yarn client start
+```
+
+## Architecture
+
+### High Level
+
+#### Database
+
+<img width="733" alt="image" src="https://github.com/blockful-io/external-resolver/assets/29408363/02882939-dd54-4fa7-a268-a817403ddd2d">
+
+#### Layer 2
+
+<img width="735" alt="image" src="https://github.com/blockful-io/external-resolver/assets/29408363/48306561-59b4-4ab7-b920-b9a8f50cb325">
 
 ## Conclusion
 

@@ -10,7 +10,6 @@
     "client": "yarn workspace @blockful/client",
     "gateway": "yarn workspace @blockful/gateway",
     "contracts": "yarn workspace @blockful/contracts",
-    "start": "dotenvx run -- turbo run start",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
     "build": "turbo run build",
