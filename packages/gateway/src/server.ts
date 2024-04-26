@@ -27,6 +27,7 @@ const abi: string[] = [
   // 'function addr(bytes32 node, uint coinType) view returns (byte memory)',
   'function contenthash(bytes32 node) view returns (bytes memory)',
   'function setContenthash(bytes32 node, bytes calldata contenthash)',
+  'function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory constants) external view returns(bytes memory witness)',
 ]
 
 function NewServer(...opts: ccip.HandlerDescription[]): ccip.Server {

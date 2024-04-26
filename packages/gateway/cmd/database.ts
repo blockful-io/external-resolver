@@ -5,26 +5,22 @@ import 'reflect-metadata'
 import { Hex } from 'viem'
 import { config } from 'dotenv'
 
-import { NewDataSource } from './datasources/postgres'
+import { NewDataSource } from '../src/datasources/postgres'
 import {
-  httpCreateAddress,
-  httpGetAddress,
-  httpCreateText,
-  httpGetText,
   withGetText,
   withSetText,
   withGetAddr,
   withSetAddr,
   withGetContentHash,
   withSetContentHash,
-} from './handlers'
-import { PostgresRepository } from './repositories/postgres'
+} from '../src/handlers'
+import { PostgresRepository } from '../src/repositories/postgres'
 
-import { NewApp } from './app'
-import { withSigner } from './middlewares'
+import { NewApp } from '../src/app'
+import { withSigner } from '../src/middlewares'
 
 config({
-  path: process.env.ENV_FILE || './env',
+  path: process.env.ENV_FILE || '../env',
 })
 
 // eslint-disable-next-line
@@ -58,11 +54,6 @@ const _ = (async () => {
       ]),
     ],
   )
-
-  app.post(`/addrs/:node`, httpCreateAddress(repo))
-  app.get(`/addrs/:node`, httpGetAddress(repo))
-  app.post(`/texts/:node`, httpCreateText(repo))
-  app.get(`/texts/:node`, httpGetText(repo))
 
   const port = process.env.PORT || 3000
   app.listen(port, () => {

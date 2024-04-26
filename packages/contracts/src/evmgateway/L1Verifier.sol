@@ -2,7 +2,6 @@
 pragma solidity ^0.8.17;
 
 import {IEVMVerifier} from "./IEVMVerifier.sol";
-import {RLPReader} from "@eth-optimism/contracts-bedrock/src/libraries/rlp/RLPReader.sol";
 import {StateProof, EVMProofHelper} from "./EVMProofHelper.sol";
 
 struct L1WitnessData {
@@ -28,9 +27,7 @@ contract L1Verifier is IEVMVerifier {
         pure
         returns (bytes[] memory values)
     {
-        (L1WitnessData memory l1Data, StateProof memory stateProof) = abi.decode(proof, (L1WitnessData, StateProof));
-        RLPReader.RLPItem[] memory headerFields = RLPReader.readList(l1Data.blockHeader);
-        bytes32 stateRoot = bytes32(RLPReader.readBytes(headerFields[3]));
+        (bytes32 stateRoot, StateProof memory stateProof) = abi.decode(proof, (bytes32, StateProof));
         return EVMProofHelper.getStorageValues(target, commands, constants, stateRoot, stateProof);
     }
 }

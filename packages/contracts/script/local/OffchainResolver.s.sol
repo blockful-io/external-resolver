@@ -29,7 +29,7 @@ contract OffchainResolverScript is Script, ENSHelper {
         // addr.reverse
         registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
 
-        urls[0] = "http://127.0.0.1:8080/{sender}/{data}.json";
+        urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
         L1Verifier verifier = new L1Verifier(urls);
         L1Resolver l1resolver = new L1Resolver(verifier, registry, INameWrapper(publicKey));
 
