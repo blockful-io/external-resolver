@@ -7,7 +7,7 @@ import {INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 
 import "../Helper.sol";
 import "../../src/evmgateway/L1Verifier.sol";
-import {L1Resolver} from "../../src/evmgateway/L1Resolver.sol";
+import {OffchainResolver} from "../../src/OffchainResolver.sol";
 
 contract OffchainResolverScript is Script, ENSHelper {
     function run() external {
@@ -22,7 +22,7 @@ contract OffchainResolverScript is Script, ENSHelper {
 
         ENSRegistry registry = ENSRegistry(registryAddress);
         L1Verifier verifier = new L1Verifier(urls);
-        new L1Resolver(verifier, registry, INameWrapper(publicKey));
+        new OffchainResolver(verifier, registry, INameWrapper(publicKey));
 
         vm.stopBroadcast();
     }

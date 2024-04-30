@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {EVMFetcher} from "./EVMFetcher.sol";
-import {EVMFetchTarget} from "./EVMFetchTarget.sol";
-import {IEVMVerifier} from "./IEVMVerifier.sol";
-import "../IExtendedResolver.sol";
+import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
+import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
+import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
+import "./IExtendedResolver.sol";
 import "@ens-contracts/registry/ENS.sol";
+import {DummyNameWrapper} from "@ens-contracts/resolvers/mocks/DummyNameWrapper.sol";
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {BytesUtils} from "@ens-contracts/dnssec-oracle/BytesUtils.sol";
 import {IAddrResolver} from "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
@@ -14,7 +15,7 @@ import {ITextResolver} from "@ens-contracts/resolvers/profiles/ITextResolver.sol
 import {IContentHashResolver} from "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165 {
+contract OffchainResolver is EVMFetchTarget, IExtendedResolver, IERC165 {
     using EVMFetcher for EVMFetcher.EVMFetchRequest;
     using BytesUtils for bytes;
 

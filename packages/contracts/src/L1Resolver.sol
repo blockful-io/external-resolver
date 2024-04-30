@@ -15,7 +15,7 @@ import "@ens-contracts/resolvers/Multicallable.sol";
  * A simple resolver anyone can use; only allows the owner of a node to set its
  * address.
  */
-contract L2Resolver is
+contract L1Resolver is
     Multicallable,
     ABIResolver,
     AddrResolver,

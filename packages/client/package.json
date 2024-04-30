@@ -2,6 +2,7 @@
   "name": "@blockful/client",
   "packageManager": "yarn@4.1.0",
   "scripts": {
+    "test": "hardhat test --network localhost",
     "test:db:e2e": "hardhat test ./test/db.e2e.spec.ts --network localhost",
     "start": "ts-node src/index.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     "dev": "nodemon src/index.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
