@@ -10,7 +10,9 @@ remappings = [
   "@openzeppelin=packages/contracts/lib/openzeppelin-contracts",
   "@ensdomains=packages/contracts/lib",
   "forge-std=packages/contracts/lib/forge-std/src",
-  "@eth-optimism/contracts-bedrock/src/libraries=packages/contracts/lib/optimism-bedrock-contracts"
+  "@eth-optimism/contracts-bedrock/src/libraries=packages/contracts/lib/optimism-bedrock-contracts",
+  "@nitro-contracts=packages/contracts/lib/nitro-contracts",
+
 ]
 ignored_warnings_from = ["lib/ens-contracts/"]
 

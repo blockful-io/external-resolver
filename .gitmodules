@@ -13,3 +13,6 @@
 [submodule "packages/contracts/lib/optimism-bedrock-contracts"]
 	path = packages/contracts/lib/optimism-bedrock-contracts
 	url = https://github.com/TusimaNetwork/optimism-bedrock-contracts
+[submodule "packages/contracts/lib/nitro-contracts"]
+	path = packages/contracts/lib/nitro-contracts
+	url = https://github.com/OffchainLabs/nitro-contracts
