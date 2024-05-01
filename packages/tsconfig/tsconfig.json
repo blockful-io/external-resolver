@@ -1,6 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    "composite": true,
     "target": "es2020",
     "module": "commonjs",
     "esModuleInterop": true,
@@ -9,6 +10,7 @@
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
+    "incremental": true,
     "resolveJsonModule": true
   },
   "exclude": [

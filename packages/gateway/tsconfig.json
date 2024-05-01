@@ -6,7 +6,8 @@
     "strictPropertyInitialization": false,
     "sourceMap": true,
     "declarationMap": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "outDir": "./dist"
   },
   "include": [
     "src"

@@ -9,7 +9,8 @@
     "start:arb": "dotenvx run --env-file=../../.env -- ts-node ./cmd/arbitrum.ts",
     "dev:db": "ENV_FILE=../../.env nodemon ./cmd/database.ts",
     "dev:arb": "ENV_FILE=../../.env nodemon ./cmd/arbitrum.ts",
-    "lint": "eslint . --ext .ts --fix"
+    "lint": "eslint . --ext .ts --fix",
+    "build": "tsc --build"
   },
   "keywords": [],
   "author": "",

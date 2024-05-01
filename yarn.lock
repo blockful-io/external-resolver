@@ -1421,6 +1421,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     husky: "npm:^9.0.11"
     ts-node: "npm:^10.9.2"
+    tsc: "npm:^2.0.4"
     tsconfig-paths: "npm:^4.2.0"
     turbo: "npm:^1.12.4"
   languageName: unknown
@@ -16032,6 +16033,15 @@ __metadata:
     ts-node-transpile-only: dist/bin-transpile.js
     ts-script: dist/bin-script-deprecated.js
   checksum: 10c0/5f29938489f96982a25ba650b64218e83a3357d76f7bede80195c65ab44ad279c8357264639b7abdd5d7e75fc269a83daa0e9c62fd8637a3def67254ecc9ddc2
+  languageName: node
+  linkType: hard
+
+"tsc@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "tsc@npm:2.0.4"
+  bin:
+    tsc: bin/tsc
+  checksum: 10c0/4651d344891d995e62ab7ca64ce0a8597bbdc2d392886c9956d15caab4dc9bfe86e759d3385b3f97c49fb5294194a161d6812673e3f51e46357c82482f32c3ab
   languageName: node
   linkType: hard
 
