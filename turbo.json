@@ -11,6 +11,13 @@
     "test": {},
     "test:watch": {},
     "lint": {},
-    "build": {}
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/"
+      ]
+    }
   }
 }
