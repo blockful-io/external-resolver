@@ -7,8 +7,6 @@ export default defineConfig({
   bundle: true,
   outDir: './dist',
   clean: true,
-  env: { IS_SERVER_BUILD: 'true' },
-  loader: { '.json': 'copy' },
   minify: true,
   sourcemap: false,
   format: ['esm'],

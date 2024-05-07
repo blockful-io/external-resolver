@@ -8,7 +8,7 @@ export default defineConfig({
   shims: true,
   outDir: './dist',
   clean: true,
-  minify: false,
+  minify: true,
   sourcemap: false,
   format: ['esm'],
   target: 'es2022',
