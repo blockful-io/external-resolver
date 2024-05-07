@@ -1,6 +1,5 @@
 {
   "name": "@blockful/tsconfig",
-  "packageManager": "yarn@4.1.0",
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.24.0",
     "@babel/preset-env": "^7.23.9",
