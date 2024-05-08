@@ -9,8 +9,8 @@
     "test:watch": "vitest",
     "start:db": "node ./dist/database.mjs",
     "start:arb": "node ./dist/arbitrum.mjs",
-    "dev:db": "ENV_FILE=../../.env nodemon ./cmd/database.ts",
-    "dev:arb": "ENV_FILE=../../.env nodemon ./cmd/arbitrum.ts",
+    "dev:db": "ENV_FILE=../../.env ts-node ./dist/database.mjs --watch",
+    "dev:arb": "ENV_FILE=../../.env ts-node ./dist/arbitrum.mjs --watch",
     "lint": "eslint . --ext .ts --fix",
     "build": "tsup-node"
   },
