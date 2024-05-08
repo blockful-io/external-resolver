@@ -20,7 +20,7 @@ To run this application locally, follow these steps:
 3. Install dependencies by running:
 
 ```bash
-yarn install
+npm install
 ```
 
 ### Database setup
@@ -34,19 +34,19 @@ docker-compose up db -d
 2. Deploy the contracts locally:
 
 ```bash
-yarn contracts start:db
+npm run contracts start:db
 ```
 
 3. Start the gateway
 
 ```bash
-yarn gateway start:db
+npm run gateway dev:db
 ```
 
 4. Request the domain properties through the client:
 
 ```bash
-yarn client start
+npm run client start
 ```
 
 ### Layer 2 setup
@@ -54,20 +54,31 @@ yarn client start
 1. Deploy the contracts locally:
 
 ```bash
-yarn contracts start:arb
+npm run contracts start:arb
 ```
 
 2. Start the gateway
 
 ```bash
-yarn gateway start:arb
+npm run gateway dev:arb
 ```
 
 3. Request the domain properties through the client:
 
 ```bash
-yarn client start
+npm run client start
 ```
+
+## Deployment
+
+It's required to have the [Railway CLI](https://docs.railway.app/guides/cli) installed.
+
+1. Install the Railway CLI through: `npm i -g @railway/cli`
+2. Login into your Railway account: `railway login`
+3. Link the repo to the project:  `railway link`
+4. Build project: `turbo build --filter=@blockful/gateway...`
+5. Test bundle locally: `npm run gateway start:db`
+6. Deploy the Gateway: `railway up`
 
 ## Architecture
 
