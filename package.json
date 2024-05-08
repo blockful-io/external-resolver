@@ -14,17 +14,20 @@
     "test:watch": "turbo run test:watch",
     "build": "turbo run build",
     "prepare": "husky",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "commit": "git-cz"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^0.20.2"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.0.3",
     "@rocketseat/eslint-config": "^2.2.2",
     "@types/eslint": "^8",
     "@types/node": "^20.11.25",
-    "commitlint": "^19.0.3",
+    "commitizen": "^4.3.0",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.57.0",
     "husky": "^9.0.11",
     "ts-node": "^10.9.2",
@@ -39,5 +42,10 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
 }
