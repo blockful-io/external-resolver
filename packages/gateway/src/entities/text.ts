@@ -1,4 +1,12 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from 'typeorm'
+import {
+  Entity,
+  PrimaryColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm'
 import { Domain } from './domain'
 
 /**
@@ -16,4 +24,10 @@ export class Text {
   @JoinColumn({ name: 'domain', referencedColumnName: 'node' })
   @ManyToOne(() => Domain, (domain) => domain.texts)
   domain: Domain
+
+  @CreateDateColumn({ default: 'now' })
+  createdAt?: Date
+
+  @UpdateDateColumn({ default: 'now' })
+  updatedAt?: Date
 }
