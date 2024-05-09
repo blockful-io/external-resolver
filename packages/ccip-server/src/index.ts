@@ -23,6 +23,7 @@ export interface RPCResponse {
 export interface HandlerResponse {
   data: Array<any>
   extraData?: any
+  error?: Error
 }
 
 export type HandlerFunc = (
@@ -227,6 +228,12 @@ export class Server {
     // Call the handler
     const result = await handler.func(args, call)
 
+    if (result.error) {
+      return {
+        status: 400,
+        body: { error: result.error.message },
+      }
+    }
     // Encode return data
     return {
       status: 200,
