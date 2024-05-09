@@ -20,6 +20,19 @@ export class PostgresRepository {
     this.client = client
   }
 
+  async register({
+    node,
+    ttl,
+  }: Pick<Domain, 'node' | 'ttl'>): Promise<void | Error> {
+    try {
+      await this.client
+        .getRepository(Domain)
+        .insert({ node, ttl, addresses: [], texts: [] })
+    } catch {
+      return Error('Duplicated domain')
+    }
+  }
+
   async setContentHash({
     node,
     contenthash,
