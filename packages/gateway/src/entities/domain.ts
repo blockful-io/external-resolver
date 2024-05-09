@@ -1,4 +1,11 @@
-import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm'
+import {
+  Entity,
+  PrimaryColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm'
 import { Address } from './address'
 import { Text } from './text'
 
@@ -8,7 +15,7 @@ import { Text } from './text'
  */
 @Entity()
 export class Domain {
-  @PrimaryColumn()
+  @PrimaryColumn({ unique: true })
   node: string
 
   @Column({ nullable: true, length: 32 })
@@ -22,4 +29,10 @@ export class Domain {
 
   @OneToMany(() => Text, (text) => text.domain, { cascade: true })
   texts: Text[]
+
+  @CreateDateColumn({ default: 'now' })
+  createdAt?: Date
+
+  @UpdateDateColumn({ default: 'now' })
+  updatedAt?: Date
 }
