@@ -6,33 +6,39 @@ export type Response = {
 }
 
 export type DomainProps = {
-  node: string
+  node: `0x${string}`
+}
+
+export type RegisterDomainProps = {
+  node: `0x${string}`
+  ttl: number
+  signature: `0x${string}`
 }
 
 export type SetContentHashProps = {
-  node: string
+  node: `0x${string}`
   contenthash: `0x${string}`
 }
 
 export type SetAddressProps = {
-  node: string
+  node: `0x${string}`
   addr: string
   coin?: number
 }
 
 export type GetAddressProps = {
-  node: string
+  node: `0x${string}`
   coin?: number
 }
 
 export type SetTextProps = {
-  node: string
+  node: `0x${string}`
   key: string
   value: string
 }
 
 export type GetTextProps = {
-  node: string
+  node: `0x${string}`
   key: string
 }
 

@@ -11,6 +11,11 @@ import {
 /**
  * Executes a function call on the specified server using the provided ABI and arguments.
  *
+ * Example of usage:
+ * ```typescript
+ * const result = await doCall(server, abi_getSignedBalance, TEST_ADDRESS, "getSignedBalance", [TEST_ADDRESS]);
+ * ```
+ *
  * @param {ccipread.Server} server - The server instance to perform the function call.
  * @param {string[]} abi - The ABI (Application Binary Interface) array describing the function.
  * @param {string} path - The path or address to which the call is made.
@@ -24,7 +29,7 @@ export async function doCall(
   path: string,
   type: string,
   ...args: any[] // eslint-disable-line
-): Promise<{ data: Array<unknown>; ttl?: bigint }> {
+): Promise<{ data: Array<unknown>; ttl?: bigint; error?: Error }> {
   const iface = parseAbi(abi)
   const func = getAbiItem({ abi: iface, name: type })
   if (!func) {
@@ -44,7 +49,8 @@ export async function doCall(
   const result = await server.call({ to: path, data: calldata })
 
   // Check if the server response has a non-200 status
-  if (result.status !== 200) throw Error(result.body.message)
+  if (result.status !== 200)
+    return { data: [], error: Error(result.body.error) }
 
   // Returns an empty array if the function has no outputs
   if (!handler.type.outputs) return { data: [] }

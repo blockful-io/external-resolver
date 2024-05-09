@@ -4,15 +4,7 @@
  * This file sets up a server instance to act as a gateway for handling specific function calls,
  * providing an interface for communication with external systems such as databases or contracts.
  * The gateway includes predefined handlers for various function types, allowing users to execute
- * these functions by making calls to the server. Additionally, the script exports a utility function
- * 'doCall' to facilitate making function calls on the server using provided ABIs and arguments.
- *
- * Example of usage:
- * ```typescript
- * const result = await doCall(server, abi_getSignedBalance, TEST_ADDRESS, "getSignedBalance", [TEST_ADDRESS]);
- * console.log(result);
- * ```
- *
+ * these functions by making calls to the server.
  */
 import * as ccip from '@blockful/ccip-server'
 
@@ -28,6 +20,7 @@ const abi: string[] = [
   'function contenthash(bytes32 node) view returns (bytes memory)',
   'function setContenthash(bytes32 node, bytes calldata contenthash)',
   'function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory constants) external view returns(bytes memory witness)',
+  'function register(bytes32 node, uint32 ttl, bytes32 signature)',
 ]
 
 function NewServer(...opts: ccip.HandlerDescription[]): ccip.Server {

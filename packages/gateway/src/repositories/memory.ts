@@ -5,6 +5,7 @@ import {
   GetAddressProps,
   SetContentHashProps,
   Response,
+  RegisterDomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -44,6 +45,10 @@ export class InMemoryRepository {
       map.set(`${text.domain.node}-${text.key}`, text)
       return map
     }, new Map())
+  }
+
+  async register({ node, ttl }: RegisterDomainProps): Promise<void> {
+    this.domains.set(node, { node, addresses: [], texts: [], ttl })
   }
 
   async setContentHash({

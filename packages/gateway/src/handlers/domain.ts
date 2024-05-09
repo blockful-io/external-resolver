@@ -1,9 +1,27 @@
 import * as ccip from '@blockful/ccip-server'
 
-import { DomainProps, Response, SetContentHashProps } from '../types'
+import {
+  DomainProps,
+  Response,
+  SetContentHashProps,
+  RegisterDomainProps,
+} from '../types'
 
 interface WriteRepository {
-  setContentHash(params: SetContentHashProps): Promise<void>
+  register({ node }: RegisterDomainProps): Promise<void | Error>
+  setContentHash(params: SetContentHashProps)
+}
+
+export function withRegisterDomain(
+  repo: WriteRepository,
+): ccip.HandlerDescription {
+  return {
+    type: 'register',
+    func: async ({ node, ttl, signature }: RegisterDomainProps) => {
+      const error = await repo.register({ node, ttl, signature })
+      return { data: [], error }
+    },
+  }
 }
 
 export function withSetContentHash(
@@ -11,12 +29,8 @@ export function withSetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'setContenthash',
-    func: async (args) => {
-      const params: SetContentHashProps = {
-        node: args.node,
-        contenthash: args.contenthash,
-      }
-      await repo.setContentHash(params)
+    func: async ({ node, contenthash }) => {
+      await repo.setContentHash({ node, contenthash })
       return { data: [] }
     },
   }
@@ -31,11 +45,8 @@ export function withGetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'contenthash',
-    func: async (args): Promise<ccip.HandlerResponse> => {
-      const params: DomainProps = {
-        node: args.node,
-      }
-      const content = await repo.getContentHash(params)
+    func: async ({ node }): Promise<ccip.HandlerResponse> => {
+      const content = await repo.getContentHash({ node })
       if (!content) return { data: [] }
       return { data: [content.value], extraData: content.ttl }
     },

@@ -18,6 +18,7 @@ import {
   withSetContentHash,
   withGetContentHash,
   withSetText,
+  withRegisterDomain,
 } from '../src/handlers'
 import { PostgresRepository } from '../src/repositories'
 import { Address, Text, Domain } from '../src/entities'
@@ -25,7 +26,7 @@ import { Address, Text, Domain } from '../src/entities'
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 
 describe('Gateway Database', () => {
-  let repo: PostgresRepository, datasource: DataSource, domain: Domain
+  let repo: PostgresRepository, datasource: DataSource
 
   beforeAll(async () => {
     datasource = new DataSource({
@@ -37,13 +38,6 @@ describe('Gateway Database', () => {
     repo = new PostgresRepository(await datasource.initialize())
   })
 
-  beforeEach(async () => {
-    domain = new Domain()
-    domain.node = namehash('public.eth')
-    domain.ttl = 2000
-    await datasource.manager.save(domain)
-  })
-
   afterEach(async () => {
     for (const entity of ['Text', 'Address', 'Domain']) {
       await datasource.getRepository(entity).clear()
@@ -51,7 +45,60 @@ describe('Gateway Database', () => {
   })
 
   describe('Domain', () => {
+    it('should create new domain', async () => {
+      const node = namehash('blockful.eth')
+      const server = NewServer(withRegisterDomain(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'register',
+        node,
+        2000,
+        node,
+      )
+
+      expect(result.data.length).toEqual(0)
+
+      const d = await datasource.getRepository(Domain).findOneBy({
+        node,
+      })
+      expect(d).not.toBeNull()
+      expect(d?.node).toEqual(node)
+      expect(d?.ttl).toEqual(2000)
+    })
+
+    it('should block duplicated domains', async () => {
+      const domain = new Domain()
+      domain.node = namehash('public.eth')
+      domain.ttl = 2000
+      await datasource.manager.save(domain)
+
+      const server = NewServer(withRegisterDomain(repo))
+      const result = await doCall(
+        server,
+        abi,
+        TEST_ADDRESS,
+        'register',
+        domain.node,
+        3000n,
+        domain.node,
+      )
+
+      expect(result.data.length).toEqual(0)
+      expect(result.error?.message).toEqual('Duplicated domain')
+
+      const d = await datasource.getRepository(Domain).countBy({
+        node: domain.node,
+      })
+      expect(d).toEqual(1)
+    })
+
     it('should set new contenthash', async () => {
+      const domain = new Domain()
+      domain.node = namehash('public.eth')
+      domain.ttl = 2000
+      await datasource.manager.save(domain)
       const contenthash =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
       const server = NewServer(withSetContentHash(repo))
@@ -76,6 +123,10 @@ describe('Gateway Database', () => {
     })
 
     it('should query contenthash', async () => {
+      const domain = new Domain()
+      domain.node = namehash('public.eth')
+      domain.ttl = 2000
+      await datasource.manager.save(domain)
       const content =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909'
       domain.contenthash = content
@@ -114,6 +165,15 @@ describe('Gateway Database', () => {
   })
 
   describe('Text', () => {
+    let domain: Domain
+
+    beforeEach(async () => {
+      domain = new Domain()
+      domain.node = namehash('public.eth')
+      domain.ttl = 2000
+      await datasource.manager.save(domain)
+    })
+
     it('should set new text', async () => {
       const server = NewServer(withSetText(repo))
       const result = await doCall(
@@ -201,6 +261,15 @@ describe('Gateway Database', () => {
   })
 
   describe('Address', () => {
+    let domain: Domain
+
+    beforeEach(async () => {
+      domain = new Domain()
+      domain.node = namehash('public.eth')
+      domain.ttl = 2000
+      await datasource.manager.save(domain)
+    })
+
     // TODO: test multicoin read/write when issue is solved: https://github.com/smartcontractkit/ccip-read/issues/32
 
     it('should set ethereum address', async () => {
