@@ -5,8 +5,8 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "start:db": "dotenvx run --env-file=../../../.env -- ts-node ./cmd/database.ts",
-    "start:arb": "dotenvx run --env-file=../../../.env -- ts-node ./cmd/arbitrum.ts",
+    "start:db": "dotenvx run --env-file=../../.env -- ts-node ./cmd/database.ts",
+    "start:arb": "dotenvx run --env-file=../../.env -- ts-node ./cmd/arbitrum.ts -vvvv",
     "dev:db": "ENV_FILE=../../.env nodemon ./cmd/database.ts",
     "dev:arb": "ENV_FILE=../../.env nodemon ./cmd/arbitrum.ts",
     "lint": "eslint . --ext .ts --fix"
