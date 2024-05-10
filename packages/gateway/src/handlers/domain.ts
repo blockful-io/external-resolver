@@ -8,7 +8,7 @@ import {
 } from '../types'
 
 interface WriteRepository {
-  register({ node }: RegisterDomainProps): Promise<void | Error>
+  register({ node }: RegisterDomainProps): Promise<void>
   setContentHash(params: SetContentHashProps)
 }
 
@@ -17,9 +17,14 @@ export function withRegisterDomain(
 ): ccip.HandlerDescription {
   return {
     type: 'register',
-    func: async ({ node, ttl, signature }: RegisterDomainProps) => {
-      const error = await repo.register({ node, ttl, signature })
-      return { data: [], error }
+    func: async ({ node, ttl, signature }) => {
+      try {
+        await repo.register({ node, ttl, signature })
+      } catch (err) {
+        return {
+          error: { message: 'Unable to register new domain', status: 400 },
+        }
+      }
     },
   }
 }
@@ -30,8 +35,13 @@ export function withSetContentHash(
   return {
     type: 'setContenthash',
     func: async ({ node, contenthash }) => {
-      await repo.setContentHash({ node, contenthash })
-      return { data: [] }
+      try {
+        await repo.setContentHash({ node, contenthash })
+      } catch (err) {
+        return {
+          error: { message: 'Unable to save contenthash', status: 400 },
+        }
+      }
     },
   }
 }
@@ -45,10 +55,9 @@ export function withGetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'contenthash',
-    func: async ({ node }): Promise<ccip.HandlerResponse> => {
+    func: async ({ node }) => {
       const content = await repo.getContentHash({ node })
-      if (!content) return { data: [] }
-      return { data: [content.value], extraData: content.ttl }
+      if (content) return { data: [content.value], extraData: content.ttl }
     },
   }
 }

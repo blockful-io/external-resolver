@@ -20,17 +20,10 @@ export class PostgresRepository {
     this.client = client
   }
 
-  async register({
-    node,
-    ttl,
-  }: Pick<Domain, 'node' | 'ttl'>): Promise<void | Error> {
-    try {
-      await this.client
-        .getRepository(Domain)
-        .insert({ node, ttl, addresses: [], texts: [] })
-    } catch {
-      return Error('Duplicated domain')
-    }
+  async register({ node, ttl }: Pick<Domain, 'node' | 'ttl'>) {
+    await this.client
+      .getRepository(Domain)
+      .insert({ node, ttl, addresses: [], texts: [] })
   }
 
   async setContentHash({
@@ -56,7 +49,7 @@ export class PostgresRepository {
     return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
-  async setAddr({ node, addr: address, coin }: SetAddressProps): Promise<void> {
+  async setAddr({ node, addr: address, coin }: SetAddressProps) {
     await this.client.getRepository(Address).upsert(
       [
         {
@@ -91,7 +84,7 @@ export class PostgresRepository {
     return { value: addr.address, ttl: addr.domain.ttl }
   }
 
-  async setText({ node, key, value }: SetTextProps): Promise<void> {
+  async setText({ node, key, value }: SetTextProps) {
     await this.client.getRepository(Text).upsert(
       [
         {

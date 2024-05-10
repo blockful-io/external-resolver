@@ -21,15 +21,18 @@ export interface RPCResponse {
 }
 
 export interface HandlerResponse {
-  data: Array<any>
+  data?: Array<any>
   extraData?: any
-  error?: Error
+  error?: {
+    message: string
+    status: number
+  }
 }
 
 export type HandlerFunc = (
   args: ethers.utils.Result,
   req: RPCCall,
-) => Promise<HandlerResponse> | HandlerResponse
+) => Promise<HandlerResponse | undefined | void>
 
 interface Handler {
   type: FunctionFragment
@@ -228,10 +231,10 @@ export class Server {
     // Call the handler
     const result = await handler.func(args, call)
 
-    if (result.error) {
+    if (result?.error) {
       return {
-        status: 400,
-        body: { error: result.error.message },
+        status: result.error.status,
+        body: { data: result.error.message },
       }
     }
     // Encode return data
@@ -239,7 +242,7 @@ export class Server {
       status: 200,
       body: {
         data:
-          handler.type.outputs && result && result.data.length > 0
+          handler.type.outputs && result && result.data?.length
             ? hexlify(
                 ethers.utils.defaultAbiCoder.encode(
                   handler.type.outputs,
@@ -247,7 +250,7 @@ export class Server {
                 ),
               )
             : '0x',
-        ttl: result.extraData,
+        ttl: result?.extraData,
       },
     }
   }
