@@ -7,9 +7,7 @@ import { Command } from 'commander'
 import { createPublicClient, http } from 'viem'
 import { normalize } from 'viem/ens'
 import * as chains from 'viem/chains'
-import { config } from 'dotenv'
 
-// Define command-line options using Commander
 const program = new Command()
 program
   .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
@@ -19,10 +17,6 @@ program
 program.parse(process.argv)
 
 const { resolver, provider, chainId } = program.opts()
-
-config({
-  path: process.env.ENV_FILE || '../.env',
-})
 
 function getChain(chainId: number) {
   for (const chain of Object.values(chains)) {
