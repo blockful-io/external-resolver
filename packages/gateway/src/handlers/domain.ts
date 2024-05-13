@@ -17,9 +17,9 @@ export function withRegisterDomain(
 ): ccip.HandlerDescription {
   return {
     type: 'register',
-    func: async ({ node, ttl, signature }) => {
+    func: async ({ node, ttl }) => {
       try {
-        await repo.register({ node, ttl, signature })
+        await repo.register({ node, ttl })
       } catch (err) {
         return {
           error: { message: 'Unable to register new domain', status: 400 },

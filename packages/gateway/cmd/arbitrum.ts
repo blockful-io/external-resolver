@@ -8,7 +8,7 @@ import * as chains from 'viem/chains'
 
 import { NewApp } from '../src/app'
 import { L1ProofService } from '../src/services'
-import { withGetStorageSlot } from '../src/handlers'
+import { withQuery, withGetStorageSlot } from '../src/handlers'
 
 function getChain(chainId: number) {
   for (const chain of Object.values(chains)) {
@@ -28,10 +28,6 @@ config({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const privateKey = process.env.PRIVATE_KEY
-  if (!privateKey) {
-    throw new Error('PRIVATE_KEY is required')
-  }
   const chainId = parseInt(process.env.CHAIN_ID || '')
   const chain = getChain(Number.isInteger(chainId) ? chainId : 1337)
 
@@ -41,7 +37,10 @@ const _ = (async () => {
   })
 
   const proofService = new L1ProofService(provider)
-  const app = NewApp([withGetStorageSlot(proofService)], [])
+  const app = NewApp([
+    withQuery(), // required for Viem integration
+    withGetStorageSlot(proofService),
+  ])
 
   const port = process.env.PORT || 3000
   app.listen(port, () => {

@@ -13,6 +13,9 @@ import {
   withSetAddr,
   withGetContentHash,
   withSetContentHash,
+  withWrite,
+  withQuery,
+  withRegisterDomain,
 } from '../src/handlers'
 import { PostgresRepository } from '../src/repositories/postgres'
 
@@ -39,12 +42,15 @@ const _ = (async () => {
 
   const app = NewApp(
     [
+      withQuery(), // required for Viem integration
       withGetText(repo),
       withSetText(repo),
       withGetAddr(repo),
       withSetAddr(repo),
       withGetContentHash(repo),
       withSetContentHash(repo),
+      withWrite(),
+      withRegisterDomain(repo),
     ],
     [
       withSigner(privateKey as Hex, [

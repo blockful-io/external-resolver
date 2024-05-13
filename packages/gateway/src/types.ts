@@ -9,10 +9,14 @@ export type DomainProps = {
   node: `0x${string}`
 }
 
+export type WritingProps = {
+  data: `0x${string}`
+  signature: `0x${string}`
+}
+
 export type RegisterDomainProps = {
   node: `0x${string}`
   ttl: number
-  signature: `0x${string}`
 }
 
 export type SetContentHashProps = {
