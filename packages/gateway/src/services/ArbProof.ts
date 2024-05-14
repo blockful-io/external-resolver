@@ -9,8 +9,9 @@ import {
     Chain,
     parseAbiItem,
     toRlp,
+    encodeAbiParameters,
+    parseAbiParameters
 } from 'viem'
-import { AbiCoder, toBeHex, toNumber } from 'ethers'
 import rollupAbi from './rollupABI'
 
 export interface ArbProvableBlock {
@@ -77,11 +78,11 @@ export class ArbProofService<chain extends Chain>
             slots,
         )
 
-        return AbiCoder.defaultAbiCoder().encode(
-            [
-                'tuple(bytes32 version, bytes32 sendRoot, uint64 nodeIndex,bytes rlpEncodedBlock)',
-                'tuple(bytes[] stateTrieWitness, bytes[][] storageProofs)',
-            ],
+        return encodeAbiParameters(
+            parseAbiParameters([
+                '(bytes32 version, bytes32 sendRoot, uint64 nodeIndex,bytes rlpEncodedBlock)',
+                '(bytes[] stateTrieWitness, bytes[][] storageProofs)'
+            ]),
             [
                 {
                     version:
@@ -91,7 +92,7 @@ export class ArbProofService<chain extends Chain>
                     rlpEncodedBlock: block.rlpEncodedBlock,
                 },
                 proof,
-            ],
+            ] as never
         ) as Hash
     }
 
@@ -127,15 +128,15 @@ export class ArbProofService<chain extends Chain>
             l2blockRaw.transactionsRoot,
             l2blockRaw.receiptsRoot,
             l2blockRaw.logsBloom,
-            toBeHex(l2blockRaw.difficulty),
-            toBeHex(l2blockRaw.number),
-            toBeHex(l2blockRaw.gasLimit),
-            toBeHex(l2blockRaw.gasUsed),
-            toBeHex(l2blockRaw.timestamp),
+            this.toBeHex(l2blockRaw.difficulty),
+            this.toBeHex(l2blockRaw.number),
+            this.toBeHex(l2blockRaw.gasLimit),
+            this.toBeHex(l2blockRaw.gasUsed),
+            this.toBeHex(l2blockRaw.timestamp),
             l2blockRaw.extraData,
             l2blockRaw.mixHash,
             l2blockRaw.nonce,
-            toBeHex(l2blockRaw.baseFeePerGas),
+            this.toBeHex(l2blockRaw.baseFeePerGas),
         ]
 
         // Rlp encode the block to pass it as an argument
@@ -145,7 +146,7 @@ export class ArbProofService<chain extends Chain>
             rlpEncodedBlock,
             sendRoot,
             nodeIndex: nodeIndex as string,
-            number: toNumber(l2blockRaw.number),
+            number: Number(l2blockRaw.number),
         }
     }
 
@@ -205,4 +206,16 @@ export class ArbProofService<chain extends Chain>
 
         return [blockHash as Hash, sendRoot as Hash]
     }
+
+    /**
+     *  Converts %%value%% to a Big Endian hexstring.
+    */
+    private toBeHex(_value: string): string {
+        const value = BigInt(_value)
+        let result = value.toString(16);
+        if (result.length % 2) { result = "0" + result; }
+        return "0x" + result;
+    }
+
+
 }
