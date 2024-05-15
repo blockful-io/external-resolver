@@ -13,6 +13,7 @@ import { isAddress, isBytesLike } from 'ethers/lib/utils'
 export interface RPCCall {
   to: BytesLike
   data: BytesLike
+  signature?: BytesLike
 }
 
 export interface RPCResponse {
@@ -179,8 +180,7 @@ export class Server {
   }
 
   async handleRequest(req: express.Request, res: express.Response) {
-    let sender: string
-    let callData: string
+    let sender: string, callData: string, signature: string
 
     if (req.method === 'GET') {
       sender = req.params.sender
@@ -188,6 +188,7 @@ export class Server {
     } else {
       sender = req.body.sender
       callData = req.body.data
+      signature = req.body.signature
     }
 
     if (!isAddress(sender) || !isBytesLike(callData)) {
@@ -198,7 +199,11 @@ export class Server {
     }
 
     try {
-      const response = await this.call({ to: sender, data: callData })
+      const response = await this.call({
+        to: sender,
+        data: callData,
+        signature: signature!,
+      })
       res.status(response.status).json(response.body)
     } catch (e) {
       res.status(500).json({
