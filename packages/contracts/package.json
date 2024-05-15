@@ -7,10 +7,10 @@
     "start:public": "anvil & forge script script/local/PublicResolver.s.sol --rpc-url rpc_url --broadcast -vv",
     "start:db": "anvil & forge script script/local/DatabaseResolver.s.sol --rpc-url rpc_url --broadcast -vv",
     "start:l1": "anvil & forge script script/local/OffchainResolver.s.sol --rpc-url rpc_url --broadcast -vv",
-    "deploy:arb:l1": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --fork-url rpc_url --broadcast -vv",
-    "deploy:arb:l2": "forge script script/deploy/L1Resolver.s.sol --gas-estimate-multiplier 200 --rpc-url rpc_url --broadcast -vv",
+    "deploy:l1": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --fork-url rpc_url --broadcast -vv",
+    "deploy:eth:l2": "forge script script/deploy/L1Resolver.s.sol --gas-estimate-multiplier 200 --rpc-url rpc_url --broadcast -vv",
     "postinstall": "forge install",
-    "lint": "solhint src/**/*.sol --fix",
+    "lint": "solhint src/**/*.sol --fix --noPrompt",
     "build": "forge build"
   },
   "devDependencies": {
