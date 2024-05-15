@@ -10,15 +10,16 @@ import {
   ContractFunctionRevertedError,
   Hash,
   Hex,
-  ccipRequest,
   createPublicClient,
   encodeFunctionData,
   http,
   namehash,
   toHex,
+  Address,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
 import * as chains from 'viem/chains'
+import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi as dbABI } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import { abi as uABI } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
@@ -32,7 +33,7 @@ program
 
 program.parse(process.argv)
 
-const { resolver, provider, chainId } = program.opts()
+const { resolver, provider, chainId, privateKey } = program.opts()
 
 function getChain(chainId: number) {
   for (const chain of Object.values(chains)) {
@@ -51,17 +52,29 @@ const client = createPublicClient({
   transport: http(provider),
 })
 
-export const textResolverAbi: AbiFunction = {
-  name: 'setText',
-  type: 'function',
-  inputs: [
-    { name: 'name', type: 'bytes32' },
-    { name: 'key', type: 'string' },
-    { name: 'value', type: 'string' },
-  ],
-  outputs: [],
-  stateMutability: 'nonpayable',
-}
+export const DBResolverAbi: AbiFunction[] = [
+  {
+    name: 'register',
+    type: 'function',
+    inputs: [
+      { name: 'name', type: 'bytes32' },
+      { name: 'ttl', type: 'uint32' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'setText',
+    type: 'function',
+    inputs: [
+      { name: 'name', type: 'bytes32' },
+      { name: 'key', type: 'string' },
+      { name: 'value', type: 'string' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+]
 
 // eslint-disable-next-line
 const _ = (async () => {
@@ -74,6 +87,7 @@ const _ = (async () => {
     args: [toHex(packetToBytes(publicAddress))],
   })) as Hash[]
 
+  // REGISTER NEW DOMAIN
   try {
     await client.simulateContract({
       address: resolverAddr,
@@ -81,7 +95,35 @@ const _ = (async () => {
       abi: dbABI,
       args: [
         encodeFunctionData({
-          abi: [textResolverAbi],
+          abi: DBResolverAbi,
+          functionName: 'register',
+          args: [namehash(publicAddress), 99999999n],
+        }),
+      ],
+    })
+  } catch (err) {
+    const data = getRevertErrorData(err)
+    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
+      const [sender, url, callData] = data?.args as [Hex, string, Hex]
+      const signer = privateKeyToAccount(privateKey)
+      const signature = await signer.signMessage({ message: { raw: callData } })
+
+      await ccipRequest({
+        body: { data: callData, signature, sender },
+        url,
+      })
+    }
+  }
+
+  // SET TEXT
+  try {
+    await client.simulateContract({
+      address: resolverAddr,
+      functionName: 'write',
+      abi: dbABI,
+      args: [
+        encodeFunctionData({
+          abi: DBResolverAbi,
           functionName: 'setText',
           args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
         }),
@@ -91,19 +133,13 @@ const _ = (async () => {
     const data = getRevertErrorData(err)
     if (data?.errorName === 'StorageHandledByOffChainDatabase') {
       const [sender, url, callData] = data?.args as [Hex, string, Hex]
+      const signer = privateKeyToAccount(privateKey)
+      const signature = await signer.signMessage({ message: { raw: callData } })
 
-      const { ccipRead } = client
-      const ccipRequest_ =
-        ccipRead && typeof ccipRead?.request === 'function'
-          ? ccipRead.request
-          : ccipRequest
-
-      const result = await ccipRequest_({
-        data: callData,
-        sender,
-        urls: [url],
+      await ccipRequest({
+        body: { data: callData, signature, sender },
+        url,
       })
-      console.log({ result })
     }
   }
 })()
@@ -112,4 +148,19 @@ function getRevertErrorData(err: unknown) {
   if (!(err instanceof BaseError)) return undefined
   const error = err.walk() as ContractFunctionRevertedError
   return error.data
+}
+
+type CcipRequestParameters = {
+  body: { data: Hex; signature: Hex; sender: Address }
+  url: string
+}
+
+export async function ccipRequest({ body, url }: CcipRequestParameters) {
+  await fetch(url.replace('/{sender}/{data}.json', ''), {
+    body: JSON.stringify(body),
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
 }

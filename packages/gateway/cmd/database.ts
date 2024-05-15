@@ -13,7 +13,6 @@ import {
   withSetAddr,
   withGetContentHash,
   withSetContentHash,
-  withWrite,
   withQuery,
   withRegisterDomain,
 } from '../src/handlers'
@@ -49,7 +48,6 @@ const _ = (async () => {
       withSetAddr(repo),
       withGetContentHash(repo),
       withSetContentHash(repo),
-      withWrite(),
       withRegisterDomain(repo),
     ],
     [

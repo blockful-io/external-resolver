@@ -20,10 +20,32 @@ export class PostgresRepository {
     this.client = client
   }
 
-  async register({ node, ttl }: Pick<Domain, 'node' | 'ttl'>) {
-    await this.client
-      .getRepository(Domain)
-      .insert({ node, ttl, addresses: [], texts: [] })
+  async verifyOwnership(
+    node: `0x${string}`,
+    address: `0x${string}`,
+  ): Promise<boolean> {
+    return await this.client
+      .getRepository(Address)
+      .existsBy({ domain: { node }, address })
+  }
+
+  async register({
+    node,
+    ttl,
+    address,
+  }: Pick<Domain, 'node' | 'ttl'> & { address: `0x${string}` }) {
+    await this.client.getRepository(Domain).insert({
+      node,
+      ttl,
+      addresses: [],
+      texts: [],
+    })
+
+    await this.client.getRepository(Address).insert({
+      address,
+      coin: 60,
+      domain: { node },
+    })
   }
 
   async setContentHash({

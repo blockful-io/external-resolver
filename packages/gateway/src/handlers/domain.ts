@@ -6,9 +6,10 @@ import {
   SetContentHashProps,
   RegisterDomainProps,
 } from '../types'
+import { recoverMessageAddress, Hex } from 'viem'
 
 interface WriteRepository {
-  register({ node }: RegisterDomainProps): Promise<void>
+  register(params: RegisterDomainProps)
   setContentHash(params: SetContentHashProps)
 }
 
@@ -17,9 +18,14 @@ export function withRegisterDomain(
 ): ccip.HandlerDescription {
   return {
     type: 'register',
-    func: async ({ node, ttl }) => {
+    func: async ({ node, ttl }, { data, signature }) => {
       try {
-        await repo.register({ node, ttl })
+        const address = await recoverMessageAddress({
+          message: { raw: data as Hex },
+          signature: signature as Hex,
+        })
+
+        await repo.register({ node, ttl, address })
       } catch (err) {
         return {
           error: { message: 'Unable to register new domain', status: 400 },

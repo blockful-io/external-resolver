@@ -7,10 +7,6 @@ import "./IExtendedResolver.sol";
 import "./IExtendedDBWriteResolver.sol";
 import "./SignatureVerifier.sol";
 
-interface Gateway {
-    function write(bytes calldata data, bytes32 signature) external;
-}
-
 /**
  * Implements an ENS resolver that directs all queries to a CCIP read gateway.
  * Callers must implement EIP 3668 and ENSIP 10.
@@ -51,9 +47,7 @@ contract DatabaseResolver is IExtendedResolver, IExtendedDBWriteResolver, IERC16
      * @return The return data, ABI encoded identically to the underlying function.
      */
     function write(bytes calldata data) external view override returns (bytes memory) {
-        revert StorageHandledByOffChainDatabase(
-            address(this), url, abi.encodeWithSelector(Gateway.write.selector, data)
-        );
+        revert StorageHandledByOffChainDatabase(address(this), url, data);
     }
 
     /**
