@@ -6,7 +6,13 @@ import {
   SetContentHashProps,
   RegisterDomainProps,
 } from '../types'
-import { recoverMessageAddress, Hex } from 'viem'
+
+interface SignatureRecover {
+  recoverMessageSigner(
+    data: `0x${string}`,
+    signature: `0x${string}`,
+  ): Promise<`0x${string}`>
+}
 
 interface WriteRepository {
   register(params: RegisterDomainProps)
@@ -15,17 +21,17 @@ interface WriteRepository {
 
 export function withRegisterDomain(
   repo: WriteRepository,
+  recover: SignatureRecover,
 ): ccip.HandlerDescription {
   return {
     type: 'register',
     func: async ({ node, ttl }, { data, signature }) => {
       try {
-        const address = await recoverMessageAddress({
-          message: { raw: data as Hex },
-          signature: signature as Hex,
-        })
-
-        await repo.register({ node, ttl, address })
+        const signer = await recover.recoverMessageSigner(
+          data as `0x${string}`,
+          signature!,
+        )
+        await repo.register({ node, ttl, address: signer })
       } catch (err) {
         return {
           error: { message: 'Unable to register new domain', status: 400 },

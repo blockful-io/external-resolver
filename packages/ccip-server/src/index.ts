@@ -13,7 +13,7 @@ import { isAddress, isBytesLike } from 'ethers/lib/utils'
 export interface RPCCall {
   to: BytesLike
   data: BytesLike
-  signature?: BytesLike
+  signature?: `0x${string}`
 }
 
 export interface RPCResponse {
@@ -180,7 +180,7 @@ export class Server {
   }
 
   async handleRequest(req: express.Request, res: express.Response) {
-    let sender: string, callData: string, signature: string
+    let sender: string, callData: string, signature: `0x${string}`
 
     if (req.method === 'GET') {
       sender = req.params.sender

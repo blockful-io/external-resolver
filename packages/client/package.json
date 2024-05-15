@@ -31,7 +31,7 @@
     "hardhat-ethers": "^1.0.1",
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.1",
-    "viem": "^2.9.3"
+    "viem": "^2.10.5"
   },
   "peerDependencies": {
     "@blockful/tsconfig": "*"

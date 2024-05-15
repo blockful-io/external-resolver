@@ -17,9 +17,9 @@ import {
   withRegisterDomain,
 } from '../src/handlers'
 import { PostgresRepository } from '../src/repositories/postgres'
-
 import { NewApp } from '../src/app'
 import { withSigner } from '../src/middlewares'
+import { OwnershipValidator } from '../src/services'
 
 config({
   path: process.env.ENV_FILE || '../env',
@@ -38,17 +38,18 @@ const _ = (async () => {
 
   const dbclient = await NewDataSource(dbUrl).initialize()
   const repo = new PostgresRepository(dbclient)
+  const validator = new OwnershipValidator(repo)
 
   const app = NewApp(
     [
       withQuery(), // required for Viem integration
       withGetText(repo),
-      withSetText(repo),
+      withSetText(repo, validator),
       withGetAddr(repo),
-      withSetAddr(repo),
+      withSetAddr(repo, validator),
       withGetContentHash(repo),
       withSetContentHash(repo),
-      withRegisterDomain(repo),
+      withRegisterDomain(repo, validator),
     ],
     [
       withSigner(privateKey as Hex, [

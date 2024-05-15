@@ -1,27 +1,32 @@
 import * as ccip from '@blockful/ccip-server'
 
-import { GetAddressProps, Response, SetAddressProps } from '../types'
-import { Hex, recoverMessageAddress } from 'viem'
+import {
+  GetAddressProps,
+  Response,
+  SetAddressProps,
+  OwnershipValidator,
+} from '../types'
 
 interface WriteRepository {
   setAddr(params: SetAddressProps): Promise<void>
-  verifyOwnership(node: Hex, address: `0x${string}`): Promise<boolean>
 }
 
-export function withSetAddr(repo: WriteRepository): ccip.HandlerDescription {
+export function withSetAddr(
+  repo: WriteRepository,
+  validator: OwnershipValidator,
+): ccip.HandlerDescription {
   return {
     type: 'setAddr',
     func: async ({ node, coin = 60, addr }, { data, signature }) => {
       try {
-        const address = await recoverMessageAddress({
-          message: { raw: data as Hex },
-          signature: signature as Hex,
+        const isOwner = validator.verifyOwnership({
+          node,
+          data: data as `0x${string}`,
+          signature: signature!,
         })
-        const isOwner = await repo.verifyOwnership(node, address)
         if (!isOwner) {
           return { error: { message: 'Authentication failed', status: 400 } }
         }
-
         await repo.setAddr({ node, coin, addr })
       } catch (err) {
         return { error: { message: 'Unable to save address', status: 400 } }

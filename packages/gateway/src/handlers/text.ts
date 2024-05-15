@@ -1,24 +1,29 @@
 import * as ccip from '@blockful/ccip-server'
 
-import { SetTextProps, GetTextProps, Response } from '../types'
-import { Hex, recoverMessageAddress } from 'viem'
+import {
+  SetTextProps,
+  GetTextProps,
+  Response,
+  OwnershipValidator,
+} from '../types'
 
 interface WriteRepository {
   setText(params: SetTextProps)
-  verifyOwnership(node: Hex, address: `0x${string}`): Promise<boolean>
 }
 
-export function withSetText(repo: WriteRepository): ccip.HandlerDescription {
+export function withSetText(
+  repo: WriteRepository,
+  validator: OwnershipValidator,
+): ccip.HandlerDescription {
   return {
     type: 'setText',
     func: async ({ node, key, value }, { data, signature }) => {
       try {
-        const address = await recoverMessageAddress({
-          message: { raw: data as Hex },
-          signature: signature as Hex,
+        const isOwner = validator.verifyOwnership({
+          node,
+          data: data as `0x${string}`,
+          signature: signature!,
         })
-
-        const isOwner = await repo.verifyOwnership(node, address)
         if (!isOwner) {
           return { error: { message: 'Authentication failed', status: 400 } }
         }

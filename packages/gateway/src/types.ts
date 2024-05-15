@@ -1,4 +1,16 @@
-import { Hex, SignableMessage } from 'viem'
+import { SignableMessage } from 'viem'
+
+export interface OwnershipValidator {
+  verifyOwnership({
+    node,
+    data,
+    signature,
+  }: {
+    node: `0x${string}`
+    data: `0x${string}`
+    signature: `0x${string}`
+  }): Promise<boolean>
+}
 
 export type Response = {
   value: string
@@ -48,5 +60,5 @@ export type GetTextProps = {
 }
 
 export interface Signer {
-  sign: (msg: SignableMessage) => Promise<Hex>
+  sign: (msg: SignableMessage) => Promise<`0x${string}`>
 }
