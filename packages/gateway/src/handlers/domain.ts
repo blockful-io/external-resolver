@@ -31,7 +31,7 @@ export function withRegisterDomain(
           data as `0x${string}`,
           signature!,
         )
-        await repo.register({ node, ttl, address: signer })
+        await repo.register({ node, ttl, owner: signer })
       } catch (err) {
         return {
           error: { message: 'Unable to register new domain', status: 400 },

@@ -27,7 +27,7 @@ export type WritingProps = {
 }
 
 export type RegisterDomainProps = {
-  address: `0x${string}`
+  owner: `0x${string}`
   node: `0x${string}`
   ttl: number
 }

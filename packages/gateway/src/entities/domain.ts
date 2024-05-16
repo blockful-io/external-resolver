@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm'
+
 import { Address } from './address'
 import { Text } from './text'
 
@@ -29,6 +30,9 @@ export class Domain {
 
   @OneToMany(() => Text, (text) => text.domain, { cascade: true })
   texts: Text[]
+
+  @Column({ type: 'varchar' })
+  owner: string
 
   @CreateDateColumn({ default: 'now' })
   createdAt?: Date

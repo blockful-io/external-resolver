@@ -25,26 +25,21 @@ export class PostgresRepository {
     address: `0x${string}`,
   ): Promise<boolean> {
     return await this.client
-      .getRepository(Address)
-      .existsBy({ domain: { node }, address })
+      .getRepository(Domain)
+      .existsBy({ node, owner: address })
   }
 
   async register({
     node,
     ttl,
-    address,
-  }: Pick<Domain, 'node' | 'ttl'> & { address: `0x${string}` }) {
+    owner,
+  }: Pick<Domain, 'node' | 'ttl'> & { owner: `0x${string}` }) {
     await this.client.getRepository(Domain).insert({
       node,
       ttl,
       addresses: [],
       texts: [],
-    })
-
-    await this.client.getRepository(Address).insert({
-      address,
-      coin: 60,
-      domain: { node },
+      owner,
     })
   }
 
