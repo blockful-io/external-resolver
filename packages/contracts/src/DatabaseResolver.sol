@@ -4,20 +4,19 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IExtendedResolver.sol";
+import "./IExtendedDBWriteResolver.sol";
 import "./SignatureVerifier.sol";
 
 /**
  * Implements an ENS resolver that directs all queries to a CCIP read gateway.
  * Callers must implement EIP 3668 and ENSIP 10.
  */
-contract DatabaseResolver is IExtendedResolver, IERC165, Ownable {
+contract DatabaseResolver is IExtendedResolver, IExtendedDBWriteResolver, IERC165, Ownable {
     string public url;
     mapping(address => bool) public signers;
 
     event NewSigners(address indexed signer, bool isSigner);
     event UpdateUrl(string url);
-
-    error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
 
     constructor(string memory _url, address[] memory _signers) {
         url = _url;
@@ -40,6 +39,15 @@ contract DatabaseResolver is IExtendedResolver, IERC165, Ownable {
         returns (bytes32)
     {
         return SignatureVerifier.makeSignatureHash(target, expires, request, result);
+    }
+
+    /**
+     * @param data The ABI encoded data for the underlying writing function
+     * (Eg, setAddr(bytes32, address), setText(bytes32,string, string), etc).
+     * @return The return data, ABI encoded identically to the underlying function.
+     */
+    function write(bytes calldata data) external view override returns (bytes memory) {
+        revert StorageHandledByOffChainDatabase(address(this), url, data);
     }
 
     /**
