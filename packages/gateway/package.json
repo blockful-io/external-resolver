@@ -8,9 +8,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "start:db": "node ./dist/database.mjs",
-    "start:arb": "node ./dist/arbitrum.mjs",
+    "start:eth": "node ./dist/ethereum.mjs",
     "dev:db": "ENV_FILE=../../.env ts-node ./dist/database.mjs --watch",
-    "dev:arb": "ENV_FILE=../../.env ts-node ./dist/arbitrum.mjs --watch",
+    "dev:eth": "ENV_FILE=../../.env ts-node ./dist/ethereum.mjs --watch",
     "lint": "eslint . --ext .ts --fix",
     "build": "tsup-node"
   },
