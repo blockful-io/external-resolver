@@ -38,7 +38,7 @@ const _ = (async () => {
 
   const proofService = new L1ProofService(provider)
   const app = NewApp([
-    withQuery(), // required for Viem integration
+    withQuery(), // required for Universal Resolver integration
     withGetStorageSlot(proofService),
   ])
 

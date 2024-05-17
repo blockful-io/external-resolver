@@ -42,7 +42,7 @@ const _ = (async () => {
 
   const app = NewApp(
     [
-      withQuery(), // required for Viem integration
+      withQuery(), // required for Universal Resolver integration
       withGetText(repo),
       withSetText(repo, validator),
       withGetAddr(repo),
