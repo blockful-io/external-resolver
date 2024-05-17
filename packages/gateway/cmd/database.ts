@@ -48,7 +48,7 @@ const _ = (async () => {
       withGetAddr(repo),
       withSetAddr(repo, validator),
       withGetContentHash(repo),
-      withSetContentHash(repo),
+      withSetContentHash(repo, validator),
       withRegisterDomain(repo, validator),
     ],
     [

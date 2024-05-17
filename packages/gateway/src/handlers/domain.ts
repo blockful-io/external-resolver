@@ -5,6 +5,7 @@ import {
   Response,
   SetContentHashProps,
   RegisterDomainProps,
+  OwnershipValidator,
 } from '../types'
 
 interface SignatureRecover {
@@ -43,11 +44,21 @@ export function withRegisterDomain(
 
 export function withSetContentHash(
   repo: WriteRepository,
+  validator: OwnershipValidator,
 ): ccip.HandlerDescription {
   return {
     type: 'setContenthash',
-    func: async ({ node, contenthash }) => {
+    func: async ({ node, contenthash }, { data, signature }) => {
       try {
+        const isOwner = await validator.verifyOwnership({
+          node,
+          data: data as `0x${string}`,
+          signature: signature!,
+        })
+        if (!isOwner) {
+          return { error: { message: 'Unauthorized', status: 401 } }
+        }
+
         await repo.setContentHash({ node, contenthash })
       } catch (err) {
         return {
