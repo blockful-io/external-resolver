@@ -19,13 +19,13 @@ export function withSetText(
     type: 'setText',
     func: async ({ node, key, value }, { data, signature }) => {
       try {
-        const isOwner = validator.verifyOwnership({
+        const isOwner = await validator.verifyOwnership({
           node,
           data: data as `0x${string}`,
           signature: signature!,
         })
         if (!isOwner) {
-          return { error: { message: 'Authentication failed', status: 400 } }
+          return { error: { message: 'Unauthorized', status: 401 } }
         }
 
         await repo.setText({ node, key, value })
