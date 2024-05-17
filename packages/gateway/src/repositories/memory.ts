@@ -47,8 +47,8 @@ export class InMemoryRepository {
     }, new Map())
   }
 
-  async register({ node, ttl }: RegisterDomainProps): Promise<void> {
-    this.domains.set(node, { node, addresses: [], texts: [], ttl })
+  async register({ node, ttl, owner }: RegisterDomainProps): Promise<void> {
+    this.domains.set(node, { node, addresses: [], texts: [], ttl, owner })
   }
 
   async setContentHash({

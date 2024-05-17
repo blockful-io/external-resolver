@@ -9,8 +9,8 @@
 
 // Importing abi and bytecode from contracts folder
 import {
-  abi as abiOffchainResolver,
-  bytecode as bytecodeOffchainResolver,
+  abi as abiDBResolver,
+  bytecode as bytecodeDBResolver,
 } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import {
   abi as abiRegistry,
@@ -21,12 +21,19 @@ import {
   bytecode as bytecodeUniversalResolver,
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
-import { ethers as eth } from 'hardhat'
-import { Contract } from 'ethers'
 import { normalize, labelhash, namehash } from 'viem/ens'
-import { localhost } from 'viem/chains'
-import { createTestClient, http, publicActions } from 'viem'
-import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
+import { anvil } from 'viem/chains'
+import {
+  Hash,
+  createTestClient,
+  getContract,
+  getContractAddress,
+  http,
+  publicActions,
+  zeroHash,
+  walletActions,
+  Address,
+} from 'viem'
 import { expect } from 'chai'
 
 import { NewApp } from '@blockful/gateway/src/app'
@@ -34,74 +41,97 @@ import {
   withGetAddr,
   withGetContentHash,
   withGetText,
+  withQuery,
 } from '@blockful/gateway/src/handlers'
 import { InMemoryRepository } from '@blockful/gateway/src/repositories'
 import { withSigner } from '@blockful/gateway/src/middlewares'
+import { generatePrivateKey } from 'viem/accounts'
 
-const gatewayUrl = 'http://127.0.0.1:3000/{sender}/{data}.json'
+const GATEWAY_URL = 'http://127.0.0.1:3000/{sender}/{data}.json'
 
-let dbResolver: Contract,
-  registry: Contract,
-  universalResolver: Contract,
-  signers: HardhatEthersSigner[]
+let offchainResolverAddr: Hash, universalResolverAddress: Hash
 
 const client = createTestClient({
-  chain: localhost,
-  mode: 'hardhat',
+  chain: anvil,
+  mode: 'anvil',
   transport: http(),
-}).extend(publicActions)
+})
+  .extend(publicActions)
+  .extend(walletActions)
 
-async function deployOffchainResolver() {
-  const ResolverContract = await new eth.ContractFactory(
-    abiOffchainResolver,
-    bytecodeOffchainResolver,
-    signers[0],
-  ).deploy(gatewayUrl, signers)
+async function deployContract({
+  abi,
+  bytecode,
+  account,
+  args,
+}: {
+  abi: unknown[]
+  bytecode: Hash
+  account: Hash
+  args?: unknown[]
+}): Promise<Hash> {
+  const txHash = await client.deployContract({
+    abi,
+    bytecode,
+    account,
+    args,
+  })
 
-  dbResolver = await eth.getContractAt(
-    abiOffchainResolver,
-    await ResolverContract.getAddress(),
-  )
+  const { nonce } = await client.getTransaction({
+    hash: txHash,
+  })
+
+  return await getContractAddress({
+    from: account,
+    nonce: BigInt(nonce),
+  })
 }
 
-async function deployRegistry() {
-  const RegistryContract = await new eth.ContractFactory(
-    abiRegistry,
-    bytecodeRegistry,
-    signers[0],
-  ).deploy()
+async function deployContracts(signer: Hash) {
+  const registryAddr = await deployContract({
+    abi: abiRegistry,
+    bytecode: bytecodeRegistry.object as Hash,
+    account: signer,
+  })
 
-  registry = await eth.getContractAt(
-    abiRegistry,
-    await RegistryContract.getAddress(),
+  universalResolverAddress = await deployContract({
+    abi: abiUniversalResolver,
+    bytecode: bytecodeUniversalResolver.object as Hash,
+    account: signer,
+    args: [registryAddr, [GATEWAY_URL]],
+  })
+
+  offchainResolverAddr = await deployContract({
+    abi: abiDBResolver,
+    bytecode: bytecodeDBResolver.object as Hash,
+    account: signer,
+    args: [GATEWAY_URL, [signer]],
+  })
+
+  const registry = await getContract({
+    abi: abiRegistry,
+    address: registryAddr,
+    client,
+  })
+
+  await registry.write.setSubnodeRecord(
+    [zeroHash, labelhash('eth'), signer, offchainResolverAddr, 10000000],
+    {
+      account: signer,
+    },
   )
 
-  await registry.setSubnodeRecord(
-    eth.ZeroHash,
-    labelhash('eth'),
-    signers[0],
-    await dbResolver.getAddress(),
-    10000000,
-  )
-  await registry.setSubnodeRecord(
-    namehash('eth'),
-    labelhash('offchain'),
-    signers[0],
-    await dbResolver.getAddress(),
-    10000000,
-  )
-}
-
-async function deployUniversalResolver() {
-  const UniversalResolverContract = await new eth.ContractFactory(
-    abiUniversalResolver,
-    bytecodeUniversalResolver,
-    signers[0],
-  ).deploy(await registry.getAddress(), [gatewayUrl])
-
-  universalResolver = await eth.getContractAt(
-    abiUniversalResolver,
-    await UniversalResolverContract.getAddress(),
+  await registry.write.setSubnodeRecord(
+    [
+      namehash('eth'),
+      labelhash('blockful'),
+      signer,
+      offchainResolverAddr,
+      10000000,
+    ],
+    {
+      account: signer,
+    },
   )
 }
 
@@ -110,7 +140,12 @@ function setupGateway(
   { repo }: { repo: InMemoryRepository },
 ) {
   const app = NewApp(
-    [withGetText(repo), withGetAddr(repo), withGetContentHash(repo)],
+    [
+      withQuery(),
+      withGetText(repo),
+      withGetAddr(repo),
+      withGetContentHash(repo),
+    ],
     [
       withSigner(privateKey, [
         'function text(bytes32 node, string key)',
@@ -129,19 +164,18 @@ describe('DatabaseResolver', () => {
   const domains = new Map()
   const domain = {
     node,
+    owner: generatePrivateKey(),
     ttl: 99712622115,
     addresses: [],
     texts: [],
   }
   domains.set(node, domain)
+  let account: Address
 
   before(async () => {
-    signers = await eth.getSigners()
-
-    // Deploying the contracts
-    await deployOffchainResolver()
-    await deployRegistry()
-    await deployUniversalResolver()
+    const [signer] = await client.getAddresses()
+    account = signer
+    await deployContracts(account)
 
     repo = new InMemoryRepository()
     setupGateway(
@@ -166,8 +200,7 @@ describe('DatabaseResolver', () => {
     ])
     const avatar = await client.getEnsAvatar({
       name: normalize(rawNode),
-      universalResolverAddress:
-        (await universalResolver.getAddress()) as `0x${string}`,
+      universalResolverAddress,
     })
     expect(avatar).equal(
       'https://ipfs.io/ipfs/QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ',
@@ -185,8 +218,7 @@ describe('DatabaseResolver', () => {
     const twitter = await client.getEnsText({
       name: normalize(rawNode),
       key: 'com.twitter',
-      universalResolverAddress:
-        (await universalResolver.getAddress()) as `0x${string}`,
+      universalResolverAddress,
     })
 
     expect(twitter).equal('@database')
@@ -196,8 +228,7 @@ describe('DatabaseResolver', () => {
     const twitter = await client.getEnsText({
       name: normalize(rawNode),
       key: 'com.twitter',
-      universalResolverAddress:
-        (await universalResolver.getAddress()) as `0x${string}`,
+      universalResolverAddress,
     })
 
     expect(twitter).to.be.an('null')
@@ -213,8 +244,7 @@ describe('DatabaseResolver', () => {
     ])
     const addr = await client.getEnsAddress({
       name: normalize(rawNode),
-      universalResolverAddress:
-        (await universalResolver.getAddress()) as `0x${string}`,
+      universalResolverAddress,
     })
 
     expect(addr).to.match(/0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5/i)
@@ -223,8 +253,7 @@ describe('DatabaseResolver', () => {
   it('should read invalid address from database', async () => {
     const addr = await client.getEnsAddress({
       name: normalize(rawNode),
-      universalResolverAddress:
-        (await universalResolver.getAddress()) as `0x${string}`,
+      universalResolverAddress,
     })
 
     expect(addr).to.be.an('null')
@@ -234,8 +263,7 @@ describe('DatabaseResolver', () => {
     const addr = await client.getEnsAddress({
       name: normalize(rawNode),
       coinType: 1,
-      universalResolverAddress:
-        (await universalResolver.getAddress()) as `0x${string}`,
+      universalResolverAddress,
     })
 
     expect(addr).to.be.an('null')

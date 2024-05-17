@@ -65,19 +65,23 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "VITEST Debug Current Test File",
-      "autoAttachChildProcesses": true,
-      "skipFiles": [
-        "<node_internals>/**",
-        "**/node_modules/**"
-      ],
-      "program": "${workspaceRoot}/node_modules/vitest/vitest.mjs",
+      "name": "Debug E2E",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": [
-        "run",
-        "${relativeFile}"
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+        "--timeout",
+        "999999",
+        "--colors",
+        "${relativeFile}",
       ],
-      "smartStep": true,
-      "console": "integratedTerminal"
+      "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
     },
     {
       "type": "node",
