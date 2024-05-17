@@ -11,13 +11,14 @@ import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 
 contract DatabaseResolverScript is Script, ENSHelper {
     function run() external {
+        string memory gatewayURL = vm.envString("GATEWAY_URL");
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         address publicKey = vm.addr(privateKey);
         vm.startBroadcast(privateKey);
 
         ENSRegistry registry = new ENSRegistry();
         string[] memory urls = new string[](1);
-        urls[0] = "http://localhost:3000/{sender}/{data}.json";
+        urls[0] = gatewayURL;
         new UniversalResolver(address(registry), urls);
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
@@ -28,7 +29,7 @@ contract DatabaseResolverScript is Script, ENSHelper {
 
         address[] memory signers = new address[](1);
         signers[0] = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-        DatabaseResolver resolver = new DatabaseResolver("http://localhost:3000/{sender}/{data}.json", signers);
+        DatabaseResolver resolver = new DatabaseResolver(gatewayURL, signers);
 
         // .eth
         registry.setSubnodeRecord(rootNode, labelhash("eth"), publicKey, address(resolver), 100000);

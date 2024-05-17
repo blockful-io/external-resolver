@@ -1,6 +1,5 @@
 {
   "name": "@blockful/client",
-  "packageManager": "yarn@4.1.0",
   "scripts": {
     "test:db:e2e": "hardhat test ./test/db.e2e.spec.ts --network localhost",
     "test:l1:e2e": "hardhat test ./test/l1.e2e.spec.ts --network localhost",
@@ -9,7 +8,7 @@
     "lint": "eslint . --ext .ts --fix"
   },
   "devDependencies": {
-    "@blockful/gateway": "workspace:^",
+    "@blockful/gateway": "*",
     "nodemon": "^3.1.0",
     "typescript": "^5.4.3"
   },
@@ -36,6 +35,6 @@
     "viem": "^2.9.3"
   },
   "peerDependencies": {
-    "@blockful/tsconfig": "workspace:^"
+    "@blockful/tsconfig": "*"
   }
 }
