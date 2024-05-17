@@ -144,19 +144,22 @@ const _ = (async () => {
   }
 })()
 
-function getRevertErrorData(err: unknown) {
+export function getRevertErrorData(err: unknown) {
   if (!(err instanceof BaseError)) return undefined
   const error = err.walk() as ContractFunctionRevertedError
   return error.data
 }
 
-type CcipRequestParameters = {
+export type CcipRequestParameters = {
   body: { data: Hex; signature: Hex; sender: Address }
   url: string
 }
 
-export async function ccipRequest({ body, url }: CcipRequestParameters) {
-  await fetch(url.replace('/{sender}/{data}.json', ''), {
+export async function ccipRequest({
+  body,
+  url,
+}: CcipRequestParameters): Promise<Response> {
+  return await fetch(url.replace('/{sender}/{data}.json', ''), {
     body: JSON.stringify(body),
     method: 'POST',
     headers: {

@@ -47,6 +47,13 @@ export class InMemoryRepository {
     }, new Map())
   }
 
+  async verifyOwnership(
+    node: `0x${string}`,
+    address: `0x${string}`,
+  ): Promise<boolean> {
+    return this.domains.get(node)?.owner === address
+  }
+
   async register({ node, ttl, owner }: RegisterDomainProps): Promise<void> {
     this.domains.set(node, { node, addresses: [], texts: [], ttl, owner })
   }

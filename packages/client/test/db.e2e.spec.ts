@@ -16,12 +16,14 @@ import {
   abi as abiRegistry,
   bytecode as bytecodeRegistry,
 } from '@blockful/contracts/out/ENSRegistry.sol/ENSRegistry.json'
+import { abi as abiTextResolver } from '@blockful/contracts/out/TextResolver.sol/TextResolver.json'
+import { abi as abiAddrResolver } from '@blockful/contracts/out/AddrResolver.sol/AddrResolver.json'
 import {
   abi as abiUniversalResolver,
   bytecode as bytecodeUniversalResolver,
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
-import { normalize, labelhash, namehash } from 'viem/ens'
+import { normalize, labelhash, namehash, packetToBytes } from 'viem/ens'
 import { anvil } from 'viem/chains'
 import {
   Hash,
@@ -33,6 +35,10 @@ import {
   zeroHash,
   walletActions,
   Address,
+  Hex,
+  encodeFunctionData,
+  toHex,
+  PrivateKeyAccount,
 } from 'viem'
 import { expect } from 'chai'
 
@@ -42,10 +48,15 @@ import {
   withGetContentHash,
   withGetText,
   withQuery,
+  withSetAddr,
+  withSetText,
+  withRegisterDomain,
 } from '@blockful/gateway/src/handlers'
 import { InMemoryRepository } from '@blockful/gateway/src/repositories'
 import { withSigner } from '@blockful/gateway/src/middlewares'
-import { generatePrivateKey } from 'viem/accounts'
+import { OwnershipValidator } from '@blockful/gateway/src/services'
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
+import { getRevertErrorData, ccipRequest } from '../src/write'
 
 const GATEWAY_URL = 'http://127.0.0.1:3000/{sender}/{data}.json'
 
@@ -88,6 +99,8 @@ async function deployContract({
 }
 
 async function deployContracts(signer: Hash) {
+  // exec('anvil')
+
   const registryAddr = await deployContract({
     abi: abiRegistry,
     bytecode: bytecodeRegistry.object as Hash,
@@ -139,11 +152,15 @@ function setupGateway(
   privateKey: `0x${string}`,
   { repo }: { repo: InMemoryRepository },
 ) {
+  const validator = new OwnershipValidator(repo)
   const app = NewApp(
     [
       withQuery(),
       withGetText(repo),
+      withRegisterDomain(repo, validator),
+      withSetText(repo, validator),
       withGetAddr(repo),
+      withSetAddr(repo, validator),
       withGetContentHash(repo),
     ],
     [
@@ -157,14 +174,65 @@ function setupGateway(
   app.listen('3000')
 }
 
+async function offchainWriting({
+  node,
+  functionName,
+  args,
+  signer,
+  abi,
+  universalResolverAddress,
+}: {
+  node: string
+  functionName: string
+  signer: PrivateKeyAccount
+  abi: unknown[]
+  args: unknown[]
+  universalResolverAddress: Hex
+}): Promise<Response | void> {
+  const [resolverAddr] = (await client.readContract({
+    address: universalResolverAddress,
+    functionName: 'findResolver',
+    abi: abiUniversalResolver,
+    args: [toHex(packetToBytes(node))],
+  })) as Hash[]
+
+  try {
+    await client.simulateContract({
+      address: resolverAddr,
+      functionName: 'write',
+      abi: abiDBResolver,
+      args: [
+        encodeFunctionData({
+          abi,
+          functionName,
+          args,
+        }),
+      ],
+    })
+  } catch (err) {
+    const data = getRevertErrorData(err)
+    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
+      const [sender, url, callData] = data?.args as [Hex, string, Hex]
+
+      const signature = await signer.signMessage({ message: { raw: callData } })
+
+      return await ccipRequest({
+        body: { data: callData, signature, sender },
+        url,
+      })
+    }
+  }
+}
+
 describe('DatabaseResolver', () => {
   let repo: InMemoryRepository
   const rawNode = 'database.eth'
   const node = namehash(rawNode)
   const domains = new Map()
+  const owner = privateKeyToAccount(generatePrivateKey())
   const domain = {
     node,
-    owner: generatePrivateKey(),
+    owner: owner.address,
     ttl: 99712622115,
     addresses: [],
     texts: [],
@@ -224,6 +292,48 @@ describe('DatabaseResolver', () => {
     expect(twitter).equal('@database')
   })
 
+  it('should write valid text record onto the database', async () => {
+    const response = await offchainWriting({
+      node: normalize(rawNode),
+      functionName: 'setText',
+      abi: abiTextResolver,
+      args: [namehash(rawNode), 'com.twitter', '@blockful'],
+      universalResolverAddress,
+      signer: owner,
+    })
+
+    expect(response?.status).equal(200)
+
+    const twitter = await client.getEnsText({
+      name: normalize(rawNode),
+      key: 'com.twitter',
+      universalResolverAddress,
+    })
+
+    expect(twitter).equal('@blockful')
+  })
+
+  it('should block unauthorized text change', async () => {
+    const response = await offchainWriting({
+      node: normalize(rawNode),
+      functionName: 'setText',
+      abi: abiTextResolver,
+      args: [namehash(rawNode), 'com.twitter', '@unauthorized'],
+      universalResolverAddress,
+      signer: privateKeyToAccount(generatePrivateKey()),
+    })
+
+    expect(response?.status).equal(401)
+
+    const twitter = await client.getEnsText({
+      name: normalize(rawNode),
+      key: 'com.twitter',
+      universalResolverAddress,
+    })
+
+    expect(twitter).not.eq('@unauthorized')
+  })
+
   it('should read invalid text record from database', async () => {
     const twitter = await client.getEnsText({
       name: normalize(rawNode),
@@ -267,5 +377,45 @@ describe('DatabaseResolver', () => {
     })
 
     expect(addr).to.be.an('null')
+  })
+
+  it('should write valid address record onto the database', async () => {
+    const response = await offchainWriting({
+      node: normalize(rawNode),
+      functionName: 'setAddr',
+      abi: abiAddrResolver,
+      args: [namehash(rawNode), '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
+      universalResolverAddress,
+      signer: owner,
+    })
+
+    expect(response?.status).equal(200)
+
+    const address = await client.getEnsAddress({
+      name: normalize(rawNode),
+      universalResolverAddress,
+    })
+
+    expect(address).match(/0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5/i)
+  })
+
+  it('should block unauthorized text change', async () => {
+    const response = await offchainWriting({
+      node: normalize(rawNode),
+      functionName: 'setAddr',
+      abi: abiAddrResolver,
+      args: [namehash(rawNode), '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
+      universalResolverAddress,
+      signer: privateKeyToAccount(generatePrivateKey()),
+    })
+
+    expect(response?.status).equal(401)
+
+    const twitter = await client.getEnsAddress({
+      name: normalize(rawNode),
+      universalResolverAddress,
+    })
+
+    expect(twitter).not.eq('0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5')
   })
 })
