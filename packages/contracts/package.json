@@ -10,7 +10,7 @@
     "deploy:arb:l1": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --fork-url rpc_url --broadcast -vv",
     "deploy:arb:l2": "forge script script/deploy/L2Resolver.s.sol --gas-estimate-multiplier 200 --rpc-url rpc_url --broadcast -vv",
     "postinstall": "forge install",
-    "lint": "solhint src/**/*.sol --fix --noPrompt",
+    "lint": "forge fmt",
     "build": "forge build"
   },
   "devDependencies": {
