@@ -21,6 +21,7 @@ import {
   bytecode as bytecodeUniversalResolver,
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
+import { ChildProcess, spawn } from 'child_process'
 import { ethers as eth } from 'hardhat'
 import { Contract } from 'ethers'
 import { normalize, labelhash, namehash } from 'viem/ens'
@@ -134,8 +135,10 @@ describe('DatabaseResolver', () => {
     texts: [],
   }
   domains.set(node, domain)
+  let localNode: ChildProcess
 
   before(async () => {
+    localNode = spawn('anvil')
     signers = await eth.getSigners()
 
     // Deploying the contracts
@@ -154,6 +157,10 @@ describe('DatabaseResolver', () => {
     repo.setDomains(domains)
     repo.setTexts([])
     repo.setAddresses([])
+  })
+
+  after(async () => {
+    localNode.kill()
   })
 
   it('should read and parse the avatar from database', async () => {

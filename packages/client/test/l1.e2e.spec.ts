@@ -7,6 +7,7 @@
   layer two, or the gateway and the database.
 */
 
+import { ChildProcess, spawn } from 'child_process'
 // Importing abi and bytecode from contracts folder
 import {
   abi as abiL1Resolver,
@@ -168,14 +169,21 @@ describe('L1Resolver', () => {
   const rawNode = 'blockful.eth'
   const node = namehash(rawNode)
   let account: Address
+  let localNode: ChildProcess
 
   before(async () => {
+    localNode = spawn('anvil')
+
     const [signer] = await client.getAddresses()
     account = signer
 
     await deployContracts(signer)
 
     setupGateway()
+  })
+
+  after(async () => {
+    localNode.kill()
   })
 
   beforeEach(async () => {
