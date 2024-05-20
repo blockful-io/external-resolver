@@ -29,7 +29,11 @@ program
   .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
   .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
   .option('-i --chainId <chainId>', 'chainId', '1337')
-  .option('-pk --privateKey <privateKey>', 'privateKey')
+  .option(
+    '-pk --privateKey <privateKey>',
+    'privateKey',
+    '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // anvil PK
+  )
 
 program.parse(process.argv)
 
@@ -73,6 +77,16 @@ export const DBResolverAbi: AbiFunction[] = [
     ],
     outputs: [],
     stateMutability: 'nonpayable',
+  },
+  {
+    name: 'text',
+    type: 'function',
+    inputs: [
+      { name: 'name', type: 'bytes32' },
+      { name: 'key', type: 'string' },
+    ],
+    outputs: [{ type: 'string' }],
+    stateMutability: 'view',
   },
 ]
 
