@@ -12,7 +12,7 @@ remappings = [
   "forge-std=packages/contracts/lib/forge-std/src",
   "@eth-optimism/contracts-bedrock/src/libraries=packages/contracts/lib/optimism-bedrock-contracts",
 ]
-ignored_warnings_from = ["lib/ens-contracts/"]
+ignored_warnings_from = ["**/lib/ens-contracts/", "**/src/evmgateway/"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
