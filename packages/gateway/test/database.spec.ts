@@ -104,20 +104,22 @@ describe('Gateway Database', () => {
 
     // Register a domain 'public.eth', then set a content hash for it
     it('should set new contenthash', async () => {
+      const pvtKey = generatePrivateKey()
       const domain = new Domain()
       domain.node = namehash('public.eth')
       domain.ttl = 2000
-      domain.owner = privateKeyToAddress(generatePrivateKey())
+      domain.owner = privateKeyToAddress(pvtKey)
       await datasource.manager.save(domain)
 
       const contenthash =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
-      const server = NewServer(withSetContentHash(repo))
+      const server = NewServer(withSetContentHash(repo, validator))
       const result = await doCall({
         server,
         abi,
         path: TEST_ADDRESS,
         method: 'setContenthash',
+        pvtKey,
         args: [domain.node, contenthash],
       })
 
@@ -163,7 +165,7 @@ describe('Gateway Database', () => {
     it('should set new contenthash on invalid domain', async () => {
       const contenthash =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
-      const server = NewServer(withSetContentHash(repo))
+      const server = NewServer(withSetContentHash(repo, validator))
       const result = await doCall({
         server,
         abi,

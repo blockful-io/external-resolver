@@ -16,7 +16,11 @@ import {
   parseAbiParameters,
   verifyMessage,
 } from 'viem'
-import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
+import {
+  generatePrivateKey,
+  privateKeyToAccount,
+  privateKeyToAddress,
+} from 'viem/accounts'
 import request from 'supertest'
 
 import { NewServer, abi as serverAbi } from '../src/server'
@@ -31,12 +35,16 @@ import {
 import { InMemoryRepository } from '../src/repositories'
 import { withSigner, makeMessageHash } from '../src/middlewares'
 import { Domain } from '../src/entities'
+import { OwnershipValidator } from '../src/services'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 const abi = parseAbi(serverAbi)
 
 describe('Gateway API', () => {
-  let repo: InMemoryRepository, domain: Domain, privateKey: Hex
+  let repo: InMemoryRepository,
+    domain: Domain,
+    privateKey: Hex,
+    validator: OwnershipValidator
 
   beforeAll(async () => {
     repo = new InMemoryRepository()
@@ -47,6 +55,7 @@ describe('Gateway API', () => {
     const node = namehash('public.eth') as Hex
     domain = {
       node,
+      owner: privateKeyToAddress(privateKey),
       ttl: 2000,
       contenthash:
         '0x4d1ae8fa44de34a527a9c6973d37dfda8befc18ca6ec73fd97535b4cf02189c6', // public goods
@@ -56,6 +65,7 @@ describe('Gateway API', () => {
     const domains = new Map()
     domains.set(node, domain)
     repo.setDomains(domains)
+    validator = new OwnershipValidator(repo)
   })
 
   afterEach(async () => await repo.clear())
@@ -65,17 +75,24 @@ describe('Gateway API', () => {
       const contenthash =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
 
-      const app = NewServer(withSetContentHash(repo)).makeApp('/')
+      const app = NewServer(withSetContentHash(repo, validator)).makeApp('/')
 
-      const calldata = encodeFunctionData({
+      const data = encodeFunctionData({
         abi,
         functionName: 'setContenthash',
         args: [domain.node, contenthash],
       })
+      const signer = privateKeyToAccount(privateKey)
+      const signature = await signer.signMessage({ message: { raw: data } })
+      await request(app)
+        .post('/')
+        .send({ data, signature, sender: TEST_ADDRESS })
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
 
-      await request(app).get(`/${TEST_ADDRESS}/${calldata}.json`)
-
-      const response = await repo.getContentHash({ node: domain.node })
+      const response = await repo.getContentHash({
+        node: domain.node as `0x${string}`,
+      })
       expect(response?.value).toEqual(contenthash)
       expect(response?.ttl).toEqual(domain.ttl)
     })
@@ -127,7 +144,7 @@ describe('Gateway API', () => {
     it('should handle request for set new text', async () => {
       const key = 'company'
       const value = 'blockful'
-      const app = NewServer(withSetText(repo)).makeApp('/')
+      const app = NewServer(withSetText(repo, validator)).makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
@@ -135,9 +152,18 @@ describe('Gateway API', () => {
         args: [domain.node, key, value],
       })
 
-      await request(app).get(`/${TEST_ADDRESS}/${calldata}.json`)
+      const signer = privateKeyToAccount(privateKey)
+      const signature = await signer.signMessage({ message: { raw: calldata } })
+      await request(app)
+        .post('/')
+        .send({ data: calldata, signature, sender: TEST_ADDRESS })
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
 
-      const response = await repo.getText({ node: domain.node, key })
+      const response = await repo.getText({
+        node: domain.node as `0x${string}`,
+        key,
+      })
       expect(response?.value).toEqual(value)
       expect(response?.ttl).toEqual(domain.ttl)
     })
@@ -153,7 +179,7 @@ describe('Gateway API', () => {
           value: 'blockful',
         },
       ])
-      const app = NewServer(withSetText(repo)).makeApp('/')
+      const app = NewServer(withSetText(repo, validator)).makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
@@ -161,9 +187,18 @@ describe('Gateway API', () => {
         args: [domain.node, key, value],
       })
 
-      await request(app).get(`/${TEST_ADDRESS}/${calldata}.json`)
+      const signer = privateKeyToAccount(privateKey)
+      const signature = await signer.signMessage({ message: { raw: calldata } })
+      await request(app)
+        .post('/')
+        .send({ data: calldata, signature, sender: TEST_ADDRESS })
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
 
-      const response = await repo.getText({ node: domain.node, key })
+      const response = await repo.getText({
+        node: domain.node as `0x${string}`,
+        key,
+      })
       expect(response?.value).toEqual(value)
       expect(response?.ttl).toEqual(domain.ttl)
     })
@@ -244,7 +279,7 @@ describe('Gateway API', () => {
 
     it('should handle set request for setAddr on ethereum', async () => {
       const address = privateKeyToAddress(privateKey)
-      const app = NewServer(withSetAddr(repo)).makeApp('/')
+      const app = NewServer(withSetAddr(repo, validator)).makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
@@ -252,9 +287,17 @@ describe('Gateway API', () => {
         args: [domain.node, address],
       })
 
-      await request(app).get(`/${TEST_ADDRESS}/${calldata}.json`)
+      const signer = privateKeyToAccount(privateKey)
+      const signature = await signer.signMessage({ message: { raw: calldata } })
+      await request(app)
+        .post('/')
+        .send({ data: calldata, signature, sender: TEST_ADDRESS })
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
 
-      const response = await repo.getAddr({ node: domain.node })
+      const response = await repo.getAddr({
+        node: domain.node as `0x${string}`,
+      })
       expect(response?.value).toEqual(address)
       expect(response?.ttl).toEqual(domain.ttl)
     })
@@ -268,7 +311,7 @@ describe('Gateway API', () => {
         },
       ])
       const address = privateKeyToAddress(privateKey)
-      const app = NewServer(withSetAddr(repo)).makeApp(
+      const app = NewServer(withSetAddr(repo, validator)).makeApp(
         '/',
         withSigner(privateKey, []),
       )
@@ -279,9 +322,17 @@ describe('Gateway API', () => {
         args: [domain.node, address],
       })
 
-      await request(app).get(`/${TEST_ADDRESS}/${calldata}.json`)
+      const signer = privateKeyToAccount(privateKey)
+      const signature = await signer.signMessage({ message: { raw: calldata } })
+      await request(app)
+        .post('/')
+        .send({ data: calldata, signature, sender: TEST_ADDRESS })
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
 
-      const response = await repo.getAddr({ node: domain.node })
+      const response = await repo.getAddr({
+        node: domain.node as `0x${string}`,
+      })
       expect(response?.value).toEqual(address)
       expect(response?.ttl).toEqual(domain.ttl)
     })
