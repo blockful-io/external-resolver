@@ -9,11 +9,18 @@ import {
 import { hexlify } from '@ethersproject/bytes'
 import express from 'express'
 import { isAddress, isBytesLike } from 'ethers/lib/utils'
+import { TypedDataDomain } from '@ethersproject/abstract-signer'
+
+export type TypedSignature = {
+  signature: `0x${string}`
+  domain: TypedDataDomain
+  message: Record<string, unknown>
+}
 
 export interface RPCCall {
   to: BytesLike
   data: BytesLike
-  signature?: `0x${string}`
+  signature?: `0x${string}` | TypedSignature
 }
 
 export interface RPCResponse {
@@ -180,7 +187,9 @@ export class Server {
   }
 
   async handleRequest(req: express.Request, res: express.Response) {
-    let sender: string, callData: string, signature: `0x${string}`
+    let sender: string,
+      callData: string,
+      signature: `0x${string}` | TypedSignature
 
     if (req.method === 'GET') {
       sender = req.params.sender
