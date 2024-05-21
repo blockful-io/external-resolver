@@ -5,6 +5,7 @@ import {
   Response,
   SetAddressProps,
   OwnershipValidator,
+  TypedSignature,
 } from '../types'
 
 interface WriteRepository {
@@ -17,12 +18,11 @@ export function withSetAddr(
 ): ccip.HandlerDescription {
   return {
     type: 'setAddr',
-    func: async ({ node, coin = 60, addr }, { data, signature }) => {
+    func: async ({ node, coin = 60, addr }, { signature }) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
-          data: data as `0x${string}`,
-          signature: signature!,
+          signature: signature! as TypedSignature,
         })
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }

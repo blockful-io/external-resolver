@@ -5,6 +5,7 @@ import {
   GetTextProps,
   Response,
   OwnershipValidator,
+  TypedSignature,
 } from '../types'
 
 interface WriteRepository {
@@ -17,12 +18,11 @@ export function withSetText(
 ): ccip.HandlerDescription {
   return {
     type: 'setText',
-    func: async ({ node, key, value }, { data, signature }) => {
+    func: async ({ node, key, value }, { signature }) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
-          data: data as `0x${string}`,
-          signature: signature!,
+          signature: signature! as TypedSignature,
         })
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }

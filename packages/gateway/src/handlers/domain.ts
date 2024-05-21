@@ -6,13 +6,11 @@ import {
   SetContentHashProps,
   RegisterDomainProps,
   OwnershipValidator,
+  TypedSignature,
 } from '../types'
 
 interface SignatureRecover {
-  recoverMessageSigner(
-    data: `0x${string}`,
-    signature: `0x${string}`,
-  ): Promise<`0x${string}`>
+  recoverMessageSigner(TypedSignature): Promise<`0x${string}`>
 }
 
 interface WriteRepository {
@@ -26,11 +24,10 @@ export function withRegisterDomain(
 ): ccip.HandlerDescription {
   return {
     type: 'register',
-    func: async ({ node, ttl }, { data, signature }) => {
+    func: async ({ node, ttl }, { signature }) => {
       try {
         const signer = await recover.recoverMessageSigner(
-          data as `0x${string}`,
-          signature!,
+          signature as TypedSignature,
         )
         await repo.register({ node, ttl, owner: signer })
       } catch (err) {
@@ -48,12 +45,11 @@ export function withSetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'setContenthash',
-    func: async ({ node, contenthash }, { data, signature }) => {
+    func: async ({ node, contenthash }, { signature }) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
-          data: data as `0x${string}`,
-          signature: signature!,
+          signature: signature! as TypedSignature,
         })
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
