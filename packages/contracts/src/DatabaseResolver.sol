@@ -395,6 +395,6 @@ contract DatabaseResolver is
             || interfaceID == type(IABIResolver).interfaceId || interfaceID == type(IPubkeyResolver).interfaceId
             || interfaceID == type(ITextResolver).interfaceId || interfaceID == type(INameResolver).interfaceId
             || interfaceID == type(IContentHashResolver).interfaceId || interfaceID == type(IAddressResolver).interfaceId
-            || interfaceID == type(IWriteDeferral).interfaceId; //|| super.supportsInterface(interfaceID);
+            || interfaceID == type(IWriteDeferral).interfaceId;
     }
 }
