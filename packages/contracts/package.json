@@ -11,11 +11,7 @@
     "deploy:eth:l1": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --broadcast --rpc-url rpc_url -vv --verify",
     "deploy:eth:l2": "forge script script/deploy/L2Resolver.s.sol --gas-estimate-multiplier 200 --broadcast --rpc-url rpc_url -vv --verify",
     "postinstall": "forge install",
-    "lint": "solhint src/**/*.sol --fix --noPrompt",
+    "lint": "forge fmt",
     "build": "forge build"
-  },
-  "devDependencies": {
-    "copyfiles": "^2.4.1",
-    "solhint": "^4.1.1"
   }
 }
