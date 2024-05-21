@@ -84,7 +84,7 @@ contract DatabaseResolver is
      * @return The return data, ABI encoded identically to the underlying function.
      */
     function resolve(bytes calldata name, bytes calldata data) external view override returns (bytes memory) {
-        _offChainLookup(msg.data);
+        _offChainLookup(data);
     }
 
     //////// ENS ERC-137 ////////
