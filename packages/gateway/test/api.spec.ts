@@ -15,15 +15,14 @@ import {
   decodeAbiParameters,
   parseAbiParameters,
   verifyMessage,
+  getAbiItem,
+  AbiFunction,
 } from 'viem'
-import {
-  generatePrivateKey,
-  privateKeyToAccount,
-  privateKeyToAddress,
-} from 'viem/accounts'
+import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 import request from 'supertest'
 
 import { NewServer, abi as serverAbi } from '../src/server'
+import { serializeTypedSignature, signData } from './helper'
 import {
   withGetAddr,
   withGetContentHash,
@@ -77,18 +76,31 @@ describe('Gateway API', () => {
 
       const app = NewServer(withSetContentHash(repo, validator)).makeApp('/')
 
+      const args = [domain.node, contenthash]
       const data = encodeFunctionData({
         abi,
         functionName: 'setContenthash',
-        args: [domain.node, contenthash],
+        args,
       })
-      const signer = privateKeyToAccount(privateKey)
-      const signature = await signer.signMessage({ message: { raw: data } })
+
+      const signature = await signData({
+        pvtKey: privateKey,
+        args,
+        sender: TEST_ADDRESS,
+        func: getAbiItem({
+          abi,
+          name: 'setContenthash',
+        }) as AbiFunction,
+      })
       await request(app)
         .post('/')
-        .send({ data, signature, sender: TEST_ADDRESS })
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json')
+        .send({
+          data,
+          signature: serializeTypedSignature(signature),
+          sender: TEST_ADDRESS,
+        })
 
       const response = await repo.getContentHash({
         node: domain.node as `0x${string}`,
@@ -146,19 +158,31 @@ describe('Gateway API', () => {
       const value = 'blockful'
       const app = NewServer(withSetText(repo, validator)).makeApp('/')
 
-      const calldata = encodeFunctionData({
+      const args = [domain.node, key, value]
+      const data = encodeFunctionData({
         abi,
         functionName: 'setText',
-        args: [domain.node, key, value],
+        args,
       })
 
-      const signer = privateKeyToAccount(privateKey)
-      const signature = await signer.signMessage({ message: { raw: calldata } })
+      const signature = await signData({
+        pvtKey: privateKey,
+        args,
+        sender: TEST_ADDRESS,
+        func: getAbiItem({
+          abi,
+          name: 'setText',
+        }) as AbiFunction,
+      })
       await request(app)
         .post('/')
-        .send({ data: calldata, signature, sender: TEST_ADDRESS })
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json')
+        .send({
+          data,
+          signature: serializeTypedSignature(signature),
+          sender: TEST_ADDRESS,
+        })
 
       const response = await repo.getText({
         node: domain.node as `0x${string}`,
@@ -181,19 +205,31 @@ describe('Gateway API', () => {
       ])
       const app = NewServer(withSetText(repo, validator)).makeApp('/')
 
-      const calldata = encodeFunctionData({
+      const args = [domain.node, key, value]
+      const data = encodeFunctionData({
         abi,
         functionName: 'setText',
-        args: [domain.node, key, value],
+        args,
       })
 
-      const signer = privateKeyToAccount(privateKey)
-      const signature = await signer.signMessage({ message: { raw: calldata } })
+      const signature = await signData({
+        pvtKey: privateKey,
+        args,
+        sender: TEST_ADDRESS,
+        func: getAbiItem({
+          abi,
+          name: 'setText',
+        }) as AbiFunction,
+      })
       await request(app)
         .post('/')
-        .send({ data: calldata, signature, sender: TEST_ADDRESS })
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json')
+        .send({
+          data,
+          signature: serializeTypedSignature(signature),
+          sender: TEST_ADDRESS,
+        })
 
       const response = await repo.getText({
         node: domain.node as `0x${string}`,
@@ -281,19 +317,31 @@ describe('Gateway API', () => {
       const address = privateKeyToAddress(privateKey)
       const app = NewServer(withSetAddr(repo, validator)).makeApp('/')
 
-      const calldata = encodeFunctionData({
+      const args = [domain.node, address]
+      const data = encodeFunctionData({
         abi,
         functionName: 'setAddr',
-        args: [domain.node, address],
+        args,
       })
 
-      const signer = privateKeyToAccount(privateKey)
-      const signature = await signer.signMessage({ message: { raw: calldata } })
+      const signature = await signData({
+        pvtKey: privateKey,
+        args,
+        sender: TEST_ADDRESS,
+        func: getAbiItem({
+          abi,
+          name: 'setAddr',
+        }) as AbiFunction,
+      })
       await request(app)
         .post('/')
-        .send({ data: calldata, signature, sender: TEST_ADDRESS })
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json')
+        .send({
+          data,
+          signature: serializeTypedSignature(signature),
+          sender: TEST_ADDRESS,
+        })
 
       const response = await repo.getAddr({
         node: domain.node as `0x${string}`,
@@ -316,19 +364,31 @@ describe('Gateway API', () => {
         withSigner(privateKey, []),
       )
 
-      const calldata = encodeFunctionData({
+      const args = [domain.node, address]
+      const data = encodeFunctionData({
         abi,
         functionName: 'setAddr',
-        args: [domain.node, address],
+        args,
       })
 
-      const signer = privateKeyToAccount(privateKey)
-      const signature = await signer.signMessage({ message: { raw: calldata } })
+      const signature = await signData({
+        pvtKey: privateKey,
+        args,
+        sender: TEST_ADDRESS,
+        func: getAbiItem({
+          abi,
+          name: 'setAddr',
+        }) as AbiFunction,
+      })
       await request(app)
         .post('/')
-        .send({ data: calldata, signature, sender: TEST_ADDRESS })
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json')
+        .send({
+          data,
+          signature: serializeTypedSignature(signature),
+          sender: TEST_ADDRESS,
+        })
 
       const response = await repo.getAddr({
         node: domain.node as `0x${string}`,

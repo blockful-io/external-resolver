@@ -58,7 +58,7 @@ describe('Gateway Database', () => {
       await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'register',
         pvtKey,
         args: [node, 2000],
@@ -86,7 +86,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'register',
         pvtKey,
         args: [domain.node, 3000],
@@ -117,7 +117,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'setContenthash',
         pvtKey,
         args: [domain.node, contenthash],
@@ -150,7 +150,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'contenthash',
         args: [domain.node],
       })
@@ -169,7 +169,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'setContenthash',
         args: [namehash('0xiiiiii'), contenthash],
       })
@@ -196,7 +196,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'setText',
         pvtKey,
         args: [domain.node, 'avatar', 'blockful.png'],
@@ -226,7 +226,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'setText',
         pvtKey,
         args: [domain.node, 'avatar', 'ethereum.png'],
@@ -252,7 +252,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'setText',
         pvtKey: unauthorizedPvtKey,
         args: [domain.node, 'avatar', 'unauthorized.png'],
@@ -283,7 +283,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'text',
         args: [domain.node, 'avatar'],
       })
@@ -315,7 +315,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'setAddr',
         pvtKey,
         args: [domain.node, '0x1234567890123456789012345678901234567890'],
@@ -343,7 +343,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'setAddr',
         pvtKey: unauthorizedPvtKey,
         args: [domain.node, '0x1234567890123456789012345678901234567890'],
@@ -372,7 +372,7 @@ describe('Gateway Database', () => {
       const result = await doCall({
         server,
         abi,
-        path: TEST_ADDRESS,
+        sender: TEST_ADDRESS,
         method: 'addr',
         args: [domain.node],
       })

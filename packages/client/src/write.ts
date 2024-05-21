@@ -170,7 +170,7 @@ export async function ccipRequest({
   url,
 }: CcipRequestParameters): Promise<Response> {
   return await fetch(url.replace('/{sender}/{data}.json', ''), {
-    body: JSON.stringify(body, (key, value) =>
+    body: JSON.stringify(body, (_, value) =>
       typeof value === 'bigint' ? value.toString() : value,
     ),
     method: 'POST',

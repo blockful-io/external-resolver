@@ -8,6 +8,58 @@ import {
   AbiFunction,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
+import { TypedSignature } from '../src/types'
+
+export async function signData({
+  func,
+  sender,
+  pvtKey,
+  args,
+}: {
+  func: AbiFunction
+  sender: `0x${string}`
+  pvtKey: `0x${string}`
+  args: unknown[]
+}): Promise<TypedSignature> {
+  const parameters = args.map((arg, i) => ({
+    name: func.inputs[i].name!,
+    value: typeof arg === 'string' ? arg : String(arg),
+  }))
+  const signer = privateKeyToAccount(pvtKey)
+  const domain = {
+    name: 'DatabaseResolver',
+    version: '1',
+    chainId: 1,
+    verifyingContract: sender,
+  }
+  const message = {
+    functionSelector: toFunctionHash(func).slice(0, 10) as `0x${string}`,
+    sender,
+    parameters,
+    expirationTimestamp: 9999999n,
+  }
+  return {
+    domain,
+    message,
+    signature: await signer.signTypedData({
+      domain,
+      message,
+      types: {
+        Message: [
+          { name: 'functionSelector', type: 'bytes4' },
+          { name: 'sender', type: 'address' },
+          { name: 'parameters', type: 'Parameter[]' },
+          { name: 'expirationTimestamp', type: 'uint256' },
+        ],
+        Parameter: [
+          { name: 'name', type: 'string' },
+          { name: 'value', type: 'string' },
+        ],
+      },
+      primaryType: 'Message',
+    }),
+  }
+}
 
 /**
  * Executes a function call on the specified server using the provided ABI and arguments.
@@ -28,26 +80,27 @@ import { privateKeyToAccount } from 'viem/accounts'
 export async function doCall({
   server,
   abi,
-  path,
+  sender,
   method,
   pvtKey,
   args,
 }: {
   server: ccipread.Server
   abi: string[]
-  path: string
+  sender: `0x${string}`
   method: string
   pvtKey?: `0x${string}`
   args: unknown[]
 }): Promise<{ data: Array<unknown>; ttl?: bigint; error?: Error }> {
   const iface = parseAbi(abi)
-  const func = getAbiItem({ abi: iface, name: method })
+  const func = getAbiItem({ abi: iface, name: method }) as AbiFunction
   if (!func) {
     throw Error('Unknown handler')
   }
 
-  const funcSelector = toFunctionHash(func as AbiFunction)
-  const handler = server.handlers[funcSelector.slice(0, 10)]
+  const funcHash = toFunctionHash(func as AbiFunction)
+  const funcSelector = funcHash.slice(0, 10) as `0x${string}`
+  const handler = server.handlers[funcSelector]
 
   // Check if the handler for the specified function type is registered
   if (!handler) throw Error('Unknown handler')
@@ -59,14 +112,10 @@ export async function doCall({
     args,
   })
 
-  let signature
-  if (pvtKey) {
-    const signer = privateKeyToAccount(pvtKey)
-    signature = await signer.signMessage({ message: { raw: calldata } })
-  }
+  const signature = pvtKey && (await signData({ pvtKey, func, args, sender }))
 
   // Make a server call with encoded function data
-  const result = await server.call({ to: path, data: calldata, signature })
+  const result = await server.call({ to: sender, data: calldata, signature })
 
   // Check if the server response has a non-200 status
   if (result.status !== 200) return { data: [], error: result.body.data }
@@ -86,5 +135,15 @@ export async function doCall({
       return { data: Object.values(decodedResponse), ttl: result.body?.ttl }
     default:
       return { data: [decodedResponse], ttl: result.body?.ttl }
+  }
+}
+
+export function serializeTypedSignature(signature: TypedSignature) {
+  return {
+    ...signature,
+    message: {
+      ...signature.message,
+      expirationTimestamp: signature.message.expirationTimestamp.toString(),
+    },
   }
 }
