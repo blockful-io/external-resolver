@@ -5,22 +5,26 @@
 
 import { Command } from 'commander'
 import {
-  AbiFunction,
   BaseError,
-  ContractFunctionRevertedError,
   Hash,
   Hex,
   createPublicClient,
-  encodeFunctionData,
   http,
   namehash,
   toHex,
   Address,
+  RawContractError,
+  encodeFunctionData,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
 import * as chains from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
 
+import {
+  MessageData,
+  DomainData,
+  TypedSignature,
+} from '@blockful/gateway/src/types'
 import { abi as dbABI } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import { abi as uABI } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
@@ -56,40 +60,6 @@ const client = createPublicClient({
   transport: http(provider),
 })
 
-export const DBResolverAbi: AbiFunction[] = [
-  {
-    name: 'register',
-    type: 'function',
-    inputs: [
-      { name: 'name', type: 'bytes32' },
-      { name: 'ttl', type: 'uint32' },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    name: 'setText',
-    type: 'function',
-    inputs: [
-      { name: 'name', type: 'bytes32' },
-      { name: 'key', type: 'string' },
-      { name: 'value', type: 'string' },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    name: 'text',
-    type: 'function',
-    inputs: [
-      { name: 'name', type: 'bytes32' },
-      { name: 'key', type: 'string' },
-    ],
-    outputs: [{ type: 'string' }],
-    stateMutability: 'view',
-  },
-]
-
 // eslint-disable-next-line
 const _ = (async () => {
   const publicAddress = normalize('blockful.eth')
@@ -102,56 +72,82 @@ const _ = (async () => {
   })) as Hash[]
 
   // REGISTER NEW DOMAIN
-  try {
-    await client.simulateContract({
-      address: resolverAddr,
-      functionName: 'write',
-      abi: dbABI,
-      args: [
-        encodeFunctionData({
-          abi: DBResolverAbi,
-          functionName: 'register',
-          args: [namehash(publicAddress), 99999999n],
-        }),
-      ],
-    })
-  } catch (err) {
-    const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [sender, url, callData] = data?.args as [Hex, string, Hex]
-      const signer = privateKeyToAccount(privateKey)
-      const signature = await signer.signMessage({ message: { raw: callData } })
+  // try {
+  //   await client.simulateContract({
+  //     address: resolverAddr,
+  //     functionName: 'write',
+  //     abi: dbABI,
+  //     args: [
+  //       encodeFunctionData({
+  //         abi: DBResolverAbi,
+  //         functionName: 'register',
+  //         args: [namehash(publicAddress), 99999999n],
+  //       }),
+  //     ],
+  //   })
+  // } catch (err) {
+  //   const data = getRevertErrorData(err)
+  //   if (data?.errorName === 'StorageHandledByOffChainDatabase') {
+  //     const [sender, url, callData] = data?.args as [Hex, string, Hex]
+  //     const signer = privateKeyToAccount(privateKey)
+  //     const signature = await signer.signMessage({ message: { raw: callData } })
 
-      await ccipRequest({
-        body: { data: callData, signature, sender },
-        url,
-      })
-    }
-  }
+  //     await ccipRequest({
+  //       body: { data: callData, signature, sender },
+  //       url,
+  //     })
+  //   }
+  // }
 
   // SET TEXT
   try {
     await client.simulateContract({
       address: resolverAddr,
-      functionName: 'write',
+      functionName: 'setText',
       abi: dbABI,
-      args: [
-        encodeFunctionData({
-          abi: DBResolverAbi,
-          functionName: 'setText',
-          args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
-        }),
-      ],
+      args: [namehash(publicAddress), 'com.twitter', '@xxx_blockful.eth'],
     })
   } catch (err) {
     const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [sender, url, callData] = data?.args as [Hex, string, Hex]
-      const signer = privateKeyToAccount(privateKey)
-      const signature = await signer.signMessage({ message: { raw: callData } })
 
+    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
+      const [domain, url, message] = data?.args as [
+        DomainData,
+        string,
+        MessageData,
+      ]
+      const signer = privateKeyToAccount(privateKey)
+
+      const signature = await signer.signTypedData({
+        domain,
+        message,
+        types: {
+          Message: [
+            { name: 'functionSelector', type: 'bytes4' },
+            { name: 'sender', type: 'address' },
+            { name: 'parameters', type: 'Parameter[]' },
+            { name: 'expirationTimestamp', type: 'uint256' },
+          ],
+          Parameter: [
+            { name: 'name', type: 'string' },
+            { name: 'value', type: 'string' },
+          ],
+        },
+        primaryType: 'Message',
+      })
+
+      const args = message.parameters.map((arg) => arg.value)
+      const callData = encodeFunctionData({
+        abi: dbABI,
+        functionName: message.functionSelector,
+        args,
+      })
       await ccipRequest({
-        body: { data: callData, signature, sender },
+        body: {
+          data: callData,
+          signature: { message, domain, signature },
+          sender: message.sender,
+        },
         url,
       })
     }
@@ -160,12 +156,12 @@ const _ = (async () => {
 
 export function getRevertErrorData(err: unknown) {
   if (!(err instanceof BaseError)) return undefined
-  const error = err.walk() as ContractFunctionRevertedError
-  return error.data
+  const error = err.walk() as RawContractError
+  return error?.data as { errorName: string; args: unknown[] }
 }
 
 export type CcipRequestParameters = {
-  body: { data: Hex; signature: Hex; sender: Address }
+  body: { data: Hex; signature: TypedSignature; sender: Address }
   url: string
 }
 
@@ -174,7 +170,9 @@ export async function ccipRequest({
   url,
 }: CcipRequestParameters): Promise<Response> {
   return await fetch(url.replace('/{sender}/{data}.json', ''), {
-    body: JSON.stringify(body),
+    body: JSON.stringify(body, (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value,
+    ),
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
