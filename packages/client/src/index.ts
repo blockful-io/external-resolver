@@ -6,7 +6,8 @@
 import { Command } from 'commander'
 import { createPublicClient, http } from 'viem'
 import { normalize } from 'viem/ens'
-import { anvil } from 'viem/chains'
+import * as chains from 'viem/chains'
+import { config } from 'dotenv'
 
 // Define command-line options using Commander
 const program = new Command()
@@ -17,10 +18,26 @@ program
 
 program.parse(process.argv)
 
-const { resolver, provider } = program.opts()
+const { resolver, provider, chainId } = program.opts()
+
+config({
+  path: process.env.ENV_FILE || '../.env',
+})
+
+function getChain(chainId: number) {
+  for (const chain of Object.values(chains)) {
+    if ('id' in chain && chain.id === chainId) {
+      return chain
+    }
+  }
+}
+
+const chain = getChain(parseInt(chainId))
+
+console.log(`Connecting to ${chain?.name}.`)
 
 const client = createPublicClient({
-  chain: anvil,
+  chain,
   transport: http(provider),
 })
 

@@ -1,35 +1,51 @@
 {
   "name": "@blockful/external-resolver",
   "version": "1.0.0",
-  "packageManager": "yarn@4.1.0",
+  "packageManager": "npm@10.2.3",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "ccip-server": "yarn workspace @blockful/ccip-server",
-    "client": "yarn workspace @blockful/client",
-    "gateway": "yarn workspace @blockful/gateway",
-    "contracts": "yarn workspace @blockful/contracts",
-    "start": "dotenvx run -- turbo run start",
+    "ccip-server": "npm run --workspace=@blockful/ccip-server",
+    "client": "npm run --workspace=@blockful/client",
+    "gateway": "npm run --workspace=@blockful/gateway",
+    "contracts": "npm run --workspace=@blockful/contracts",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
     "build": "turbo run build",
     "prepare": "husky",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "commit": "git-cz"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^0.20.2"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.0.3",
     "@rocketseat/eslint-config": "^2.2.2",
     "@types/eslint": "^8",
     "@types/node": "^20.11.25",
-    "commitlint": "^19.0.3",
+    "commitizen": "^4.3.0",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.57.0",
     "husky": "^9.0.11",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsup": "^8.0.2",
     "turbo": "^1.12.4"
+  },
+  "description": "This project aims to scale the Ethereum Name Service (ENS) by reducing costs for users and increasing its usage. The strategy involves combining existing patterns such as [ERC-3668](https://eips.ethereum.org/EIPS/eip-3668), [EIP-5559](https://eips.ethereum.org/EIPS/eip-5559), [ENSIP-10](https://docs.ens.domains/ensip/10) and [ENSIP-16](https://docs.ens.domains/ensip/16), along with proof of concepts to develop a comprehensive reference codebase for the industry.",
+  "main": "commitlint.config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

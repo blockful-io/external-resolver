@@ -7,7 +7,7 @@ import {
   encodeAbiParameters,
   parseAbiParameters,
 } from 'viem'
-import { IProofService } from '../types'
+import { IProofService } from '../interfaces'
 import { EVMProofHelper } from './evmproof'
 
 /**

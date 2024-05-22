@@ -1,19 +1,25 @@
 {
   "name": "@blockful/ccip-server",
-  "packageManager": "yarn@4.1.0",
-  "types": "./src/index.ts",
+  "type": "module",
+  "types": "./dist/index.js",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup"
   },
   "dependencies": {
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/bytes": "^5.7.0",
     "cors": "2.8.5",
     "ethers": "5.3.1",
     "express": "4.17.1"
   },
-  "peerDependencies": {
-    "@blockful/tsconfig": "workspace:^"
-  },
   "devDependencies": {
-    "@types/cors": "^2.8.17"
+    "@blockful/tsconfig": "*",
+    "@types/cors": "^2.8.17",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
   }
 }

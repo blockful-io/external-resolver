@@ -20,24 +20,77 @@ To run this application locally, follow these steps:
 3. Install dependencies by running:
 
 ```bash
-yarn install
-cd packages/contracts && forge install && cd -
+npm install
 ```
 
-4. Start the development server:
+### Database setup
+
+1. Run local postgres instance (currently no initial data is inserted)
+
+```shell
+docker-compose up db -d
+```
+
+2. Deploy the contracts locally:
 
 ```bash
-yarn start
+npm run contracts start:db
 ```
 
-5. Run tests:
+3. Start the gateway
 
 ```bash
-docker-compose up -d # start local blockchain node
-yarn test
+npm run gateway dev:db
 ```
 
-6. Access the contracts through `http://localhost:8545`
+4. Request the domain properties through the client:
+
+```bash
+npm run client start
+```
+
+### Layer 2 setup
+
+1. Deploy the contracts locally:
+
+```bash
+npm run contracts start:arb
+```
+
+2. Start the gateway
+
+```bash
+npm run gateway dev:arb
+```
+
+3. Request the domain properties through the client:
+
+```bash
+npm run client start
+```
+
+## Deployment
+
+It's required to have the [Railway CLI](https://docs.railway.app/guides/cli) installed.
+
+1. Install the Railway CLI through: `npm i -g @railway/cli`
+2. Login into your Railway account: `railway login`
+3. Link the repo to the project:  `railway link`
+4. Build project: `turbo build --filter=@blockful/gateway...`
+5. Test bundle locally: `npm run gateway start:db`
+6. Deploy the Gateway: `railway up`
+
+## Architecture
+
+### High Level
+
+#### Database
+
+<img width="733" alt="image" src="https://github.com/blockful-io/external-resolver/assets/29408363/02882939-dd54-4fa7-a268-a817403ddd2d">
+
+#### Layer 2
+
+<img width="735" alt="image" src="https://github.com/blockful-io/external-resolver/assets/29408363/48306561-59b4-4ab7-b920-b9a8f50cb325">
 
 ## Conclusion
 

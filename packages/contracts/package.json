@@ -4,13 +4,15 @@
   "scripts": {
     "test": "forge test -vvv",
     "test:watch": "forge test -vvv --watch",
-    "start:l1": "anvil & forge script script/local/PublicResolver.s.sol --rpc-url localhost:8545 --broadcast -vv",
-    "start:db": "anvil & forge script script/local/DatabaseResolver.s.sol --rpc-url localhost:8545 --broadcast -vv",
+    "start:public": "forge script script/local/PublicResolver.s.sol --rpc-url rpc_url --broadcast -vv",
+    "start:db": "forge script script/local/DatabaseResolver.s.sol --rpc-url rpc_url --broadcast -vv",
+    "start:l1": "forge script script/local/OffchainResolver.s.sol --rpc-url rpc_url --broadcast -vv",
     "start:arb:l1": "forge script script/local/ArbResolver.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vv",
     "start:arb:l2": "forge script script/local/ArbResolverl2.s.sol --rpc-url http://127.0.0.1:8547 --broadcast -vv",
     "deploy:arb": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --fork-url $RPC_URL -vv",
     "postinstall": "forge install",
     "lint": "forge fmt",
+
     "build": "forge build"
   },
   "devDependencies": {
