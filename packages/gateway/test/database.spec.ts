@@ -187,7 +187,7 @@ describe('Gateway Database', () => {
       domain.ttl = 2000
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
-      await datasource.manager.save(domain)
+      domain = await datasource.manager.save(domain)
     })
 
     // Register a domain, set an initial text record, then update it with a new value
@@ -204,15 +204,46 @@ describe('Gateway Database', () => {
 
       expect(result.data.length).toEqual(0)
 
-      const text = await datasource.getRepository(Text).findOneBy({
-        key: 'avatar',
-        domain: {
-          node: domain.node,
-          owner: domain.owner,
-        },
+      const [actual, count] = await datasource
+        .getRepository(Text)
+        .createQueryBuilder()
+        .where('key = :key', { key: 'avatar' })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getManyAndCount()
+      expect(count).toBe(1)
+      expect(actual[0]?.key).toEqual('avatar')
+      expect(actual[0]?.value).toEqual('blockful.png')
+    })
+
+    // Register a domain, set an initial text record, then update it with a new value
+    it('should allow only 1 key same per domain', async () => {
+      const server = NewServer(withSetText(repo, validator))
+      const text = new Text()
+      text.key = 'avatar'
+      text.value = 'blockful.png'
+      text.domain = domain
+      await datasource.manager.save(text)
+
+      const result = await doCall({
+        server,
+        abi,
+        sender: TEST_ADDRESS,
+        method: 'setText',
+        pvtKey,
+        args: [domain.node, 'avatar', 'floripa.png'],
       })
-      expect(text?.key).toEqual('avatar')
-      expect(text?.value).toEqual('blockful.png')
+
+      expect(result.data.length).toEqual(0)
+
+      const [actual, count] = await datasource
+        .getRepository(Text)
+        .createQueryBuilder()
+        .where('key = :key', { key: 'avatar' })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getManyAndCount()
+      expect(count).toEqual(1)
+      expect(actual[0]?.key).toEqual('avatar')
+      expect(actual[0]?.value).toEqual('floripa.png')
     })
 
     // Register a domain, set an initial text record, then update it with a new value
@@ -221,6 +252,7 @@ describe('Gateway Database', () => {
       const text = new Text()
       text.key = 'avatar'
       text.value = 'blockful.png'
+      text.domain = domain
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -234,15 +266,15 @@ describe('Gateway Database', () => {
 
       expect(result.data.length).toEqual(0)
 
-      const updatedText = await datasource.getRepository(Text).findOneBy({
-        key: 'avatar',
-        domain: {
-          node: domain.node,
-          owner: domain.owner,
-        },
-      })
-      expect(updatedText?.key).toEqual('avatar')
-      expect(updatedText?.value).toEqual('ethereum.png')
+      const [actual, count] = await datasource
+        .getRepository(Text)
+        .createQueryBuilder()
+        .where('key = :key', { key: 'avatar' })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getManyAndCount()
+      expect(count).toBe(1)
+      expect(actual[0]?.key).toEqual('avatar')
+      expect(actual[0]?.value).toEqual('ethereum.png')
     })
 
     // Attempt to set a text record using an unauthorized private key
@@ -259,14 +291,13 @@ describe('Gateway Database', () => {
       })
 
       expect(result.error).toEqual('Unauthorized')
-      const text = await datasource.getRepository(Text).findOneBy({
-        key: 'avatar',
-        domain: {
-          node: domain.node,
-          owner: domain.owner,
-        },
-      })
-      expect(text?.value).not.toEqual('unauthorized.png')
+      const exists = await datasource
+        .getRepository(Text)
+        .createQueryBuilder()
+        .where('key = :key', { key: 'avatar' })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getExists()
+      expect(exists).toBeFalsy()
     })
 
     // Register a domain with a text record, then query for it
@@ -323,17 +354,55 @@ describe('Gateway Database', () => {
 
       expect(result.data.length).toEqual(0)
 
-      const addr = await datasource.getRepository(Address).findOneBy({
-        domain: {
-          node: domain.node,
-          owner: domain.owner,
-        },
-        coin: 60,
-      })
-      expect(addr?.address).toEqual(
+      const [actual, count] = await datasource
+        .getRepository(Address)
+        .createQueryBuilder()
+        .where('coin = :coin', { coin: 60 })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getManyAndCount()
+      expect(count).toBe(1)
+      expect(actual[0]?.address).toEqual(
         '0x1234567890123456789012345678901234567890',
       )
-      expect(addr?.coin).toEqual(60)
+      expect(actual[0]?.coin).toEqual(60)
+    })
+
+    // TODO: test multicoin read/write when issue is solved: https://github.com/smartcontractkit/ccip-read/issues/32
+
+    // Register a domain, then set an Ethereum address for it
+    it('should allow multiple addresses for same owner and different coins', async () => {
+      const server = NewServer(withSetAddr(repo, validator))
+      const addr = new Address()
+      addr.address = TEST_ADDRESS
+      addr.coin = 1
+      addr.domain = domain
+      await datasource.manager.save(addr)
+
+      const result = await doCall({
+        server,
+        abi,
+        sender: TEST_ADDRESS,
+        method: 'setAddr',
+        pvtKey,
+        args: [domain.node, '0x1234567890123456789012345678901234567999'],
+      })
+
+      expect(result.data.length).toEqual(0)
+
+      const [actual, count] = await datasource
+        .getRepository(Address)
+        .createQueryBuilder()
+        .where('domain = :domain', { domain: domain.node })
+        .getManyAndCount()
+      expect(count).toBe(2)
+      expect(actual[0]?.address).toEqual(
+        '0x1234567890123456789012345678901234567890',
+      )
+      expect(actual[0]?.coin).toEqual(1)
+      expect(actual[1]?.address).toEqual(
+        '0x1234567890123456789012345678901234567999',
+      )
+      expect(actual[1]?.coin).toEqual(60)
     })
 
     // Attempt to set an Ethereum address using an unauthorized private key
@@ -350,14 +419,15 @@ describe('Gateway Database', () => {
       })
 
       expect(result.error).toEqual('Unauthorized')
-      const addr = await datasource.getRepository(Address).findOneBy({
-        domain: {
-          node: domain.node,
-          owner: domain.owner,
-        },
-        coin: 60,
-      })
-      expect(addr).toBeNull() // The address should not be set
+
+      const exists = await datasource
+        .getRepository(Address)
+        .createQueryBuilder()
+        .where('coin = :coin', { coin: 60 })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getExists()
+
+      expect(exists).toBeFalsy() // The address should not be set
     })
 
     // Register a domain with an Ethereum address, then query for it

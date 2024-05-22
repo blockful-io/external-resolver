@@ -22,7 +22,11 @@ export class Text {
   value: string
 
   @JoinColumn({ name: 'domain', referencedColumnName: 'node' })
-  @ManyToOne(() => Domain, (domain) => domain.texts)
+  @ManyToOne(() => Domain, (domain) => domain.texts, { eager: true })
+  @PrimaryColumn({
+    name: 'domain',
+    type: 'text',
+  })
   domain: Domain
 
   @CreateDateColumn({ default: 'now' })

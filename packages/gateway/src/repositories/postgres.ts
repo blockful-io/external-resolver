@@ -78,7 +78,7 @@ export class PostgresRepository {
         },
       ],
       {
-        conflictPaths: ['coin'],
+        conflictPaths: ['coin', 'domain'],
         skipUpdateIfNoValuesChanged: true,
       },
     )
@@ -103,19 +103,14 @@ export class PostgresRepository {
 
   async setText({ node, key, value }: SetTextProps) {
     await this.client.getRepository(Text).upsert(
-      [
-        {
-          key,
-          value,
-          domain: {
-            node,
-          },
-        },
-      ],
       {
-        conflictPaths: ['key'],
-        skipUpdateIfNoValuesChanged: true,
+        key,
+        value,
+        domain: {
+          node,
+        },
       },
+      { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )
   }
 
