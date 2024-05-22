@@ -72,32 +72,24 @@ const _ = (async () => {
   })) as Hash[]
 
   // REGISTER NEW DOMAIN
-  // try {
-  //   await client.simulateContract({
-  //     address: resolverAddr,
-  //     functionName: 'write',
-  //     abi: dbABI,
-  //     args: [
-  //       encodeFunctionData({
-  //         abi: DBResolverAbi,
-  //         functionName: 'register',
-  //         args: [namehash(publicAddress), 99999999n],
-  //       }),
-  //     ],
-  //   })
-  // } catch (err) {
-  //   const data = getRevertErrorData(err)
-  //   if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-  //     const [sender, url, callData] = data?.args as [Hex, string, Hex]
-  //     const signer = privateKeyToAccount(privateKey)
-  //     const signature = await signer.signMessage({ message: { raw: callData } })
-
-  //     await ccipRequest({
-  //       body: { data: callData, signature, sender },
-  //       url,
-  //     })
-  //   }
-  // }
+  try {
+    await client.simulateContract({
+      address: resolverAddr,
+      functionName: 'register',
+      abi: dbABI,
+      args: [namehash(publicAddress), 99999999n],
+    })
+  } catch (err) {
+    const data = getRevertErrorData(err)
+    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
+      const [domain, url, message] = data.args as [
+        DomainData,
+        string,
+        MessageData,
+      ]
+      await handleOffchainStorage({ domain, url, message })
+    }
+  }
 
   // SET TEXT
   try {
@@ -111,48 +103,59 @@ const _ = (async () => {
     const data = getRevertErrorData(err)
 
     if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [domain, url, message] = data?.args as [
+      const [domain, url, message] = data.args as [
         DomainData,
         string,
         MessageData,
       ]
-      const signer = privateKeyToAccount(privateKey)
-
-      const signature = await signer.signTypedData({
-        domain,
-        message,
-        types: {
-          Message: [
-            { name: 'functionSelector', type: 'bytes4' },
-            { name: 'sender', type: 'address' },
-            { name: 'parameters', type: 'Parameter[]' },
-            { name: 'expirationTimestamp', type: 'uint256' },
-          ],
-          Parameter: [
-            { name: 'name', type: 'string' },
-            { name: 'value', type: 'string' },
-          ],
-        },
-        primaryType: 'Message',
-      })
-
-      const args = message.parameters.map((arg) => arg.value)
-      const callData = encodeFunctionData({
-        abi: dbABI,
-        functionName: message.functionSelector,
-        args,
-      })
-      await ccipRequest({
-        body: {
-          data: callData,
-          signature: { message, domain, signature },
-          sender: message.sender,
-        },
-        url,
-      })
+      await handleOffchainStorage({ domain, url, message })
     }
   }
 })()
+
+async function handleOffchainStorage({
+  domain,
+  url,
+  message,
+}: {
+  domain: DomainData
+  url: string
+  message: MessageData
+}) {
+  const signer = privateKeyToAccount(privateKey)
+
+  const signature = await signer.signTypedData({
+    domain,
+    message,
+    types: {
+      Message: [
+        { name: 'functionSelector', type: 'bytes4' },
+        { name: 'sender', type: 'address' },
+        { name: 'parameters', type: 'Parameter[]' },
+        { name: 'expirationTimestamp', type: 'uint256' },
+      ],
+      Parameter: [
+        { name: 'name', type: 'string' },
+        { name: 'value', type: 'string' },
+      ],
+    },
+    primaryType: 'Message',
+  })
+
+  const callData = encodeFunctionData({
+    abi: dbABI,
+    functionName: message.functionSelector,
+    args: message.parameters.map((arg) => arg.value),
+  })
+  await ccipRequest({
+    body: {
+      data: callData,
+      signature: { message, domain, signature },
+      sender: message.sender,
+    },
+    url,
+  })
+}
 
 export function getRevertErrorData(err: unknown) {
   if (!(err instanceof BaseError)) return undefined

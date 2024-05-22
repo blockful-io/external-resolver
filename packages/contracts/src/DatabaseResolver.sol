@@ -74,6 +74,25 @@ contract DatabaseResolver is
         _setOffChainDatabaseTimeoutDuration(newOffChainDatabaseTimeoutDuration);
     }
 
+    //////// OFFCHAIN STORAGE REGISTER DOMAIN ////////
+
+    /**
+     * Resolves a name, as specified by ENSIP 10 (wildcard).
+     * @param node The DNS-encoded name to resolve.
+     * @param ttl Expiration timestamp of the domain
+     */
+    function register(bytes32 node, uint32 ttl) external view {
+        IWriteDeferral.parameter[] memory params = new IWriteDeferral.parameter[](2);
+
+        params[0].name = "node";
+        params[0].value = TypeToString.bytes32ToString(node);
+
+        params[1].name = "ttl";
+        params[1].value = Strings.toString(ttl);
+
+        _offChainStorage(params);
+    }
+
     //////// ENSIP 10 ////////
 
     /**
