@@ -1,4 +1,4 @@
-import type { IBlockCache } from '../types'
+import type { IBlockCache } from './IBlockCache'
 
 // Dummy in memory cache for storing block data. Replace with something more sophisticated like redis in the future
 export class InMemoryBlockCache implements IBlockCache {

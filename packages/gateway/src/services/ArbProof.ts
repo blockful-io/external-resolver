@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
-import { IProofService, IBlockCache } from '../types'
+import { IProofService } from '../types'
+import { IBlockCache } from './IBlockCache'
 import { EVMProofHelper } from './evmproof'
 import {
     Address,
@@ -53,7 +54,7 @@ export class ArbProofService<chain extends Chain>
         slot: bigint,
     ): Promise<Hash> {
         return this.helper.getStorageAt(
-            block.number as unknown as bigint,
+            BigInt(block.number),
             address,
             slot,
         )
@@ -80,19 +81,18 @@ export class ArbProofService<chain extends Chain>
 
         return encodeAbiParameters(
             parseAbiParameters([
-                '(bytes32 version, bytes32 sendRoot, uint64 nodeIndex,bytes rlpEncodedBlock)',
-                '(bytes[] stateTrieWitness, bytes[][] storageProofs)'
+                '(bytes32 version, bytes32 sendRoot, uint64 nodeIndex, bytes rlpEncodedBlock), (bytes[] stateTrieWitness, bytes[][] storageProofs)'
             ]),
             [
                 {
                     version:
                         '0x0000000000000000000000000000000000000000000000000000000000000000',
-                    sendRoot: block.sendRoot,
-                    nodeIndex: block.nodeIndex,
-                    rlpEncodedBlock: block.rlpEncodedBlock,
-                },
-                proof,
-            ] as never
+                    sendRoot: block.sendRoot as Hash,
+                    nodeIndex: BigInt(block.nodeIndex),
+                    rlpEncodedBlock: block.rlpEncodedBlock as Hash,
+                }, proof
+
+            ]
         ) as Hash
     }
 

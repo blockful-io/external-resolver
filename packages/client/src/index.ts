@@ -33,9 +33,8 @@ const _ = (async () => {
     key: 'com.twitter',
     universalResolverAddress: resolver,
   })
-  const avatar = await client.getEnsText({
+  const avatar = await client.getEnsAvatar({
     name: publicAddress,
-    key: 'avatar',
     universalResolverAddress: resolver,
   })
 

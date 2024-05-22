@@ -8,7 +8,7 @@ import "@ens-contracts/utils/UniversalResolver.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 
 import "../Helper.sol";
-import "../../src/evmgateway/L1Verifier.sol";
+import "@evmgateway/L1Verifier.sol";
 import {ArbVerifier} from "../../src/ArbVerifier.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
 import {L1Resolver} from "../../src/evmgateway/L1Resolver.sol";
@@ -16,10 +16,10 @@ import {IRollupCore} from "@nitro-contracts/src/rollup/IRollupCore.sol";
 
 contract OffchainResolverScript is Script, ENSHelper {
     function run() external {
-        uint256 privateKey = vm.envUint("PRIVATE_KEY_ARBITRUM");
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
         address publicKey = vm.addr(privateKey);
         address arbitrumRollupAddress = 0x15F958bc3CB7308739AF63136AF432c868af97e2;
-        address arbitrumL2ResolverAddress = 0x79b994D378518EAe46917Aa19F05cE6545fAAc26;
+        address arbitrumL2ResolverAddress = 0xd1Aa1B583f2C086D0964600E0c79A95aCbc30A65;
 
         vm.startBroadcast(privateKey);
 
