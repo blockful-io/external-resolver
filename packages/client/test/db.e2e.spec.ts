@@ -6,6 +6,7 @@
   environment and stops at the gateway call. It still requires implementing the connection between the gateway and 
   layer two, or the gateway and the database.
 */
+import { spawn } from 'child_process'
 
 // Importing abi and bytecode from contracts folder
 import {
@@ -16,8 +17,6 @@ import {
   abi as abiRegistry,
   bytecode as bytecodeRegistry,
 } from '@blockful/contracts/out/ENSRegistry.sol/ENSRegistry.json'
-import { abi as abiTextResolver } from '@blockful/contracts/out/TextResolver.sol/TextResolver.json'
-import { abi as abiAddrResolver } from '@blockful/contracts/out/AddrResolver.sol/AddrResolver.json'
 import {
   abi as abiUniversalResolver,
   bytecode as bytecodeUniversalResolver,
@@ -52,6 +51,7 @@ import {
   withSetText,
   withRegisterDomain,
 } from '@blockful/gateway/src/handlers'
+import { DomainData, MessageData } from '@blockful/gateway/src/types'
 import { InMemoryRepository } from '@blockful/gateway/src/repositories'
 import { withSigner } from '@blockful/gateway/src/middlewares'
 import { OwnershipValidator } from '@blockful/gateway/src/services'
@@ -99,8 +99,6 @@ async function deployContract({
 }
 
 async function deployContracts(signer: Hash) {
-  // exec('anvil')
-
   const registryAddr = await deployContract({
     abi: abiRegistry,
     bytecode: bytecodeRegistry.object as Hash,
@@ -118,7 +116,7 @@ async function deployContracts(signer: Hash) {
     abi: abiDBResolver,
     bytecode: bytecodeDBResolver.object as Hash,
     account: signer,
-    args: [GATEWAY_URL, [signer]],
+    args: [GATEWAY_URL, 600, [signer]],
   })
 
   const registry = await getContract({
@@ -199,25 +197,48 @@ async function offchainWriting({
   try {
     await client.simulateContract({
       address: resolverAddr,
-      functionName: 'write',
-      abi: abiDBResolver,
-      args: [
-        encodeFunctionData({
-          abi,
-          functionName,
-          args,
-        }),
-      ],
+      abi,
+      functionName,
+      args,
     })
   } catch (err) {
     const data = getRevertErrorData(err)
     if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [sender, url, callData] = data?.args as [Hex, string, Hex]
+      const [domain, url, message] = data.args as [
+        DomainData,
+        string,
+        MessageData,
+      ]
 
-      const signature = await signer.signMessage({ message: { raw: callData } })
+      const signature = await signer.signTypedData({
+        domain,
+        message,
+        types: {
+          Message: [
+            { name: 'functionSelector', type: 'bytes4' },
+            { name: 'sender', type: 'address' },
+            { name: 'parameters', type: 'Parameter[]' },
+            { name: 'expirationTimestamp', type: 'uint256' },
+          ],
+          Parameter: [
+            { name: 'name', type: 'string' },
+            { name: 'value', type: 'string' },
+          ],
+        },
+        primaryType: 'Message',
+      })
 
+      const callData = encodeFunctionData({
+        abi,
+        functionName: message.functionSelector,
+        args: message.parameters.map((arg) => arg.value),
+      })
       return await ccipRequest({
-        body: { data: callData, signature, sender },
+        body: {
+          data: callData,
+          signature: { message, domain, signature },
+          sender: signer.address,
+        },
         url,
       })
     }
@@ -241,6 +262,8 @@ describe('DatabaseResolver', () => {
   let account: Address
 
   before(async () => {
+    spawn('anvil')
+
     const [signer] = await client.getAddresses()
     account = signer
     await deployContracts(account)
@@ -296,7 +319,7 @@ describe('DatabaseResolver', () => {
     const response = await offchainWriting({
       node: normalize(rawNode),
       functionName: 'setText',
-      abi: abiTextResolver,
+      abi: abiDBResolver,
       args: [namehash(rawNode), 'com.twitter', '@blockful'],
       universalResolverAddress,
       signer: owner,
@@ -317,7 +340,7 @@ describe('DatabaseResolver', () => {
     const response = await offchainWriting({
       node: normalize(rawNode),
       functionName: 'setText',
-      abi: abiTextResolver,
+      abi: abiDBResolver,
       args: [namehash(rawNode), 'com.twitter', '@unauthorized'],
       universalResolverAddress,
       signer: privateKeyToAccount(generatePrivateKey()),
@@ -383,7 +406,7 @@ describe('DatabaseResolver', () => {
     const response = await offchainWriting({
       node: normalize(rawNode),
       functionName: 'setAddr',
-      abi: abiAddrResolver,
+      abi: abiDBResolver,
       args: [namehash(rawNode), '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
       universalResolverAddress,
       signer: owner,
@@ -403,7 +426,7 @@ describe('DatabaseResolver', () => {
     const response = await offchainWriting({
       node: normalize(rawNode),
       functionName: 'setAddr',
-      abi: abiAddrResolver,
+      abi: abiDBResolver,
       args: [namehash(rawNode), '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
       universalResolverAddress,
       signer: privateKeyToAccount(generatePrivateKey()),

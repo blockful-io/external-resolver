@@ -115,7 +115,15 @@ contract DatabaseResolver is
      * @param a The address to set.
      */
     function setAddr(bytes32 node, address a) external {
-        setAddr(node, _COIN_TYPE_ETH, abi.encodePacked(a));
+        IWriteDeferral.parameter[] memory params = new IWriteDeferral.parameter[](2);
+
+        params[0].name = "node";
+        params[0].value = TypeToString.bytes32ToString(node);
+
+        params[1].name = "address";
+        params[1].value = TypeToString.addressToString(a);
+
+        _offChainStorage(params);
     }
 
     /**
@@ -125,6 +133,40 @@ contract DatabaseResolver is
      */
     function addr(bytes32 node) public view virtual override returns (address payable) {
         addr(node, _COIN_TYPE_ETH);
+    }
+
+    //////// ENS ERC-2304 LOGIC ////////
+
+    /**
+     * Sets the address associated with an ENS node.
+     * May only be called by the owner of that node in the ENS registry.
+     * @param node The node to update.
+     * @param coinType The constant used to define the coin type of the corresponding address.
+     * @param a The address to set.
+     */
+    function setAddr(bytes32 node, uint256 coinType, bytes memory a) public {
+        IWriteDeferral.parameter[] memory params = new IWriteDeferral.parameter[](3);
+
+        params[0].name = "node";
+        params[0].value = TypeToString.bytes32ToString(node);
+
+        params[1].name = "coin_type";
+        params[1].value = Strings.toString(coinType);
+
+        params[2].name = "address";
+        params[2].value = TypeToString.bytesToString(a);
+
+        _offChainStorage(params);
+    }
+
+    /**
+     * Returns the address associated with an ENS node for the corresponding coinType.
+     * @param node The ENS node to query.
+     * @param coinType The coin type of the corresponding address.
+     * @return Always reverts with an OffchainLookup error.
+     */
+    function addr(bytes32 node, uint256 coinType) public view override returns (bytes memory) {
+        _offChainLookup(msg.data);
     }
 
     //////// ENS ERC-181 LOGIC ////////
@@ -216,40 +258,6 @@ contract DatabaseResolver is
      * @return Always reverts with an OffchainLookup error.
      */
     function contenthash(bytes32 node) external view override returns (bytes memory) {
-        _offChainLookup(msg.data);
-    }
-
-    //////// ENS ERC-2304 LOGIC ////////
-
-    /**
-     * Sets the address associated with an ENS node.
-     * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
-     * @param coinType The constant used to define the coin type of the corresponding address.
-     * @param a The address to set.
-     */
-    function setAddr(bytes32 node, uint256 coinType, bytes memory a) public {
-        IWriteDeferral.parameter[] memory params = new IWriteDeferral.parameter[](3);
-
-        params[0].name = "node";
-        params[0].value = TypeToString.bytes32ToString(node);
-
-        params[1].name = "coin_type";
-        params[1].value = Strings.toString(coinType);
-
-        params[2].name = "address";
-        params[2].value = TypeToString.bytesToString(a);
-
-        _offChainStorage(params);
-    }
-
-    /**
-     * Returns the address associated with an ENS node for the corresponding coinType.
-     * @param node The ENS node to query.
-     * @param coinType The coin type of the corresponding address.
-     * @return Always reverts with an OffchainLookup error.
-     */
-    function addr(bytes32 node, uint256 coinType) public view override returns (bytes memory) {
         _offChainLookup(msg.data);
     }
 
