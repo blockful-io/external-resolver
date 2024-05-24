@@ -33,7 +33,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
         address[] memory signers = new address[](1);
         signers[0] = address(0x1337);
         string memory url = "http://localhost:3000/{sender}/{data}.json";
-        resolver = new DatabaseResolver(url, block.timestamp + 600, signers);
+        resolver = new DatabaseResolver(url, 600, signers);
         registrar.setDefaultResolver(address(resolver));
 
         vm.stopPrank();
