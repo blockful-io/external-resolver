@@ -180,13 +180,20 @@ export class Server {
     const app = express()
     app.use(cors())
     app.use(express.json() as express.RequestHandler)
-    if (middlewares.length > 0) app.use(middlewares)
-    app.get(`${prefix}:sender/:callData.json`, this.handleRequest.bind(this))
-    app.post(prefix, this.handleRequest.bind(this))
+    app.get(
+      `${prefix}:sender/:callData.json`,
+      this.handleRequest.bind(this),
+      ...middlewares,
+    )
+    app.post(prefix, this.handleRequest.bind(this), ...middlewares)
     return app
   }
 
-  async handleRequest(req: express.Request, res: express.Response) {
+  async handleRequest(
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) {
     let sender: string,
       callData: string,
       signature: `0x${string}` | TypedSignature
@@ -204,6 +211,7 @@ export class Server {
       res.status(400).json({
         message: 'Invalid request format',
       })
+      next()
       return
     }
 
@@ -218,6 +226,8 @@ export class Server {
       res.status(500).json({
         message: `Internal server error: ${(e as any).toString()}`,
       })
+    } finally {
+      next()
     }
   }
 
