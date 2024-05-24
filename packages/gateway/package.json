@@ -44,6 +44,7 @@
     "reflect-metadata": "^0.2.1",
     "ts-node": "^10.9.2",
     "typeorm": "^0.3.20",
-    "viem": "^2.10.5"
+    "viem": "^2.10.5",
+    "winston": "^3.13.0"
   }
 }

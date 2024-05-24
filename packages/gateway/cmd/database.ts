@@ -2,8 +2,8 @@
  * Script for running the server locally exposing the API
  */
 import 'reflect-metadata'
-import { Hex } from 'viem'
 import { config } from 'dotenv'
+import { Hex } from 'viem'
 
 import { NewDataSource } from '../src/datasources/postgres'
 import {
@@ -16,9 +16,10 @@ import {
   withQuery,
   withRegisterDomain,
 } from '../src/handlers'
+import { abi } from '../src/abi'
 import { PostgresRepository } from '../src/repositories/postgres'
-import { NewApp } from '../src/app'
-import { withSigner } from '../src/middlewares'
+import { NewServer } from '../src/server'
+import { withLogger, withSigner } from '../src/middlewares'
 import { OwnershipValidator } from '../src/services'
 
 config({
@@ -40,24 +41,23 @@ const _ = (async () => {
   const repo = new PostgresRepository(dbclient)
   const validator = new OwnershipValidator(repo)
 
-  const app = NewApp(
-    [
-      withQuery(), // required for Universal Resolver integration
-      withGetText(repo),
-      withSetText(repo, validator),
-      withGetAddr(repo),
-      withSetAddr(repo, validator),
-      withGetContentHash(repo),
-      withSetContentHash(repo, validator),
-      withRegisterDomain(repo, validator),
-    ],
-    [
-      withSigner(privateKey as Hex, [
-        'function text(bytes32 node, string key)',
-        'function addr(bytes32 node)',
-        'function contenthash(bytes32 node)',
-      ]),
-    ],
+  const app = NewServer(
+    withQuery(), // required for Universal Resolver integration
+    withGetText(repo),
+    withSetText(repo, validator),
+    withGetAddr(repo),
+    withSetAddr(repo, validator),
+    withGetContentHash(repo),
+    withSetContentHash(repo, validator),
+    withRegisterDomain(repo, validator),
+  ).makeApp(
+    '/',
+    withLogger({ abi, debug: process.env.DEBUG === 'true' }),
+    withSigner(privateKey as Hex, [
+      'function text(bytes32 node, string key)',
+      'function addr(bytes32 node)',
+      'function contenthash(bytes32 node)',
+    ]),
   )
 
   const port = process.env.PORT || 3000
