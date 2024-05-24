@@ -26,7 +26,7 @@ contract DatabaseResolver is
     IAddrResolver,
     INameResolver,
     // IABIResolver,
-    // IPubkeyResolver,
+    // IPubkeyResolver, TODO this should be supported in the future
     ITextResolver,
     IContentHashResolver,
     IAddressResolver,
@@ -40,6 +40,7 @@ contract DatabaseResolver is
     //////// CONTRACT STATE ////////
 
     string public gatewayUrl;
+    // Expiration timestamp for an offchain signature
     uint256 public gatewayDatabaseTimeoutDuration;
     EnumerableSetUpgradeable.AddressSet private _signers;
 

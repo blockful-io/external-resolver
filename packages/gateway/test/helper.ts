@@ -98,7 +98,7 @@ export async function doCall({
     throw Error('Unknown handler')
   }
 
-  const funcHash = toFunctionHash(func as AbiFunction)
+  const funcHash = toFunctionHash(func)
   const funcSelector = funcHash.slice(0, 10) as `0x${string}`
   const handler = server.handlers[funcSelector]
 
