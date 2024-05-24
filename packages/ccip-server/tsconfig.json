@@ -1,6 +1,7 @@
 {
   "extends": "@blockful/tsconfig/tsconfig.json",
   "compilerOptions": {
+    "module": "CommonJS",
     "noImplicitAny": false,
     "outDir": "./dist"
   }

@@ -1,4 +1,12 @@
-import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm'
+import {
+  Entity,
+  Column,
+  PrimaryColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm'
 import { Domain } from './domain'
 
 /**
@@ -7,7 +15,7 @@ import { Domain } from './domain'
  */
 @Entity()
 export class Address {
-  @PrimaryColumn()
+  @PrimaryColumn({ unique: true })
   coin: number
 
   @Column()
@@ -15,5 +23,15 @@ export class Address {
 
   @JoinColumn({ name: 'domain', referencedColumnName: 'node' })
   @ManyToOne(() => Domain, (domain) => domain.addresses)
+  @PrimaryColumn({
+    name: 'domain',
+    type: 'text',
+  })
   domain: Domain
+
+  @CreateDateColumn({ default: 'now' })
+  createdAt?: Date
+
+  @UpdateDateColumn({ default: 'now' })
+  updatedAt?: Date
 }

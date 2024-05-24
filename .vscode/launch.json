@@ -7,11 +7,11 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "debug client",
+      "name": "debug read client",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/packages/client/src/index.ts",
+      "program": "${workspaceFolder}/packages/client/src/read.ts",
       "runtimeArgs": [
         "-r",
         "ts-node/register",
@@ -35,19 +35,50 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "VITEST Debug Current Test File",
-      "autoAttachChildProcesses": true,
+      "name": "debug write client",
       "skipFiles": [
-        "<node_internals>/**",
-        "**/node_modules/**"
+        "<node_internals>/**"
       ],
-      "program": "${workspaceRoot}/node_modules/vitest/vitest.mjs",
+      "program": "${workspaceFolder}/packages/client/src/write.ts",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/client/tsconfig.json",
+      },
+      "console": "integratedTerminal",
+      "outFiles": [
+        "${workspaceFolder}/**/*.js",
+        "!**/node_modules/**"
+      ],
       "args": [
-        "run",
-        "${relativeFile}"
+        "--resolver",
+        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        "-pk",
+        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug E2E",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+        "${relativeFile}",
       ],
-      "smartStep": true,
-      "console": "integratedTerminal"
+      "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
     },
     {
       "type": "node",

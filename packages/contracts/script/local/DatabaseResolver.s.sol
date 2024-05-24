@@ -29,7 +29,7 @@ contract DatabaseResolverScript is Script, ENSHelper {
 
         address[] memory signers = new address[](1);
         signers[0] = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-        DatabaseResolver resolver = new DatabaseResolver(gatewayURL, signers);
+        DatabaseResolver resolver = new DatabaseResolver(gatewayURL, 600, signers);
 
         // .eth
         registry.setSubnodeRecord(rootNode, labelhash("eth"), publicKey, address(resolver), 100000);
