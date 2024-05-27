@@ -18,9 +18,9 @@ import {
 } from '../src/handlers'
 import { abi } from '../src/abi'
 import { PostgresRepository } from '../src/repositories/postgres'
-import { NewServer } from '../src/server'
 import { withLogger, withSigner } from '../src/middlewares'
 import { OwnershipValidator } from '../src/services'
+import * as ccip from '@blockful/ccip-server'
 
 config({
   path: process.env.ENV_FILE || '../env',
@@ -41,7 +41,12 @@ const _ = (async () => {
   const repo = new PostgresRepository(dbclient)
   const validator = new OwnershipValidator(repo)
 
-  const app = NewServer(
+  const server = new ccip.Server()
+  server.app.use(withSigner(privateKey as Hex))
+  server.app.use(withLogger({ abi, debug: process.env.DEBUG === 'true' }))
+
+  server.add(
+    abi,
     withQuery(), // required for Universal Resolver integration
     withGetText(repo),
     withSetText(repo, validator),
@@ -50,18 +55,10 @@ const _ = (async () => {
     withGetContentHash(repo),
     withSetContentHash(repo, validator),
     withRegisterDomain(repo, validator),
-  ).makeApp(
-    '/',
-    withLogger({ abi, debug: process.env.DEBUG === 'true' }),
-    withSigner(privateKey as Hex, [
-      'function text(bytes32 node, string key)',
-      'function addr(bytes32 node)',
-      'function contenthash(bytes32 node)',
-    ]),
   )
 
   const port = process.env.PORT || 3000
-  app.listen(port, () => {
+  server.makeApp('/').listen(port, () => {
     console.log(`Gateway bound to port ${port}.`)
   })
 })()

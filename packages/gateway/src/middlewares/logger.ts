@@ -26,8 +26,16 @@ export function withLogger({
   }
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const callData =
-      req.method === 'GET' ? req.params?.callData : req.body?.data
+    let callData = req.body?.data
+    if (req.method === 'GET') {
+      // fetches de calldata from the url according to the EIP-3668 (/:sender/:calldata.json)
+      const data = /\/\w+\/(\w+)\.json/g.exec(req.url) || []
+      callData = data.length > 1 ? data[1] : ''
+    }
+    if (!callData) {
+      return next()
+    }
+
     const func = decodeFunctionData({ abi: parseAbi(abi), data: callData })
 
     next()
