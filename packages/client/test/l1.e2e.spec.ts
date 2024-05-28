@@ -53,7 +53,7 @@ import { expect } from 'chai'
 
 import { L1ProofService } from '@blockful/gateway/src/services'
 import { NewApp } from '@blockful/gateway/src/app'
-import { withGetStorageSlot } from '@blockful/gateway/src/handlers'
+import { withGetStorageSlot, withQuery } from '@blockful/gateway/src/handlers'
 
 const GATEWAY_URLS = ['http://127.0.0.1:3000/{sender}/{data}.json']
 
@@ -161,7 +161,10 @@ async function deployContracts(signer: Hash) {
 }
 
 function setupGateway() {
-  const app = NewApp([withGetStorageSlot(new L1ProofService(client))], [])
+  const app = NewApp(
+    [withQuery(), withGetStorageSlot(new L1ProofService(client))],
+    [],
+  )
   app.listen('3000')
 }
 
