@@ -4,17 +4,14 @@
   "scripts": {
     "test": "forge test -vvv",
     "test:watch": "forge test -vvv --watch",
-    "start:public": "forge script script/local/PublicResolver.s.sol --rpc-url rpc_url --broadcast -vv",
-    "start:db": "forge script script/local/DatabaseResolver.s.sol --rpc-url rpc_url --broadcast -vv",
-    "start:l1": "forge script script/local/OffchainResolver.s.sol --rpc-url rpc_url --broadcast -vv",
-    "deploy:arb:l1": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --fork-url rpc_url --broadcast -vv",
-    "deploy:arb:l2": "forge script script/deploy/L2Resolver.s.sol --gas-estimate-multiplier 200 --rpc-url rpc_url --broadcast -vv",
+    "dev:public": "forge script script/local/PublicResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
+    "dev:db": "forge script script/local/DatabaseResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
+    "dev:l1": "forge script script/local/OffchainResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
+    "deploy:db": "forge script script/deploy/DatabaseResolver.s.sol:DatabaseResolverScript --broadcast --rpc-url rpc_url -vv --verify",
+    "deploy:eth:l1": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --broadcast --rpc-url rpc_url -vv --verify",
+    "deploy:eth:l2": "forge script script/deploy/L2Resolver.s.sol --gas-estimate-multiplier 200 --broadcast --rpc-url rpc_url -vv --verify",
     "postinstall": "forge install",
     "lint": "forge fmt",
     "build": "forge build"
-  },
-  "devDependencies": {
-    "copyfiles": "^2.4.1",
-    "solhint": "^4.1.1"
   }
 }

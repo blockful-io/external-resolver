@@ -9,10 +9,18 @@ import {
 import { hexlify } from '@ethersproject/bytes'
 import express from 'express'
 import { isAddress, isBytesLike } from 'ethers/lib/utils'
+import { TypedDataDomain } from '@ethersproject/abstract-signer'
+
+export type TypedSignature = {
+  signature: `0x${string}`
+  domain: TypedDataDomain
+  message: Record<string, unknown>
+}
 
 export interface RPCCall {
   to: BytesLike
   data: BytesLike
+  signature?: `0x${string}` | TypedSignature
 }
 
 export interface RPCResponse {
@@ -21,14 +29,18 @@ export interface RPCResponse {
 }
 
 export interface HandlerResponse {
-  data: Array<any>
+  data?: Array<any>
   extraData?: any
+  error?: {
+    message: string
+    status: number
+  }
 }
 
 export type HandlerFunc = (
   args: ethers.utils.Result,
   req: RPCCall,
-) => Promise<HandlerResponse> | HandlerResponse
+) => Promise<HandlerResponse | undefined | void>
 
 interface Handler {
   type: FunctionFragment
@@ -175,8 +187,9 @@ export class Server {
   }
 
   async handleRequest(req: express.Request, res: express.Response) {
-    let sender: string
-    let callData: string
+    let sender: string,
+      callData: string,
+      signature: `0x${string}` | TypedSignature
 
     if (req.method === 'GET') {
       sender = req.params.sender
@@ -184,6 +197,7 @@ export class Server {
     } else {
       sender = req.body.sender
       callData = req.body.data
+      signature = req.body.signature
     }
 
     if (!isAddress(sender) || !isBytesLike(callData)) {
@@ -194,7 +208,11 @@ export class Server {
     }
 
     try {
-      const response = await this.call({ to: sender, data: callData })
+      const response = await this.call({
+        to: sender,
+        data: callData,
+        signature: signature!,
+      })
       res.status(response.status).json(response.body)
     } catch (e) {
       res.status(500).json({
@@ -227,12 +245,18 @@ export class Server {
     // Call the handler
     const result = await handler.func(args, call)
 
+    if (result?.error) {
+      return {
+        status: result.error.status,
+        body: { data: result.error.message },
+      }
+    }
     // Encode return data
     return {
       status: 200,
       body: {
         data:
-          handler.type.outputs && result && result.data.length > 0
+          handler.type.outputs && result && result.data?.length
             ? hexlify(
                 ethers.utils.defaultAbiCoder.encode(
                   handler.type.outputs,
@@ -240,7 +264,7 @@ export class Server {
                 ),
               )
             : '0x',
-        ttl: result.extraData,
+        ttl: result?.extraData,
       },
     }
   }
