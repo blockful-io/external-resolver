@@ -90,11 +90,11 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "gateway arb",
+      "name": "gateway ethereum",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/packages/gateway/cmd/arbitrum.ts",
+      "program": "${workspaceFolder}/packages/gateway/cmd/ethereum.ts",
       "runtimeArgs": [
         "-r",
         "ts-node/register",
