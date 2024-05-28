@@ -15,6 +15,9 @@ import {
   Address,
   RawContractError,
   encodeFunctionData,
+  PrivateKeyAccount,
+  walletActions,
+  Abi,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
 import * as chains from 'viem/chains'
@@ -32,7 +35,7 @@ const program = new Command()
 program
   .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
   .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
-  .option('-i --chainId <chainId>', 'chainId', '1337')
+  .option('-i --chainId <chainId>', 'chainId', '31337')
   .option(
     '-pk --privateKey <privateKey>',
     'privateKey',
@@ -44,15 +47,10 @@ program.parse(process.argv)
 const { resolver, provider, chainId, privateKey } = program.opts()
 
 function getChain(chainId: number) {
-  for (const chain of Object.values(chains)) {
-    if ('id' in chain && chain.id === chainId) {
-      return chain
-    }
-  }
+  return Object.values(chains).find((chain) => chain.id === chainId)
 }
 
 const chain = getChain(parseInt(chainId))
-
 console.log(`Connecting to ${chain?.name}.`)
 
 const client = createPublicClient({
@@ -63,6 +61,7 @@ const client = createPublicClient({
 // eslint-disable-next-line
 const _ = (async () => {
   const publicAddress = normalize('blockful.eth')
+  const signer = privateKeyToAccount(privateKey)
 
   const [resolverAddr] = (await client.readContract({
     address: resolver,
@@ -72,58 +71,126 @@ const _ = (async () => {
   })) as Hash[]
 
   // REGISTER NEW DOMAIN
+  const registerArgs = {
+    functionName: 'register',
+    abi: dbABI,
+    args: [namehash(publicAddress), 9999999999n],
+  }
   try {
-    await client.simulateContract({
-      address: resolverAddr,
-      functionName: 'register',
-      abi: dbABI,
-      args: [namehash(publicAddress), 9999999999n],
-    })
+    await client.simulateContract({ ...registerArgs, address: resolverAddr })
   } catch (err) {
     const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [domain, url, message] = data.args as [
-        DomainData,
-        string,
-        MessageData,
-      ]
-      await handleOffchainStorage({ domain, url, message })
+    switch (data?.errorName) {
+      case 'StorageHandledByOffChainDatabase': {
+        const [domain, url, message] = data.args as [
+          DomainData,
+          string,
+          MessageData,
+        ]
+        await handleDBStorage({ domain, url, message, signer })
+        break
+      }
+      case 'StorageHandledByL2': {
+        const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
+
+        try {
+          handleL2Storage({
+            chainId,
+            args: {
+              ...registerArgs,
+              address: contractAddress,
+              account: signer.address,
+            },
+          })
+        } catch (err) {
+          console.log({ err })
+        }
+        break
+      }
+      default:
+        console.error({ err })
     }
   }
 
   // SET TEXT
+
+  const setTextArgs = {
+    functionName: 'setText',
+    abi: dbABI,
+    args: [namehash(publicAddress), 'com.twitter', '@xxx_blockful.eth'],
+  }
   try {
-    await client.simulateContract({
-      address: resolverAddr,
-      functionName: 'setText',
-      abi: dbABI,
-      args: [namehash(publicAddress), 'com.twitter', '@xxx_blockful.eth'],
-    })
+    await client.simulateContract({ ...setTextArgs, address: resolverAddr })
   } catch (err) {
     const data = getRevertErrorData(err)
+    switch (data?.errorName) {
+      case 'StorageHandledByOffChainDatabase': {
+        const [domain, url, message] = data.args as [
+          DomainData,
+          string,
+          MessageData,
+        ]
+        await handleDBStorage({ domain, url, message, signer })
+        break
+      }
+      case 'StorageHandledByL2': {
+        const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [domain, url, message] = data.args as [
-        DomainData,
-        string,
-        MessageData,
-      ]
-      await handleOffchainStorage({ domain, url, message })
+        try {
+          handleL2Storage({
+            chainId,
+            args: {
+              ...setTextArgs,
+              address: contractAddress,
+              account: signer.address,
+            },
+          })
+        } catch (err) {
+          console.log({ err })
+        }
+        break
+      }
+      default:
+        console.error({ err })
     }
   }
 })()
 
-async function handleOffchainStorage({
+async function handleL2Storage({
+  chainId,
+  args,
+}: {
+  chainId: bigint
+  args: {
+    abi: Abi | unknown[]
+    address: Address
+    account: Hash
+    functionName: string
+    args: unknown[]
+  }
+}) {
+  const chain = getChain(Number(chainId))
+
+  const l2Client = createPublicClient({
+    chain,
+    transport: http('http://127.0.0.1:8545'),
+  }).extend(walletActions)
+
+  const { request } = await l2Client.simulateContract(args)
+  await l2Client.writeContract(request)
+}
+
+async function handleDBStorage({
   domain,
   url,
   message,
+  signer,
 }: {
   domain: DomainData
   url: string
   message: MessageData
+  signer: PrivateKeyAccount
 }) {
-  const signer = privateKeyToAccount(privateKey)
-
   const signature = await signer.signTypedData({
     domain,
     message,
@@ -168,10 +235,7 @@ export type CcipRequestParameters = {
   url: string
 }
 
-export async function ccipRequest({
-  body,
-  url,
-}: CcipRequestParameters): Promise<Response> {
+export async function ccipRequest({ body, url }: CcipRequestParameters) {
   return await fetch(url.replace('/{sender}/{data}.json', ''), {
     body: JSON.stringify(body, (_, value) =>
       typeof value === 'bigint' ? value.toString() : value,
