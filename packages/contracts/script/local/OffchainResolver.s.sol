@@ -10,7 +10,7 @@ import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResol
 import "../Helper.sol";
 import "../../src/evmgateway/L1Verifier.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
-import {L1Resolver} from "../../src/evmgateway/L1Resolver.sol";
+import {L1Resolver} from "../../src/L1Resolver.sol";
 
 contract OffchainResolverScript is Script, ENSHelper {
     function run() external {
@@ -31,19 +31,19 @@ contract OffchainResolverScript is Script, ENSHelper {
 
         urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
         L1Verifier verifier = new L1Verifier(urls);
-        L1Resolver l1resolver = new L1Resolver(verifier, registry, INameWrapper(publicKey));
+        L1Resolver l1resolver = new L1Resolver(31337, verifier, registry, INameWrapper(publicKey));
 
         // .eth
-        registry.setSubnodeRecord(rootNode, labelhash("eth"), publicKey, address(l1resolver), 100000);
+        registry.setSubnodeRecord(rootNode, labelhash("eth"), publicKey, address(l1resolver), 9999999999);
         // blockful.eth
-        registry.setSubnodeRecord(namehash("eth"), labelhash("blockful"), publicKey, address(l1resolver), 100000);
+        registry.setSubnodeRecord(namehash("eth"), labelhash("blockful"), publicKey, address(l1resolver), 9999999999);
 
-        L2Resolver arbResolver = new L2Resolver();
+        L2Resolver l2Resolver = new L2Resolver();
         bytes32 node = namehash("blockful.eth");
-        l1resolver.setTarget(node, address(arbResolver));
+        l1resolver.setTarget(node, address(l2Resolver));
 
-        arbResolver.setOwner(node, publicKey);
-        arbResolver.setText(node, "com.twitter", "@blockful");
+        l2Resolver.setOwner(node, publicKey);
+        l2Resolver.setText(node, "com.twitter", "@blockful");
 
         vm.stopBroadcast();
     }
