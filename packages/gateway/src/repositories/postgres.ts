@@ -20,6 +20,29 @@ export class PostgresRepository {
     this.client = client
   }
 
+  async verifyOwnership(
+    node: `0x${string}`,
+    address: `0x${string}`,
+  ): Promise<boolean> {
+    return await this.client
+      .getRepository(Domain)
+      .existsBy({ node, owner: address })
+  }
+
+  async register({
+    node,
+    ttl,
+    owner,
+  }: Pick<Domain, 'node' | 'ttl'> & { owner: `0x${string}` }) {
+    await this.client.getRepository(Domain).insert({
+      node,
+      ttl,
+      addresses: [],
+      texts: [],
+      owner,
+    })
+  }
+
   async setContentHash({
     node,
     contenthash,
@@ -43,7 +66,7 @@ export class PostgresRepository {
     return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
-  async setAddr({ node, addr: address, coin }: SetAddressProps): Promise<void> {
+  async setAddr({ node, addr: address, coin }: SetAddressProps) {
     await this.client.getRepository(Address).upsert(
       [
         {
@@ -55,7 +78,7 @@ export class PostgresRepository {
         },
       ],
       {
-        conflictPaths: ['coin'],
+        conflictPaths: ['coin', 'domain'],
         skipUpdateIfNoValuesChanged: true,
       },
     )
@@ -78,21 +101,16 @@ export class PostgresRepository {
     return { value: addr.address, ttl: addr.domain.ttl }
   }
 
-  async setText({ node, key, value }: SetTextProps): Promise<void> {
+  async setText({ node, key, value }: SetTextProps) {
     await this.client.getRepository(Text).upsert(
-      [
-        {
-          key,
-          value,
-          domain: {
-            node,
-          },
-        },
-      ],
       {
-        conflictPaths: ['key'],
-        skipUpdateIfNoValuesChanged: true,
+        key,
+        value,
+        domain: {
+          node,
+        },
       },
+      { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )
   }
 

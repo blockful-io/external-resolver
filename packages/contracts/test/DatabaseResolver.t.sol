@@ -33,7 +33,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
         address[] memory signers = new address[](1);
         signers[0] = address(0x1337);
         string memory url = "http://localhost:3000/{sender}/{data}.json";
-        resolver = new DatabaseResolver(url, signers);
+        resolver = new DatabaseResolver(url, 600, signers);
         registrar.setDefaultResolver(address(resolver));
 
         vm.stopPrank();
@@ -61,8 +61,8 @@ contract DatabaseResolverTest is Test, ENSHelper {
 
     // Test the resolver setup from the constructor
     function testResolverSetupFromConstructor() public {
-        assertTrue(resolver.signers(address(0x1337)));
-        assertEq(resolver.url(), "http://localhost:3000/{sender}/{data}.json");
+        assertTrue(resolver.isSigner(address(0x1337)));
+        assertEq(resolver.gatewayUrl(), "http://localhost:3000/{sender}/{data}.json");
     }
 
     // Test updating the URL by the owner
@@ -70,8 +70,8 @@ contract DatabaseResolverTest is Test, ENSHelper {
         vm.prank(owner);
 
         string memory newUrl = "https://new_gateway.com";
-        resolver.updateUrl(newUrl);
-        assertEq(resolver.url(), newUrl);
+        resolver.setGatewayUrl(newUrl);
+        assertEq(resolver.gatewayUrl(), newUrl);
     }
 
     // Test failure in updating the URL by a non-owner
@@ -80,7 +80,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
 
         vm.prank(address(0x44));
         vm.expectRevert("Ownable: caller is not the owner");
-        resolver.updateUrl(newUrl);
+        resolver.setGatewayUrl(newUrl);
     }
 
     // Test updating the signers by the owner
@@ -89,15 +89,12 @@ contract DatabaseResolverTest is Test, ENSHelper {
         address[] memory signers = new address[](1);
         signers[0] = address(0x69420);
 
-        bool[] memory canSign = new bool[](1);
-        canSign[0] = true;
+        resolver.addSigners(signers);
 
-        resolver.updateSigners(signers, canSign);
+        assertTrue(resolver.isSigner(address(0x1337)));
+        assertTrue(resolver.isSigner(address(0x69420)));
 
-        assertTrue(resolver.signers(address(0x1337)));
-        assertTrue(resolver.signers(address(0x69420)));
-
-        assertFalse(resolver.signers(address(0x42069)));
+        assertFalse(resolver.isSigner(address(0x42069)));
     }
 
     // Test failure in updating the signers by a non-owner
@@ -105,15 +102,12 @@ contract DatabaseResolverTest is Test, ENSHelper {
         address[] memory signers = new address[](1);
         signers[0] = address(0x69420);
 
-        bool[] memory canSign = new bool[](1);
-        canSign[0] = true;
-
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(address(0x44));
-        resolver.updateSigners(signers, canSign);
+        resolver.addSigners(signers);
 
-        assertTrue(resolver.signers(address(0x1337)));
-        assertFalse(resolver.signers(address(0x69420)));
+        assertTrue(resolver.isSigner(address(0x1337)));
+        assertFalse(resolver.isSigner(address(0x69420)));
     }
 
     // Test removing a signer
@@ -122,12 +116,9 @@ contract DatabaseResolverTest is Test, ENSHelper {
         address[] memory signers = new address[](1);
         signers[0] = address(0x1337);
 
-        bool[] memory canSign = new bool[](1);
-        canSign[0] = false;
+        resolver.removeSigners(signers);
 
-        resolver.updateSigners(signers, canSign);
-
-        assertFalse(resolver.signers(address(0x1337)));
-        assertFalse(resolver.signers(address(0x69420)));
+        assertFalse(resolver.isSigner(address(0x1337)));
+        assertFalse(resolver.isSigner(address(0x69420)));
     }
 }

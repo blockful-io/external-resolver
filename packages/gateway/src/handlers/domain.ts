@@ -1,23 +1,66 @@
 import * as ccip from '@blockful/ccip-server'
 
-import { DomainProps, Response, SetContentHashProps } from '../types'
+import {
+  DomainProps,
+  Response,
+  SetContentHashProps,
+  RegisterDomainProps,
+  OwnershipValidator,
+  TypedSignature,
+} from '../types'
+
+interface SignatureRecover {
+  recoverMessageSigner(TypedSignature): Promise<`0x${string}`>
+}
 
 interface WriteRepository {
-  setContentHash(params: SetContentHashProps): Promise<void>
+  register(params: RegisterDomainProps)
+  setContentHash(params: SetContentHashProps)
+}
+
+export function withRegisterDomain(
+  repo: WriteRepository,
+  recover: SignatureRecover,
+): ccip.HandlerDescription {
+  return {
+    type: 'register',
+    func: async ({ node, ttl }, { signature }) => {
+      try {
+        const signer = await recover.recoverMessageSigner(
+          signature as TypedSignature,
+        )
+        await repo.register({ node, ttl, owner: signer })
+      } catch (err) {
+        return {
+          error: { message: 'Unable to register new domain', status: 400 },
+        }
+      }
+    },
+  }
 }
 
 export function withSetContentHash(
   repo: WriteRepository,
+  validator: OwnershipValidator,
 ): ccip.HandlerDescription {
   return {
     type: 'setContenthash',
-    func: async (args) => {
-      const params: SetContentHashProps = {
-        node: args.node,
-        contenthash: args.contenthash,
+    func: async ({ node, contenthash }, { signature }) => {
+      try {
+        const isOwner = await validator.verifyOwnership({
+          node,
+          signature: signature! as TypedSignature,
+        })
+        if (!isOwner) {
+          return { error: { message: 'Unauthorized', status: 401 } }
+        }
+
+        await repo.setContentHash({ node, contenthash })
+      } catch (err) {
+        return {
+          error: { message: 'Unable to save contenthash', status: 400 },
+        }
       }
-      await repo.setContentHash(params)
-      return { data: [] }
     },
   }
 }
@@ -31,13 +74,9 @@ export function withGetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'contenthash',
-    func: async (args): Promise<ccip.HandlerResponse> => {
-      const params: DomainProps = {
-        node: args.node,
-      }
-      const content = await repo.getContentHash(params)
-      if (!content) return { data: [] }
-      return { data: [content.value], extraData: content.ttl }
+    func: async ({ node }) => {
+      const content = await repo.getContentHash({ node })
+      if (content) return { data: [content.value], extraData: content.ttl }
     },
   }
 }

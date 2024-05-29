@@ -1,11 +1,6 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "packages/gateway/docker/database/Dockerfile"
-watchPatterns = [
-  "pacakges/gateway/**/*.ts",
-  "pacakges/ccip-server/**/*.ts",
-  "pacakges/tsconfig/tsconfig.json",
-]
 
 [deploy]
 restartPolicyType = "ON_FAILURE"

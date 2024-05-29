@@ -2,8 +2,8 @@
   "name": "@blockful/client",
   "scripts": {
     "test:db:e2e": "hardhat test ./test/db.e2e.spec.ts --network localhost",
-    "start": "ts-node src/index.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-    "dev": "nodemon src/index.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "start:read": "ts-node src/read.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "start:write": "ts-node src/write.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     "lint": "eslint . --ext .ts --fix"
   },
   "devDependencies": {
@@ -31,7 +31,7 @@
     "hardhat-ethers": "^1.0.1",
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.1",
-    "viem": "^2.9.3"
+    "viem": "^2.10.5"
   },
   "peerDependencies": {
     "@blockful/tsconfig": "*"

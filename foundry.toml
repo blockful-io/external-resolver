@@ -14,10 +14,14 @@ remappings = [
   "@nitro-contracts=packages/contracts/lib/nitro-contracts",
   "@evmgateway=packages/contracts/src/evmgateway",
 
+
 ]
-ignored_warnings_from = ["lib/ens-contracts/"]
+ignored_warnings_from = ["**/lib/ens-contracts/", "**/src/evmgateway/"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 [rpc_endpoints]
 rpc_url = "${RPC_URL}"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }

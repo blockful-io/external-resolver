@@ -1,8 +1,12 @@
 {
   "extends": "@blockful/tsconfig/tsconfig.json",
   "compilerOptions": {
+    "module": "CommonJS",
     "resolveJsonModule": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
   },
+  "include": [
+    "src"
+  ],
 }
