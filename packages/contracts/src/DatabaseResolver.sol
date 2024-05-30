@@ -4,6 +4,8 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import {OffchainLookup} from "@ens-contracts/dnsregistrar/OffchainDNSResolver.sol";
+import {IExtendedResolver} from "@ens-contracts/resolvers/profiles/IExtendedResolver.sol";
 import {IAddrResolver} from "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
 import {INameResolver} from "@ens-contracts/resolvers/profiles/INameResolver.sol";
 import {IABIResolver} from "@ens-contracts/resolvers/profiles/IABIResolver.sol";
@@ -12,7 +14,6 @@ import {ITextResolver} from "@ens-contracts/resolvers/profiles/ITextResolver.sol
 import {IContentHashResolver} from "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
 import {IAddressResolver} from "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
 
-import "./IExtendedResolver.sol";
 import "./IWriteDeferral.sol";
 import "./SignatureVerifier.sol";
 import {TypeToString} from "./utils/TypeToString.sol";

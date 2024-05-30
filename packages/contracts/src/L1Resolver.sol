@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {BytesUtils} from "@ens-contracts/wrapper/BytesUtils.sol";
 import {HexUtils} from "@ens-contracts/utils/HexUtils.sol";
+import {IExtendedResolver} from "@ens-contracts/resolvers/profiles/IExtendedResolver.sol";
 import {IAddrResolver} from "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
 import {IAddressResolver} from "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
 import {ITextResolver} from "@ens-contracts/resolvers/profiles/ITextResolver.sol";
