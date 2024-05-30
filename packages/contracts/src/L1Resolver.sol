@@ -302,6 +302,6 @@ contract L1Resolver is
             owner = nameWrapper.ownerOf(uint256(node));
         }
 
-        return owner == msg.sender;
+        return owner == msg.sender || owner == address(0);
     }
 }
