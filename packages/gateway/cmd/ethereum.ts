@@ -38,14 +38,13 @@ const _ = (async () => {
     transport: http(process.env.RPC_URL || 'http://127.0.0.1:8545'),
   })
 
-  const proofService = new L1ProofService(provider)
   const server = new ccip.Server()
   server.app.use(withLogger({ abi, debug: process.env.DEBUG === 'true' }))
 
   server.add(
     abi,
     withQuery(), // required for Universal Resolver integration
-    withGetStorageSlot(proofService),
+    withGetStorageSlot(new L1ProofService(provider)),
   )
 
   const port = process.env.PORT || 3000
