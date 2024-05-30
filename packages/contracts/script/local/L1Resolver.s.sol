@@ -40,7 +40,8 @@ contract OffchainResolverScript is Script, ENSHelper {
 
         L2Resolver l2Resolver = new L2Resolver();
         bytes32 node = namehash("blockful.eth");
-        l1resolver.setTarget(node, address(l2Resolver));
+        (bytes memory dnsNode,) = NameEncoder.dnsEncodeName("blockful.eth");
+        l1resolver.setTarget(dnsNode, address(l2Resolver));
 
         l2Resolver.setOwner(node, publicKey);
         l2Resolver.setText(node, "com.twitter", "@blockful");
