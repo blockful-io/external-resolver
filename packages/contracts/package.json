@@ -1,6 +1,5 @@
 {
   "name": "@blockful/contracts",
-  "packageManager": "yarn@4.1.0",
   "scripts": {
     "test": "forge test -vvv",
     "test:watch": "forge test -vvv --watch",
@@ -12,8 +11,12 @@
     "deploy:eth:l2": "forge script script/deploy/L2Resolver.s.sol --gas-estimate-multiplier 200 --broadcast --rpc-url rpc_url -vv --verify",
     "postinstall": "forge install",
     "lint": "forge fmt",
-    "start:arb:l1": "forge script script/local/ArbResolver.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vv --verify",
-    "start:arb:l2": "forge script script/local/ArbResolverl2.s.sol --rpc-url http://127.0.0.1:8547 --broadcast -vv --verify" ,
+    "dev:arb:l1": "forge script script/local/ArbResolver.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vv",
+    "dev:arb:l2": "forge script script/local/ArbResolverl2.s.sol --rpc-url http://127.0.0.1:8547 --broadcast -vv",
     "build": "forge build"
+  },
+  "dependencies": {
+    "@arbitrum/nitro-contracts": "^1.2.1",
+    "@openzeppelin/contracts": "^4.1.0"
   }
 }

@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { IProofService } from '../types'
+import { IProofService } from '../interfaces'
 import { IBlockCache } from './IBlockCache'
 import { EVMProofHelper } from './evmproof'
 import {

@@ -19,7 +19,7 @@ contract OffchainResolverScript is Script, ENSHelper {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         address publicKey = vm.addr(privateKey);
         address arbitrumRollupAddress = 0x15F958bc3CB7308739AF63136AF432c868af97e2;
-        address arbitrumL2ResolverAddress = 0xd1Aa1B583f2C086D0964600E0c79A95aCbc30A65;
+        address arbitrumL2ResolverAddress = 0xda52b25ddB0e3B9CC393b0690Ac62245Ac772527;
 
         vm.startBroadcast(privateKey);
 
@@ -31,34 +31,13 @@ contract OffchainResolverScript is Script, ENSHelper {
         // .reverse
         registry.setSubnodeOwner(rootNode, labelhash("reverse"), publicKey);
 
-        urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
-
-        ArbVerifier verifier = new ArbVerifier(
-            urls,
-            IRollupCore(arbitrumRollupAddress)
-        );
-        L1Resolver l1resolver = new L1Resolver(
-            verifier,
-            registry,
-            INameWrapper(publicKey)
-        );
+        ArbVerifier verifier = new ArbVerifier(urls, IRollupCore(arbitrumRollupAddress));
+        L1Resolver l1resolver = new L1Resolver(verifier, registry, INameWrapper(publicKey));
 
         // .eth
-        registry.setSubnodeRecord(
-            rootNode,
-            labelhash("eth"),
-            publicKey,
-            address(l1resolver),
-            100000
-        );
+        registry.setSubnodeRecord(rootNode, labelhash("eth"), publicKey, address(l1resolver), 100000);
         // blockful.eth
-        registry.setSubnodeRecord(
-            namehash("eth"),
-            labelhash("blockful"),
-            publicKey,
-            address(l1resolver),
-            100000
-        );
+        registry.setSubnodeRecord(namehash("eth"), labelhash("blockful"), publicKey, address(l1resolver), 100000);
 
         bytes32 node = namehash("blockful.eth");
         l1resolver.setTarget(node, arbitrumL2ResolverAddress);
