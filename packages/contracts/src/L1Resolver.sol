@@ -4,8 +4,9 @@ pragma solidity ^0.8.17;
 import "@ens-contracts/registry/ENS.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
-import {BytesUtils} from "@ens-contracts/wrapper/BytesUtils.sol";
+import {BytesUtils} from "@ens-contracts/dnssec-oracle/BytesUtils.sol";
 import {HexUtils} from "@ens-contracts/utils/HexUtils.sol";
+import {IExtendedResolver} from "@ens-contracts/resolvers/profiles/IExtendedResolver.sol";
 import {IAddrResolver} from "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
 import {IAddressResolver} from "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
 import {ITextResolver} from "@ens-contracts/resolvers/profiles/ITextResolver.sol";
@@ -13,7 +14,6 @@ import {IContentHashResolver} from "@ens-contracts/resolvers/profiles/IContentHa
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
-import "./IExtendedResolver.sol";
 import "./IWriteDeferral.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
@@ -37,6 +37,7 @@ contract L1Resolver is
     //////// CONTRACT STATE ////////
 
     uint32 public chainId;
+    // Mapping domain -> offchain contract address
     mapping(bytes32 => address) private _targets;
 
     // ENS Registry
@@ -90,7 +91,7 @@ contract L1Resolver is
      * @return result result of the call
      */
     function resolve(bytes calldata name, bytes calldata data) external view returns (bytes memory result) {
-        (, address target) = getTarget(name, 0);
+        (, address target) = getTarget(name);
         bytes4 selector = bytes4(data);
 
         if (selector == IAddrResolver.addr.selector) {
@@ -116,11 +117,11 @@ contract L1Resolver is
     /**
      * Sets the address associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
+     * @param name The DNS encoded node to update.
      * @param a The address to set.
      */
-    function setAddr(bytes32 node, address a) external {
-        _offChainStorage(node);
+    function setAddr(bytes calldata name, address a) external {
+        _offChainStorage(name);
     }
 
     function addr(bytes32 node) external view override returns (address payable) {
@@ -142,12 +143,12 @@ contract L1Resolver is
     /**
      * Sets the address associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
+     * @param name The DNS encoded node to update.
      * @param coinType The constant used to define the coin type of the corresponding address.
      * @param a The address to set.
      */
-    function setAddr(bytes32 node, uint256 coinType, bytes memory a) public {
-        _offChainStorage(node);
+    function setAddr(bytes calldata name, uint256 coinType, bytes memory a) public {
+        _offChainStorage(name);
     }
 
     function addr(bytes32 node, uint256 coinType) external view override returns (bytes memory) {
@@ -169,12 +170,12 @@ contract L1Resolver is
     /**
      * Sets the text data associated with an ENS node and key.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
+     * @param name The DNS encoded node to update.
      * @param key The key to set.
      * @param value The text data value to set.
      */
-    function setText(bytes32 node, string calldata key, string calldata value) external {
-        _offChainStorage(node);
+    function setText(bytes calldata name, string calldata key, string calldata value) external {
+        _offChainStorage(name);
     }
 
     function text(bytes32 node, string memory key) external view override returns (string memory) {
@@ -196,11 +197,11 @@ contract L1Resolver is
     /**
      * Sets the contenthash associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
+     * @param name The DNS encoded node to update.
      * @param hash The contenthash to set
      */
-    function setContenthash(bytes32 node, bytes calldata hash) external {
-        _offChainStorage(node);
+    function setContenthash(bytes calldata name, bytes calldata hash) external {
+        _offChainStorage(name);
     }
 
     function contenthash(bytes32 node) external view override returns (bytes memory) {
@@ -221,9 +222,11 @@ contract L1Resolver is
 
     /**
      * @notice Builds an StorageHandledByL2 error.
+     *
+     * @param name The DNS encoded node to update.
      */
-    function _offChainStorage(bytes32 node) internal view {
-        address target = _targets[node];
+    function _offChainStorage(bytes calldata name) internal view {
+        (, address target) = this.getTarget(name);
         revert StorageHandledByL2(chainId, target);
     }
 
@@ -236,54 +239,43 @@ contract L1Resolver is
 
     //////// PUBLIC VIEW FUNCTIONS ////////
 
-    function getTarget(bytes calldata name) public view returns (bytes32 node, address target) {
+    function getTarget(bytes calldata name) public view returns (bytes32, address) {
         return getTarget(name, 0);
     }
 
     /**
      * @dev Returns the L2 target address that can answer queries for `name`.
      * @param name DNS encoded ENS name to query
-     * @param offset The offset of the label to query recursively.
-     * @return node The node of the name
+     * @param offset for recursive resolution
+     * @return node namehash of resolved domain
      * @return target The L2 resolver address to verify against.
      */
-    function getTarget(bytes calldata name, uint256 offset) public view returns (bytes32, address) {
-        uint256 labelLength = uint256(uint8(name[offset]));
-        if (labelLength == 0) {
+    function getTarget(bytes calldata name, uint256 offset) public view returns (bytes32 node, address target) {
+        uint256 len = name.readUint8(offset);
+        node = bytes32(0);
+        if (len > 0) {
+            bytes32 label = name.keccak(offset + 1, len);
+            (node, target) = getTarget(name, offset + len + 1);
+            node = keccak256(abi.encodePacked(node, label));
+            if (_targets[node] != address(0)) {
+                return (node, _targets[node]);
+            }
+        } else {
             return (bytes32(0), address(0));
         }
-        uint256 nextLabel = offset + labelLength + 1;
-        bytes32 labelHash;
-        if (
-            labelLength == 66
-            // 0x5b == '['
-            && name[offset + 1] == 0x5b
-            // 0x5d == ']'
-            && name[nextLabel - 1] == 0x5d
-        ) {
-            // Encrypted label
-            (labelHash,) = bytes(name[offset + 2:nextLabel - 1]).hexStringToBytes32(0, 64);
-        } else {
-            labelHash = keccak256(name[offset + 1:nextLabel]);
-        }
-        (bytes32 parentnode, address parentresolver) = getTarget(name, nextLabel);
-        bytes32 node = keccak256(abi.encodePacked(parentnode, labelHash));
-        address resolver = _targets[node];
-        if (resolver != address(0)) {
-            return (node, resolver);
-        }
-        return (node, parentresolver);
+        return (node, target);
     }
 
     //////// PUBLIC WRITE FUNCTIONS ////////
 
     /**
      * Set target address to verify against
-     * @param node The ENS node to query.
+     * @param name The ENS node to query.
      * @param target The L2 resolver address to verify against.
      */
-    function setTarget(bytes32 node, address target) public authorised(node) {
-        address prevAddr = _targets[node];
+    function setTarget(bytes calldata name, address target) public {
+        (bytes32 node, address prevAddr) = getTarget(name);
+        require(isAuthorised(node));
         _targets[node] = target;
         emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
     }
@@ -308,11 +300,10 @@ contract L1Resolver is
         // isApprovedFor
         address owner = ens.owner(node);
 
-        // TODO fix this assertion
-        // if (owner == address(nameWrapper)) {
-        //     owner = nameWrapper.ownerOf(uint256(node));
-        // }
+        if (owner == address(nameWrapper)) {
+            owner = nameWrapper.ownerOf(uint256(node));
+        }
 
-        return owner == msg.sender;
+        return owner == msg.sender || owner == address(0);
     }
 }
