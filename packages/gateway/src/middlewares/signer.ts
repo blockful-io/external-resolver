@@ -6,7 +6,6 @@ import {
   Hex,
   encodeAbiParameters,
   parseAbiParameters,
-  toFunctionSelector,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 
@@ -18,18 +17,14 @@ import { privateKeyToAccount } from 'viem/accounts'
  * @param {string[]} function signatures that the middleware should be applied to
  * @return {*}
  */
-export function withSigner(privateKey: Hex, selectors: string[]) {
+export function withSigner(privateKey: Hex) {
   return mung.jsonAsync(
     async (body: Record<string, unknown>, req: HTTPRequest) => {
       const sender = req.method === 'GET' ? req.params.sender : req.body.sender
       const callData =
         req.method === 'GET' ? req.params.callData : req.body.data
 
-      if (
-        !callData ||
-        !selectors.map(toFunctionSelector).includes(callData.slice(0, 10)) ||
-        body.data === '0x'
-      ) {
+      if (!callData || body.data === '0x' || !body.ttl) {
         return body
       }
 

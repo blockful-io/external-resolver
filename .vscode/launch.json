@@ -7,7 +7,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "debug read client",
+      "name": "read client",
       "skipFiles": [
         "<node_internals>/**"
       ],
@@ -35,7 +35,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "debug write client",
+      "name": "write client",
       "skipFiles": [
         "<node_internals>/**"
       ],
@@ -61,24 +61,6 @@
         "-pk",
         "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
       ]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug E2E",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register",
-        "${relativeFile}",
-      ],
-      "env": {
-        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
-      },
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
     },
     {
       "type": "node",
@@ -129,6 +111,24 @@
         "${workspaceFolder}/**/*.js",
         "!**/node_modules/**"
       ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug E2E",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+        "${relativeFile}",
+      ],
+      "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
     },
   ]
 }

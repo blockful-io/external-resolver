@@ -86,6 +86,7 @@ export interface HandlerDescription {
  * ```
  */
 export class Server {
+  app: express.Application
   /** @ignore */
   readonly handlers: { [selector: string]: Handler }
 
@@ -93,6 +94,10 @@ export class Server {
    * Constructs a new CCIP-Read gateway server instance.
    */
   constructor() {
+    this.app = express()
+    this.app.use(cors())
+    this.app.use(express.json())
+
     this.handlers = {}
     this.addMulticallSupport() // Q: should this be on by default?
   }
@@ -107,33 +112,31 @@ export class Server {
       [
         'function multicall(bytes[] calldata data) external returns (bytes[] memory results)',
       ],
-      [
-        {
-          type: 'multicall',
-          func: async (args: ethers.utils.Result, { to }: RPCCall) => {
-            return {
-              data: [
-                await Promise.all(
-                  args[0].map(async (data: any) => {
-                    let error
-                    try {
-                      const { status, body } = await this.call({ to, data })
-                      if (status === 200) return body.data // Q: should this be 2XX?
-                      error = body.message || 'unknown error'
-                    } catch (err) {
-                      error = String(err) // Q: should this include status?
-                    }
-                    return ethers.utils.hexConcat([
-                      selector,
-                      ethers.utils.defaultAbiCoder.encode(['string'], [error]),
-                    ])
-                  }),
-                ),
-              ],
-            }
-          },
+      {
+        type: 'multicall',
+        func: async (args: ethers.utils.Result, { to }: RPCCall) => {
+          return {
+            data: [
+              await Promise.all(
+                args[0].map(async (data: any) => {
+                  let error
+                  try {
+                    const { status, body } = await this.call({ to, data })
+                    if (status === 200) return body.data // Q: should this be 2XX?
+                    error = body.message || 'unknown error'
+                  } catch (err) {
+                    error = String(err) // Q: should this include status?
+                  }
+                  return ethers.utils.hexConcat([
+                    selector,
+                    ethers.utils.defaultAbiCoder.encode(['string'], [error]),
+                  ])
+                }),
+              ),
+            ],
+          }
         },
-      ],
+      },
     )
   }
 
@@ -145,7 +148,7 @@ export class Server {
    */
   add(
     abi: string | readonly (string | Fragment | JsonFragment)[] | Interface,
-    handlers: Array<HandlerDescription>,
+    ...handlers: Array<HandlerDescription>
   ) {
     const abiInterface = toInterface(abi)
 
@@ -173,17 +176,13 @@ export class Server {
    * in a smart contract would be "https://example.com/{sender}/{callData}.json".
    * @returns An `express.Application` object configured to serve as a CCIP read gateway.
    */
-  makeApp(
-    prefix: string,
-    ...middlewares: express.RequestHandler[]
-  ): express.Application {
-    const app = express()
-    app.use(cors())
-    app.use(express.json() as express.RequestHandler)
-    if (middlewares.length > 0) app.use(middlewares)
-    app.get(`${prefix}:sender/:callData.json`, this.handleRequest.bind(this))
-    app.post(prefix, this.handleRequest.bind(this))
-    return app
+  makeApp(prefix: string): express.Application {
+    this.app.get(
+      `${prefix}:sender/:callData.json`,
+      this.handleRequest.bind(this),
+    )
+    this.app.post(prefix, this.handleRequest.bind(this))
+    return this.app
   }
 
   async handleRequest(req: express.Request, res: express.Response) {
@@ -206,7 +205,6 @@ export class Server {
       })
       return
     }
-
     try {
       const response = await this.call({
         to: sender,
