@@ -1,5 +1,5 @@
 {
-  "extends": "@blockful/tsconfig/tsconfig.json",
+  "extends": "@blockful/tsconfig/tsconfig",
   "compilerOptions": {
     "module": "CommonJS",
     "resolveJsonModule": true,
