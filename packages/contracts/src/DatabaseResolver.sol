@@ -68,6 +68,7 @@ contract DatabaseResolver is
     /**
      * @notice Initializes the contract with the initial parameters.
      * @param newGatewayUrl Gateway URL.
+     * @param newOffChainDatabaseTimeoutDuration how long an offchain signature will last
      * @param newSigners Signer addresses.
      */
     constructor(string memory newGatewayUrl, uint256 newOffChainDatabaseTimeoutDuration, address[] memory newSigners) {

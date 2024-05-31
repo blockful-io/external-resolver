@@ -11,10 +11,10 @@ import {
   createPublicClient,
   http,
   namehash,
-  toHex,
   Address,
   RawContractError,
   encodeFunctionData,
+  toHex,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
 import * as chains from 'viem/chains'
@@ -88,6 +88,9 @@ const _ = (async () => {
         MessageData,
       ]
       await handleOffchainStorage({ domain, url, message })
+      console.log('writing succeed', err)
+    } else {
+      console.log('writing failed', err)
     }
   }
 
@@ -109,7 +112,10 @@ const _ = (async () => {
         MessageData,
       ]
       await handleOffchainStorage({ domain, url, message })
+      console.log('writing succeed', err)
+      return
     }
+    console.log('writing failed', err)
   }
 })()
 

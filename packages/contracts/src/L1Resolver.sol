@@ -117,11 +117,11 @@ contract L1Resolver is
     /**
      * Sets the address associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The DNS encoded node to update.
+     * @param name The DNS encoded node to update.
      * @param a The address to set.
      */
-    function setAddr(bytes calldata node, address a) external {
-        _offChainStorage(node);
+    function setAddr(bytes calldata name, address a) external {
+        _offChainStorage(name);
     }
 
     function addr(bytes32 node) external view override returns (address payable) {
@@ -143,12 +143,12 @@ contract L1Resolver is
     /**
      * Sets the address associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The DNS encoded node to update.
+     * @param name The DNS encoded node to update.
      * @param coinType The constant used to define the coin type of the corresponding address.
      * @param a The address to set.
      */
-    function setAddr(bytes calldata node, uint256 coinType, bytes memory a) public {
-        _offChainStorage(node);
+    function setAddr(bytes calldata name, uint256 coinType, bytes memory a) public {
+        _offChainStorage(name);
     }
 
     function addr(bytes32 node, uint256 coinType) external view override returns (bytes memory) {
@@ -170,12 +170,12 @@ contract L1Resolver is
     /**
      * Sets the text data associated with an ENS node and key.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The DNS encoded node to update.
+     * @param name The DNS encoded node to update.
      * @param key The key to set.
      * @param value The text data value to set.
      */
-    function setText(bytes calldata node, string calldata key, string calldata value) external {
-        _offChainStorage(node);
+    function setText(bytes calldata name, string calldata key, string calldata value) external {
+        _offChainStorage(name);
     }
 
     function text(bytes32 node, string memory key) external view override returns (string memory) {
@@ -197,11 +197,11 @@ contract L1Resolver is
     /**
      * Sets the contenthash associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The DNS encoded node to update.
+     * @param name The DNS encoded node to update.
      * @param hash The contenthash to set
      */
-    function setContenthash(bytes calldata node, bytes calldata hash) external {
-        _offChainStorage(node);
+    function setContenthash(bytes calldata name, bytes calldata hash) external {
+        _offChainStorage(name);
     }
 
     function contenthash(bytes32 node) external view override returns (bytes memory) {
@@ -222,9 +222,11 @@ contract L1Resolver is
 
     /**
      * @notice Builds an StorageHandledByL2 error.
+     *
+     * @param name The DNS encoded node to update.
      */
-    function _offChainStorage(bytes calldata node) internal view {
-        (, address target) = this.getTarget(node);
+    function _offChainStorage(bytes calldata name) internal view {
+        (, address target) = this.getTarget(name);
         revert StorageHandledByL2(chainId, target);
     }
 

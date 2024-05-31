@@ -8,7 +8,9 @@ import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import "@ens-contracts/utils/UniversalResolver.sol";
 
 import "../script/Helper.sol";
+import {Config} from "../script/deploy/Config.s.sol";
 import {DatabaseResolver} from "../src/DatabaseResolver.sol";
+import {DatabaseResolverScript} from "../script/deploy/DatabaseResolver.s.sol";
 
 contract DatabaseResolverTest is Test, ENSHelper {
     DatabaseResolver public resolver;
@@ -17,10 +19,14 @@ contract DatabaseResolverTest is Test, ENSHelper {
 
     // Initial setup before each test
     function setUp() public {
+        Config config = new Config(block.chainid);
+        (string memory gatewayUrl,) = config.activeNetworkConfig();
+        string[] memory urls = new string[](1);
+        urls[0] = gatewayUrl;
+
         vm.startPrank(owner);
         registry = new ENSRegistry();
-        string[] memory urls = new string[](1);
-        urls[0] = "localhost:8080";
+
         new UniversalResolver(address(registry), urls);
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
@@ -29,11 +35,13 @@ contract DatabaseResolverTest is Test, ENSHelper {
         // addr.reverse
         registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
 
-        // DatabaseResolver contract setup
+        // instantiating the contract the same way the deploy is done
+        resolver = new DatabaseResolverScript().run();
+
         address[] memory signers = new address[](1);
         signers[0] = address(0x1337);
-        string memory url = "http://localhost:3000/{sender}/{data}.json";
-        resolver = new DatabaseResolver(url, 600, signers);
+        resolver.addSigners(signers);
+
         registrar.setDefaultResolver(address(resolver));
 
         vm.stopPrank();
