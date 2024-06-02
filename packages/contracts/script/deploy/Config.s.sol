@@ -30,6 +30,6 @@ contract Config is Script {
     }
 
     function _getAnvilConfig() private pure returns (NetworkConfig memory) {
-        return NetworkConfig({gatewayUrl: "http://127.0.0.1/{sender}/{data}.json", gatewayTimestamp: 600});
+        return NetworkConfig({gatewayUrl: "http://127.0.0.1:3000/{sender}/{data}.json", gatewayTimestamp: 600});
     }
 }

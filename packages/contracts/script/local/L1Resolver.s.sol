@@ -12,7 +12,7 @@ import "../../src/evmgateway/L1Verifier.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
 import {L1Resolver} from "../../src/L1Resolver.sol";
 
-contract OffchainResolverScript is Script, ENSHelper {
+contract L1ResolverScript is Script, ENSHelper {
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         address publicKey = vm.addr(privateKey);
@@ -22,14 +22,13 @@ contract OffchainResolverScript is Script, ENSHelper {
         string[] memory urls = new string[](1);
         urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
         new UniversalResolver(address(registry), urls);
-        ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
+        ReverseRegistrar registrar = new ReverseRegistrar(registry);
         // .reverse
         registry.setSubnodeOwner(rootNode, labelhash("reverse"), publicKey);
         // addr.reverse
         registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
 
-        urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
         L1Verifier verifier = new L1Verifier(urls);
         L1Resolver l1resolver = new L1Resolver(31337, verifier, registry, INameWrapper(publicKey));
 
@@ -39,10 +38,10 @@ contract OffchainResolverScript is Script, ENSHelper {
         registry.setSubnodeRecord(namehash("eth"), labelhash("blockful"), publicKey, address(l1resolver), 9999999999);
 
         L2Resolver l2Resolver = new L2Resolver();
-        bytes32 node = namehash("blockful.eth");
         (bytes memory dnsNode,) = NameEncoder.dnsEncodeName("blockful.eth");
         l1resolver.setTarget(dnsNode, address(l2Resolver));
 
+        bytes32 node = namehash("blockful.eth");
         l2Resolver.setOwner(node, publicKey);
         l2Resolver.setText(node, "com.twitter", "@blockful");
 
