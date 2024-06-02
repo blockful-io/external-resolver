@@ -5,7 +5,7 @@ import {Script, console} from "forge-std/Script.sol";
 import "../Helper.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
 
-contract OffchainResolverScript is Script, ENSHelper {
+contract L2ResolverScript is Script, ENSHelper {
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);

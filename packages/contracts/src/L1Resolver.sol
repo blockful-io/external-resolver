@@ -68,8 +68,8 @@ contract L1Resolver is
         require(address(_nameWrapper) != address(0), "Name Wrapper address must be set");
         require(address(_verifier) != address(0), "Verifier address must be set");
         require(address(_ens) != address(0), "Registry address must be set");
-        verifier = _verifier;
         ens = _ens;
+        verifier = _verifier;
         nameWrapper = _nameWrapper;
 
         setChainId(_chainId);
@@ -300,9 +300,9 @@ contract L1Resolver is
         // isApprovedFor
         address owner = ens.owner(node);
 
-        if (owner == address(nameWrapper)) {
-            owner = nameWrapper.ownerOf(uint256(node));
-        }
+        // if (owner == address(nameWrapper)) {
+        //     owner = nameWrapper.ownerOf(uint256(node));
+        // }
 
         return owner == msg.sender || owner == address(0);
     }

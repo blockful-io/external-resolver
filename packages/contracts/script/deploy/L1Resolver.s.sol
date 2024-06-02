@@ -9,7 +9,7 @@ import "../Helper.sol";
 import "../../src/evmgateway/L1Verifier.sol";
 import {L1Resolver} from "../../src/L1Resolver.sol";
 
-contract OffchainResolverScript is Script, ENSHelper {
+contract L1ResolverScript is Script, ENSHelper {
     function run() external {
         string memory gatewayUrl = vm.envString("GATEWAY_URL");
         address registryAddress = vm.envAddress("REGISTRY_ADDRESS");

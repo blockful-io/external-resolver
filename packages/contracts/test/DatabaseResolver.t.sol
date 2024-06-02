@@ -15,12 +15,13 @@ import {DatabaseResolverScript} from "../script/deploy/DatabaseResolver.s.sol";
 contract DatabaseResolverTest is Test, ENSHelper {
     DatabaseResolver public resolver;
     ENSRegistry public registry;
-    address constant owner = address(0x1337);
+    address owner;
 
     // Initial setup before each test
     function setUp() public {
+        owner = address(this);
         Config config = new Config(block.chainid);
-        (string memory gatewayUrl,) = config.activeNetworkConfig();
+        (string memory gatewayUrl, uint256 gatewayTimestamp) = config.activeNetworkConfig();
         string[] memory urls = new string[](1);
         urls[0] = gatewayUrl;
 
@@ -35,12 +36,9 @@ contract DatabaseResolverTest is Test, ENSHelper {
         // addr.reverse
         registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
 
-        // instantiating the contract the same way the deploy is done
-        resolver = new DatabaseResolverScript().run();
-
         address[] memory signers = new address[](1);
         signers[0] = address(0x1337);
-        resolver.addSigners(signers);
+        resolver = new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
 
         registrar.setDefaultResolver(address(resolver));
 
@@ -70,7 +68,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
     // Test the resolver setup from the constructor
     function testResolverSetupFromConstructor() public {
         assertTrue(resolver.isSigner(address(0x1337)));
-        assertEq(resolver.gatewayUrl(), "http://localhost:3000/{sender}/{data}.json");
+        assertEq(resolver.gatewayUrl(), "http://127.0.0.1:3000/{sender}/{data}.json");
     }
 
     // Test updating the URL by the owner
