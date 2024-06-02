@@ -21,6 +21,7 @@ ignored_warnings_from = ["**/lib/ens-contracts/", "**/src/evmgateway/"]
 
 [rpc_endpoints]
 rpc_url = "${RPC_URL}"
+arbitrum_rpc_url = "${ARBITRUM_RPC_URL}"
 
 [etherscan]
 sepolia = { key = "${ETHERSCAN_API_KEY}" }

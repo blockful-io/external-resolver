@@ -10,7 +10,7 @@ import * as chains from 'viem/chains'
 
 const program = new Command()
 program
-  .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
+  .option('-r --resolver <address>', 'ENS Universal Resolver address')
   .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
   .option('-i --chainId <chainId>', 'chainId', '1337')
 
@@ -37,26 +37,30 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const publicAddress = normalize('blockful.eth')
+  const publicAddress = normalize('picollo.eth')
 
   const twitter = await client.getEnsText({
     name: publicAddress,
     key: 'com.twitter',
     universalResolverAddress: resolver,
+    gatewayUrls: [
+      // 'https://ens-external-resolver-production.up.railway.app/{sender}/{data}.json',
+      'http://127.0.0.1:3000/{sender}/{data}.json',
+    ],
   })
-  const avatar = await client.getEnsAvatar({
-    name: publicAddress,
-    universalResolverAddress: resolver,
-  })
+  // const avatar = await client.getEnsAvatar({
+  //   name: publicAddress,
+  //   universalResolverAddress: resolver,
+  // })
 
-  const address = await client.getEnsAddress({
-    name: publicAddress,
-    universalResolverAddress: resolver,
-  })
+  // const address = await client.getEnsAddress({
+  //   name: publicAddress,
+  //   universalResolverAddress: resolver,
+  // })
 
   console.log({
     twitter,
-    avatar,
-    address,
+    // avatar,
+    // address,
   })
 })()
