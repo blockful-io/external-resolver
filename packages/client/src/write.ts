@@ -11,7 +11,6 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { MessageData, DomainData } from '@blockful/gateway/src/types'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
 import { abi as l2Abi } from '@blockful/contracts/out/L2Resolver.sol/L2Resolver.json'
-// import { abi as dbABI } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import { abi as uABI } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import {
   getRevertErrorData,
@@ -24,6 +23,11 @@ const program = new Command()
 program
   .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
   .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
+  .option(
+    '-pl2 --providerl2 <url>',
+    'web3 provider URL for layer2',
+    'http://127.0.0.1:8547',
+  )
   .option('-i --chainId <chainId>', 'chainId', '31337')
   .option(
     '-pk --privateKey <privateKey>',
@@ -33,7 +37,7 @@ program
 
 program.parse(process.argv)
 
-const { resolver, provider, chainId, privateKey } = program.opts()
+const { resolver, provider, providerL2, chainId, privateKey } = program.opts()
 
 const chain = getChain(parseInt(chainId))
 console.log(`Connecting to ${chain?.name}.`)
@@ -52,7 +56,7 @@ const _ = (async () => {
     address: resolver,
     functionName: 'findResolver',
     abi: uABI,
-    args: [publicAddress],
+    args: [toHex(packetToBytes(publicAddress))],
   })) as Hash[]
 
   // REGISTER NEW DOMAIN
@@ -81,6 +85,7 @@ const _ = (async () => {
         try {
           handleL2Storage({
             chainId,
+            l2Url: providerL2,
             args: {
               functionName: 'register',
               abi: l2Abi,
@@ -129,6 +134,7 @@ const _ = (async () => {
 
         handleL2Storage({
           chainId,
+          l2Url: providerL2,
           args: {
             functionName: 'setText',
             abi: l2Abi,

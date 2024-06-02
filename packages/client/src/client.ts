@@ -48,9 +48,11 @@ export async function ccipRequest({
 
 export async function handleL2Storage({
   chainId,
+  l2Url,
   args,
 }: {
   chainId: bigint
+  l2Url: string
   args: {
     abi: Abi | unknown[]
     address: Address
@@ -63,7 +65,7 @@ export async function handleL2Storage({
 
   const l2Client = createPublicClient({
     chain,
-    transport: http('http://127.0.0.1:8545'),
+    transport: http(l2Url),
   }).extend(walletActions)
 
   try {
