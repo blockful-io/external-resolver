@@ -21,6 +21,7 @@ import {
   bytecode as bytecodeUniversalResolver,
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
+import { abi } from '@blockful/gateway/src/abi'
 import { ChildProcess, spawn } from 'child_process'
 import { normalize, labelhash, namehash, packetToBytes } from 'viem/ens'
 import { anvil } from 'viem/chains'
@@ -40,7 +41,7 @@ import {
 } from 'viem'
 import { expect } from 'chai'
 
-import { NewApp } from '@blockful/gateway/src/app'
+import * as ccip from '@blockful/ccip-server'
 import {
   withGetAddr,
   withGetContentHash,
@@ -139,25 +140,21 @@ function setupGateway(
   { repo }: { repo: InMemoryRepository },
 ) {
   const validator = new OwnershipValidator(repo)
-  const app = NewApp(
-    [
-      withQuery(),
-      withGetText(repo),
-      withRegisterDomain(repo, validator),
-      withSetText(repo, validator),
-      withGetAddr(repo),
-      withSetAddr(repo, validator),
-      withGetContentHash(repo),
-    ],
-    [
-      withSigner(privateKey, [
-        'function text(bytes32 node, string key)',
-        'function addr(bytes32 node)',
-        'function contenthash(bytes32 node)',
-      ]),
-    ],
+
+  const server = new ccip.Server()
+  server.app.use(withSigner(privateKey))
+
+  server.add(
+    abi,
+    withQuery(),
+    withGetText(repo),
+    withRegisterDomain(repo, validator),
+    withSetText(repo, validator),
+    withGetAddr(repo),
+    withSetAddr(repo, validator),
+    withGetContentHash(repo),
   )
-  app.listen('3000')
+  server.makeApp('/').listen('3000')
 }
 
 async function offchainWriting({

@@ -7,7 +7,6 @@
   layer two, or the gateway and the database.
 */
 
-import { ChildProcess, spawn } from 'child_process'
 // Importing abi and bytecode from contracts folder
 import {
   abi as abiL1Resolver,
@@ -34,7 +33,9 @@ import {
   bytecode as bytecodeUniversalResolver,
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
+import * as ccip from '@blockful/ccip-server'
 import { normalize, labelhash, namehash } from 'viem/ens'
+import { ChildProcess, spawn } from 'child_process'
 import { anvil } from 'viem/chains'
 import {
   Address,
@@ -49,10 +50,10 @@ import {
   walletActions,
   zeroHash,
 } from 'viem'
+import { abi } from '@blockful/gateway/src/abi'
 import { expect } from 'chai'
 
 import { L1ProofService } from '@blockful/gateway/src/services'
-import { NewApp } from '@blockful/gateway/src/app'
 import { withGetStorageSlot, withQuery } from '@blockful/gateway/src/handlers'
 
 const GATEWAY_URLS = ['http://127.0.0.1:3000/{sender}/{data}.json']
@@ -161,11 +162,9 @@ async function deployContracts(signer: Hash) {
 }
 
 function setupGateway() {
-  const app = NewApp(
-    [withQuery(), withGetStorageSlot(new L1ProofService(client))],
-    [],
-  )
-  app.listen('3000')
+  const server = new ccip.Server()
+  server.add(abi, withQuery(), withGetStorageSlot(new L1ProofService(client)))
+  server.makeApp('/').listen('3000')
 }
 
 describe('L1Resolver', () => {

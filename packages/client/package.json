@@ -10,11 +10,10 @@
   },
   "devDependencies": {
     "@blockful/gateway": "*",
+    "@blockful/ccip-server": "*",
     "nodemon": "^3.1.0",
     "npm-run-all": "^4.1.5",
-    "typescript": "^5.4.3"
-  },
-  "dependencies": {
+    "typescript": "^5.4.3",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
     "@nomicfoundation/hardhat-ignition": "^0.15.0",

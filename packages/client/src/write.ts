@@ -66,7 +66,7 @@ const _ = (async () => {
       address: resolverAddr,
       functionName: 'register',
       abi: dbABI,
-      args: [namehash(publicAddress), 99999999n],
+      args: [namehash(publicAddress), 9999999999n],
     })
   } catch (err) {
     const data = getRevertErrorData(err)

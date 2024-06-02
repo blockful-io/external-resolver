@@ -8,9 +8,10 @@ import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest'
 import { hash as namehash } from 'eth-ens-namehash'
+import * as ccip from '@blockful/ccip-server'
 
 import { doCall } from './helper'
-import { NewServer, abi } from '../src/server'
+import { abi } from '../src/abi'
 import {
   withGetAddr,
   withGetText,
@@ -54,7 +55,8 @@ describe('Gateway Database', () => {
       const pvtKey = generatePrivateKey()
       const owner = privateKeyToAddress(pvtKey)
       const node = namehash('blockful.eth')
-      const server = NewServer(withRegisterDomain(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withRegisterDomain(repo, validator))
       await doCall({
         server,
         abi,
@@ -82,7 +84,8 @@ describe('Gateway Database', () => {
       domain.owner = owner
       await datasource.manager.save(domain)
 
-      const server = NewServer(withRegisterDomain(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withRegisterDomain(repo, validator))
       const result = await doCall({
         server,
         abi,
@@ -113,7 +116,8 @@ describe('Gateway Database', () => {
 
       const contenthash =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
-      const server = NewServer(withSetContentHash(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withSetContentHash(repo, validator))
       const result = await doCall({
         server,
         abi,
@@ -146,7 +150,8 @@ describe('Gateway Database', () => {
       domain.contenthash = content
       await datasource.manager.save(domain)
 
-      const server = NewServer(withGetContentHash(repo))
+      const server = new ccip.Server()
+      server.add(abi, withGetContentHash(repo))
       const result = await doCall({
         server,
         abi,
@@ -165,7 +170,8 @@ describe('Gateway Database', () => {
     it('should set new contenthash on invalid domain', async () => {
       const contenthash =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
-      const server = NewServer(withSetContentHash(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withSetContentHash(repo, validator))
       const result = await doCall({
         server,
         abi,
@@ -192,7 +198,8 @@ describe('Gateway Database', () => {
 
     // Register a domain, set an initial text record, then update it with a new value
     it('should set new text', async () => {
-      const server = NewServer(withSetText(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withSetText(repo, validator))
       const result = await doCall({
         server,
         abi,
@@ -217,7 +224,8 @@ describe('Gateway Database', () => {
 
     // Register a domain, set an initial text record, then update it with a new value
     it('should allow only 1 key same per domain', async () => {
-      const server = NewServer(withSetText(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withSetText(repo, validator))
       const text = new Text()
       text.key = 'avatar'
       text.value = 'blockful.png'
@@ -248,7 +256,8 @@ describe('Gateway Database', () => {
 
     // Register a domain, set an initial text record, then update it with a new value
     it('should update text', async () => {
-      const server = NewServer(withSetText(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withSetText(repo, validator))
       const text = new Text()
       text.key = 'avatar'
       text.value = 'blockful.png'
@@ -279,7 +288,8 @@ describe('Gateway Database', () => {
 
     // Attempt to set a text record using an unauthorized private key
     it('should not allow unauthorized users to set text', async () => {
-      const server = NewServer(withSetText(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withSetText(repo, validator))
       const unauthorizedPvtKey = generatePrivateKey() // generate a different private key
       const result = await doCall({
         server,
@@ -309,7 +319,8 @@ describe('Gateway Database', () => {
       domain.owner = privateKeyToAddress(generatePrivateKey())
       await datasource.manager.save(text)
 
-      const server = NewServer(withGetText(repo))
+      const server = new ccip.Server()
+      server.add(abi, withGetText(repo))
 
       const result = await doCall({
         server,
@@ -342,7 +353,8 @@ describe('Gateway Database', () => {
 
     // Register a domain, then set an Ethereum address for it
     it('should set ethereum address', async () => {
-      const server = NewServer(withSetAddr(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withSetAddr(repo, validator))
       const result = await doCall({
         server,
         abi,
@@ -371,7 +383,8 @@ describe('Gateway Database', () => {
 
     // Register a domain, then set an Ethereum address for it
     it('should allow multiple addresses for same owner and different coins', async () => {
-      const server = NewServer(withSetAddr(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withSetAddr(repo, validator))
       const addr = new Address()
       addr.address = TEST_ADDRESS
       addr.coin = 1
@@ -407,7 +420,8 @@ describe('Gateway Database', () => {
 
     // Attempt to set an Ethereum address using an unauthorized private key
     it('should not allow unauthorized users to set ethereum address', async () => {
-      const server = NewServer(withSetAddr(repo, validator))
+      const server = new ccip.Server()
+      server.add(abi, withSetAddr(repo, validator))
       const unauthorizedPvtKey = generatePrivateKey() // generate a different private key
       const result = await doCall({
         server,
@@ -438,7 +452,8 @@ describe('Gateway Database', () => {
       addr.domain = domain
       await datasource.manager.save(addr)
 
-      const server = NewServer(withGetAddr(repo))
+      const server = new ccip.Server()
+      server.add(abi, withGetAddr(repo))
       const result = await doCall({
         server,
         abi,
