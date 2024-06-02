@@ -9,7 +9,9 @@ import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
 import { MessageData, DomainData } from '@blockful/gateway/src/types'
-import { abi as dbABI } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
+import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
+import { abi as l2Abi } from '@blockful/contracts/out/L2Resolver.sol/L2Resolver.json'
+// import { abi as dbABI } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import { abi as uABI } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import {
   getRevertErrorData,
@@ -50,17 +52,17 @@ const _ = (async () => {
     address: resolver,
     functionName: 'findResolver',
     abi: uABI,
-    args: [toHex(packetToBytes(publicAddress))],
+    args: [publicAddress],
   })) as Hash[]
 
   // REGISTER NEW DOMAIN
-  const registerArgs = {
-    functionName: 'register',
-    abi: dbABI,
-    args: [namehash(publicAddress), 9999999999n],
-  }
   try {
-    await client.simulateContract({ ...registerArgs, address: resolverAddr })
+    await client.simulateContract({
+      functionName: 'register',
+      abi: l1Abi,
+      args: [toHex(packetToBytes(publicAddress)), 9999999999n],
+      address: resolverAddr,
+    })
   } catch (err) {
     const data = getRevertErrorData(err)
     switch (data?.errorName) {
@@ -80,7 +82,9 @@ const _ = (async () => {
           handleL2Storage({
             chainId,
             args: {
-              ...registerArgs,
+              functionName: 'register',
+              abi: l2Abi,
+              args: [namehash(publicAddress), 9999999999n],
               address: contractAddress,
               account: signer.address,
             },
@@ -97,13 +101,17 @@ const _ = (async () => {
 
   // SET TEXT
 
-  const setTextArgs = {
-    functionName: 'setText',
-    abi: dbABI,
-    args: [namehash(publicAddress), 'com.twitter', '@xxx_blockful.eth'],
-  }
   try {
-    await client.simulateContract({ ...setTextArgs, address: resolverAddr })
+    await client.simulateContract({
+      functionName: 'setText',
+      abi: l1Abi,
+      args: [
+        toHex(packetToBytes(publicAddress)),
+        'com.twitter',
+        '@xxx_blockful.eth',
+      ],
+      address: resolverAddr,
+    })
   } catch (err) {
     const data = getRevertErrorData(err)
     switch (data?.errorName) {
@@ -119,18 +127,21 @@ const _ = (async () => {
       case 'StorageHandledByL2': {
         const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-        try {
-          handleL2Storage({
-            chainId,
-            args: {
-              ...setTextArgs,
-              address: contractAddress,
-              account: signer.address,
-            },
-          })
-        } catch (err) {
-          console.log({ err })
-        }
+        handleL2Storage({
+          chainId,
+          args: {
+            functionName: 'setText',
+            abi: l2Abi,
+            args: [
+              namehash(normalize(publicAddress)),
+              'com.twitter',
+              '@tartaruga.eth',
+            ],
+            address: contractAddress,
+            account: signer.address,
+          },
+        })
+
         break
       }
       default:

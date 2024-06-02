@@ -66,8 +66,12 @@ export async function handleL2Storage({
     transport: http('http://127.0.0.1:8545'),
   }).extend(walletActions)
 
-  const { request } = await l2Client.simulateContract(args)
-  await l2Client.writeContract(request)
+  try {
+    const { request } = await l2Client.simulateContract(args)
+    await l2Client.writeContract(request)
+  } catch (err) {
+    console.log({ err })
+  }
 }
 
 export async function handleDBStorage({
