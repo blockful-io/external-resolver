@@ -14,8 +14,8 @@
     "dev:public": "forge script script/local/PublicResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
     "dev:db": "forge script script/local/DatabaseResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
     "dev:l1": "forge script script/local/OffchainResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
-    "dev:arb:l1": "forge script script/local/ArbResolver.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vv",
-    "dev:arb:l2": "forge script script/local/ArbResolverl2.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vv"
+    "dev:arb:l1": "forge script script/local/ArbResolver.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vv --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659",
+    "dev:arb:l2": "forge script script/local/ArbResolverl2.s.sol --rpc-url http://127.0.0.1:8547 --broadcast -vv --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
   },
   "dependencies": {
     "@arbitrum/nitro-contracts": "^1.2.1",

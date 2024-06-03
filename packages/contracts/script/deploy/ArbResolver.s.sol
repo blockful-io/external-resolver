@@ -16,20 +16,18 @@ import {IRollupCore} from "@nitro-contracts/src/rollup/IRollupCore.sol";
 
 contract ArbitrumResolverScript is Script, ENSHelper {
     function run() external {
-        uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        address publicKey = vm.addr(privateKey);
-
         string memory gatewayUrl = vm.envString("GATEWAY_URL");
         string[] memory urls = new string[](1);
         urls[0] = gatewayUrl;
 
-        address arbitrumRollupAddress = vm.envAddress("ARBITRUM_ROLLUP_ADDRESS");
+        address arbitrumRollupAddress = vm.envAddress("ROLLUP_ADDRESS");
 
         ENSRegistry registry = ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e);
 
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
         ArbVerifier verifier = new ArbVerifier(urls, IRollupCore(arbitrumRollupAddress));
-        new L1Resolver(verifier, registry, INameWrapper(publicKey));
+        new L1Resolver(verifier, registry, INameWrapper(0x0635513f179D50A207757E05759CbD106d7dFcE8));
         vm.stopBroadcast();
     }
 }

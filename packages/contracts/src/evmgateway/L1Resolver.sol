@@ -38,10 +38,9 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165 {
         // isApprovedFor
         address owner = ens.owner(node);
 
-        // TODO fix this assertion
-        // if (owner == address(nameWrapper)) {
-        //     owner = nameWrapper.ownerOf(uint256(node));
-        // }
+        if (owner == address(nameWrapper)) {
+            owner = nameWrapper.ownerOf(uint256(node));
+        }
 
         return owner == msg.sender;
     }

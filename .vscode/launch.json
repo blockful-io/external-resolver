@@ -7,7 +7,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "debug read client",
+      "name": "read client",
       "skipFiles": [
         "<node_internals>/**"
       ],
@@ -30,36 +30,6 @@
       "args": [
         "--chainId",
         "11155111",
-        "--provider",
-        "https://rpc.sepolia.org"
-      ]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "client read arb",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}/packages/client/src/read.ts",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register"
-      ],
-      "env": {
-        "NODE_ENV": "development",
-        "TS_NODE_PROJECT": "${workspaceFolder}/packages/client/tsconfig.json",
-      },
-      "console": "integratedTerminal",
-      "outFiles": [
-        "${workspaceFolder}/**/*.js",
-        "!**/node_modules/**"
-      ],
-      "args": [
-        "--resolver",
-        "0x85D9a8a4bd77b9b5559c1B7FCb8eC9635922Ed49"
       ]
     },
     {

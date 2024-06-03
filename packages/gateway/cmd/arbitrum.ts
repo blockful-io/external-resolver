@@ -12,40 +12,34 @@ import { NewApp } from '../src/app'
 import { ArbProofService } from '../src/services/ArbProof'
 import { withQuery, withGetStorageSlot } from '../src/handlers'
 
-const defaultL1Url = 'http://127.0.0.1:8545'
-const defaultL2Url = 'http://127.0.0.1:8547'
-
 config({ path: process.env.ENV_FILE || '../../.env' })
 
-export function getChain(chainId: number) {
-  let chainObject: chains.Chain = chains.localhost
-  for (const chain of Object.values(chains)) {
-    if ('id' in chain) {
-      if (chainId === chain.id) {
-        chainObject = chain
-      }
-    }
-  }
-  return chainObject
+function getChain(chainId: number): chains.Chain {
+  return (
+    Object.values(chains).find((chain) => chain?.id === chainId) ||
+    chains.localhost
+  )
 }
 
 const _ = (async () => {
-  const privateKey = process.env.PRIVATE_KEY
   const rollupAddr = process.env.ROLLUP_ADDRESS
-  if (!privateKey || !rollupAddr) {
-    throw new Error('PRIVATE_KEY and ROLLUP_ADDRESS are required!')
+  if (!rollupAddr) {
+    throw new Error('ROLLUP_ADDRESS is required')
   }
 
-  const chain1 = getChain(parseInt(process.env.CHAIN_ID || '1337'))
+  const chain1 = getChain(parseInt(process.env.CHAIN_ID || '31337'))
+  console.debug(`layer 1: ${chain1.name}`)
+
   const chain2 = getChain(parseInt(process.env.CHAIN_ID_L2 || '412346'))
+  console.debug(`layer 2: ${chain2.name}`)
 
   const provider = createPublicClient({
     chain: chain1,
-    transport: http(process.env.RPC_URL || defaultL1Url),
+    transport: http(process.env.RPC_URL),
   })
   const providerL2 = createPublicClient({
     chain: chain2,
-    transport: http(process.env.LAYER2_RPC || defaultL2Url),
+    transport: http(process.env.LAYER2_RPC),
   })
 
   const proofService = new ArbProofService(
