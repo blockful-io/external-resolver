@@ -6,8 +6,8 @@ out = "packages/contracts/out"
 libs = ["packages/contracts/lib"]
 viaIR = true
 remappings = [
-  "@ens-contracts=packages/contracts/lib/ens-contracts/contracts",
-  "@openzeppelin=packages/contracts/node_modules/@openzeppelin",
+  "@ens-contracts=node_modules/@ensdomains/ens-contracts/contracts",
+  "@openzeppelin=node_modules/@openzeppelin",
   "@ensdomains=packages/contracts/lib",
   "forge-std=packages/contracts/lib/forge-std/src",
   "@eth-optimism/contracts-bedrock/src/libraries=packages/contracts/lib/optimism-bedrock-contracts",
@@ -15,7 +15,11 @@ remappings = [
   "@evmgateway=packages/contracts/src/evmgateway",
 ]
 
-ignored_warnings_from = ["**/lib/ens-contracts/", "**/src/evmgateway/"]
+ignored_warnings_from = [
+  "node_modules/",
+  "packages/contracts/lib/**",
+  "**/src/evmgateway/",
+]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
