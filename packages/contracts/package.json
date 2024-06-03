@@ -1,19 +1,25 @@
 {
   "name": "@blockful/contracts",
-  "packageManager": "yarn@4.1.0",
   "scripts": {
     "test": "forge test -vvv",
     "test:watch": "forge test -vvv --watch",
-    "dev:public": "forge script script/local/PublicResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
-    "dev:db": "forge script script/local/DatabaseResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
-    "dev:l1": "forge script script/local/OffchainResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vv",
     "deploy:db": "forge script script/deploy/DatabaseResolver.s.sol:DatabaseResolverScript --broadcast --rpc-url rpc_url -vv --verify",
     "deploy:eth:l1": "forge script script/deploy/OffchainResolver.s.sol:OffchainResolverScript --broadcast --rpc-url rpc_url -vv --verify",
     "deploy:eth:l2": "forge script script/deploy/L2Resolver.s.sol --gas-estimate-multiplier 200 --broadcast --rpc-url rpc_url -vv --verify",
+    "deploy:arb:l1": "forge script script/deploy/ArbResolver.s.sol:ArbitrumResolverScript --broadcast --rpc-url rpc_url -vv --verify",
+    "deploy:arb:l2": "forge script script/local/ArbResolverl2.s.sol --rpc-url arbitrum_rpc_url --broadcast -vvv --verify",
     "postinstall": "forge install",
     "lint": "forge fmt",
-    "start:arb:l1": "forge script script/local/ArbResolver.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vv --verify",
-    "start:arb:l2": "forge script script/local/ArbResolverl2.s.sol --rpc-url http://127.0.0.1:8547 --broadcast -vv --verify" ,
-    "build": "forge build"
+    "build": "forge build",
+    "dev:public": "forge script script/local/PublicResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vvv",
+    "dev:db": "forge script script/local/DatabaseResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vvv",
+    "dev:l1": "forge script script/local/OffchainResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vvv",
+    "dev:arb:l1": "forge script script/local/ArbResolver.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vvv --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659",
+    "dev:arb:l2": "forge script script/local/ArbResolverl2.s.sol --rpc-url http://127.0.0.1:8547 --broadcast -vvv --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
+  },
+  "dependencies": {
+    "@arbitrum/nitro-contracts": "^1.2.1",
+    "@openzeppelin/contracts": "^4.1.0",
+    "@ensdomains/ens-contracts": "^1.1.4"
   }
 }

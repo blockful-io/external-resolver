@@ -1,5 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
+
 import {StateProof, EVMProofHelper} from "./evmgateway/EVMProofHelper.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {Node, IRollupCore} from "@nitro-contracts/src/rollup/IRollupCore.sol";

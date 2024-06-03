@@ -7,7 +7,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "debug read client",
+      "name": "read client",
       "skipFiles": [
         "<node_internals>/**"
       ],
@@ -28,44 +28,15 @@
         "!**/node_modules/**"
       ],
       "args": [
-        "--resolver",
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+        "--chainId",
+        "11155111",
       ]
     },
     {
       "type": "node",
       "request": "launch",
-      "name": "debug client arb",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}/packages/client/src/index.ts",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register"
-      ],
-      "env": {
-        "NODE_ENV": "development",
-        "TS_NODE_PROJECT": "${workspaceFolder}/packages/client/tsconfig.json",
-      },
-      "console": "integratedTerminal",
-      "outFiles": [
-        "${workspaceFolder}/**/*.js",
-        "!**/node_modules/**"
-      ],
-      "args": [
-        "--resolver",
-        "0x11ec9349b3c2DEdfD2B2916125EE267574c93Bf6"
-      ]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "VITEST Debug Current Test File",
       "autoAttachChildProcesses": true,
-      "name": "debug write client",
+      "name": "write client",
       "skipFiles": [
         "<node_internals>/**"
       ],

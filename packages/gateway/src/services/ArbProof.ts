@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { IProofService } from '../types'
+import { IProofService } from '../interfaces'
 import { IBlockCache } from './IBlockCache'
 import { EVMProofHelper } from './evmproof'
 import {
@@ -11,7 +11,7 @@ import {
     parseAbiItem,
     toRlp,
     encodeAbiParameters,
-    parseAbiParameters
+    parseAbiParameters,
 } from 'viem'
 import rollupAbi from './rollupABI'
 
@@ -74,7 +74,7 @@ export class ArbProofService<chain extends Chain>
         slots: bigint[],
     ): Promise<Hash> {
         const proof = await this.helper.getProofs(
-            block.number as unknown as bigint,
+            BigInt(block.number),
             address,
             slots,
         )
@@ -163,7 +163,7 @@ export class ArbProofService<chain extends Chain>
         if (cachedBlock) {
             return [cachedBlock.block, cachedBlock.sendRoot]
         }
-        const [blockHash, sendRoot] = await this.getBlockHashAndSendRoot();
+        const [blockHash, sendRoot] = await this.getBlockHashAndSendRoot(nodeIndex);
         const l2blockRaw = await this.l2Provider.getBlock({
             blockHash: blockHash as Hash,
             includeTransactions: false,
@@ -178,16 +178,17 @@ export class ArbProofService<chain extends Chain>
         return [l2blockRaw as unknown as Record<string, string>, sendRoot]
     }
 
-    private async getBlockHashAndSendRoot(): Promise<[Hash, Hash]> {
+    private async getBlockHashAndSendRoot(nodeIndex: bigint): Promise<[Hash, Hash]> {
         // Get logs based on the event
         const logs = (
             await this.l1Provider.getLogs({
                 address: this.rollupAddress as Hash,
-                fromBlock: 0n,
-                toBlock: 'latest',
+                fromBlock:  6030287n,
+                // toBlock:  "latest",
                 event: parseAbiItem(
-                    'event NodeCreated( uint64, bytes32, bytes32, bytes32, (((bytes32[2],uint64[2]), uint8),((bytes32[2],uint64[2]), uint8), uint64), bytes32, bytes32, uint256)',
+                    'event NodeCreated(uint64 indexed nodeIndex, bytes32, bytes32, bytes32, (((bytes32[2],uint64[2]), uint8),((bytes32[2],uint64[2]), uint8), uint64), bytes32, bytes32, uint256)',
                 ),
+                args: {nodeIndex},
             })
         ).reverse()
 
