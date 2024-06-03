@@ -82,6 +82,17 @@ contract L1Resolver is
         _;
     }
 
+    //////// OFFCHAIN STORAGE REGISTER DOMAIN ////////
+
+    /**
+     * Resolves a name, as specified by ENSIP 10 (wildcard).
+     * @param name The DNS-encoded name to resolve.
+     * @param ttl Expiration timestamp of the domain
+     */
+    function register(bytes calldata name, uint32 ttl) external {
+        _offChainStorage(name);
+    }
+
     //////// ENSIP 10 ////////
 
     /**

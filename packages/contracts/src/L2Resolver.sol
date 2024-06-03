@@ -26,6 +26,8 @@ contract L2Resolver is
     PubkeyResolver,
     TextResolver
 {
+    error L2Resolver__UnavailableDomain(bytes32 node);
+
     mapping(bytes32 => address) private _owners;
 
     function isAuthorised(bytes32 node) internal view override returns (bool) {
@@ -39,6 +41,17 @@ contract L2Resolver is
 
     function owner(bytes32 node) public view returns (address) {
         return _owners[node];
+    }
+
+    /**
+     * Creates a new domain if available
+     * @param node The namehash of the domain
+     */
+    function register(bytes32 node) public {
+        if (owner(node) != msg.sender) {
+            revert L2Resolver__UnavailableDomain(node);
+        }
+        _owners[node] = msg.sender;
     }
 
     function supportsInterface(bytes4 interfaceID)
