@@ -64,7 +64,8 @@ const _ = (async () => {
     await client.simulateContract({
       functionName: 'register',
       abi: l1Abi,
-      args: [toHex(packetToBytes(publicAddress)), 9999999999n],
+      args: [toHex(packetToBytes(publicAddress)), 99999999n],
+      account: signer.address,
       address: resolverAddr,
     })
   } catch (err) {
@@ -82,21 +83,17 @@ const _ = (async () => {
       case 'StorageHandledByL2': {
         const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-        try {
-          handleL2Storage({
-            chainId,
-            l2Url: providerL2,
-            args: {
-              functionName: 'register',
-              abi: l2Abi,
-              args: [namehash(publicAddress), 9999999999n],
-              address: contractAddress,
-              account: signer.address,
-            },
-          })
-        } catch (err) {
-          console.log({ err })
-        }
+        handleL2Storage({
+          chainId,
+          l2Url: providerL2,
+          args: {
+            functionName: 'register',
+            abi: l2Abi,
+            args: [namehash(publicAddress)],
+            address: contractAddress,
+            account: signer.address,
+          },
+        })
         break
       }
       default:
