@@ -13,5 +13,12 @@
     "postinstall": "forge install",
     "lint": "forge fmt",
     "build": "forge build"
+  },
+  "dependencies": {
+    "@arbitrum/nitro-contracts": "^1.2.1",
+    "@openzeppelin/contracts": "^4.1.0",
+    "@ensdomains/ens-contracts": "^1.1.4",
+    "@ensdomains/buffer": "^0.1.1",
+    "forge-std": "github:foundry-rs/forge-std"
   }
 }
