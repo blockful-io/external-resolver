@@ -34,10 +34,12 @@ program
     'privateKey',
     '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // anvil PK
   )
+  .option('-l2r --l2resolver <l2resolver>', 'l2resolver')
 
 program.parse(process.argv)
 
-const { resolver, provider, providerL2, chainId, privateKey } = program.opts()
+const { resolver, provider, providerL2, chainId, privateKey, l2resolver } =
+  program.opts()
 
 const chain = getChain(parseInt(chainId))
 console.log(`Connecting to ${chain?.name}.`)
@@ -49,7 +51,7 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const publicAddress = normalize('blockful.eth')
+  const publicAddress = normalize('floripa.eth')
   const signer = privateKeyToAccount(privateKey)
 
   const [resolverAddr] = (await client.readContract({
@@ -64,7 +66,7 @@ const _ = (async () => {
     await client.simulateContract({
       functionName: 'register',
       abi: l1Abi,
-      args: [toHex(packetToBytes(publicAddress)), 99999999n],
+      args: [toHex(packetToBytes(publicAddress)), l2resolver],
       account: signer.address,
       address: resolverAddr,
     })

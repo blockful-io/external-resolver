@@ -34,6 +34,10 @@ contract L1Resolver is
     using BytesUtils for bytes;
     using HexUtils for bytes;
 
+    //////// ERRORS ////////
+
+    error L1Resolver__UnavailableDomain(bytes32 node);
+
     //////// CONTRACT STATE ////////
 
     uint32 public chainId;
@@ -87,10 +91,16 @@ contract L1Resolver is
     /**
      * Resolves a name, as specified by ENSIP 10 (wildcard).
      * @param name The DNS-encoded name to resolve.
-     * @param ttl Expiration timestamp of the domain
+     * @param resolver Address of resolver that should will store this domain
      */
-    function register(bytes calldata name, uint32 ttl) external {
-        _offChainStorage(name);
+    function register(bytes calldata name, address resolver) external {
+        (bytes32 node, address target) = getTarget(name);
+        if (target != address(0)) {
+            revert L1Resolver__UnavailableDomain(node);
+        }
+
+        setTarget(name, resolver);
+        revert StorageHandledByL2(chainId, resolver);
     }
 
     //////// ENSIP 10 ////////

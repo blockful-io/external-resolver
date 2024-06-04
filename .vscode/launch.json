@@ -35,7 +35,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "l1/db write client",
+      "name": "db write client",
       "skipFiles": [
         "<node_internals>/**"
       ],
@@ -91,7 +91,9 @@
         "-pk",
         "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
         "--providerl2",
-        "http://127.0.0.1:8545"
+        "http://127.0.0.1:8545",
+        "--l2resolver",
+        "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318"
       ]
     },
     {
