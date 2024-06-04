@@ -26,33 +26,38 @@ contract L2Resolver is
     PubkeyResolver,
     TextResolver
 {
+    //////// ERRORS ////////
+
     error L2Resolver__UnavailableDomain(bytes32 node);
+    error L2Resolver__ForbiddenAction(bytes32 node);
+
+    //////// STATE VARIABLES ////////
 
     mapping(bytes32 => address) private _owners;
 
-    function isAuthorised(bytes32 node) internal view override returns (bool) {
-        if (_owners[node] == address(0)) return true;
-        return _owners[node] == msg.sender;
-    }
-
-    function setOwner(bytes32 node, address _owner) public authorised(node) {
-        _owners[node] = _owner;
-    }
+    //////// PUBLIC READ METHODS ////////
 
     function owner(bytes32 node) public view returns (address) {
         return _owners[node];
     }
 
-    /**
-     * Creates a new domain if available
-     * @param node The namehash of the domain
-     */
-    function register(bytes32 node) public {
-        if (owner(node) != msg.sender) {
-            revert L2Resolver__UnavailableDomain(node);
+    //////// PUBLIC WRITE METHODS ////////
+
+    function setOwner(bytes32 node, address _owner) public {
+        if (!isAuthorised(node)) {
+            revert L2Resolver__ForbiddenAction(node);
         }
-        _owners[node] = msg.sender;
+
+        _owners[node] = _owner;
     }
+
+    //////// INTERNAL READ METHODS ////////
+
+    function isAuthorised(bytes32 node) internal view override returns (bool) {
+        return _owners[node] == msg.sender || _owners[node] == address(0);
+    }
+
+    //////// ERC-165 ////////
 
     function supportsInterface(bytes4 interfaceID)
         public

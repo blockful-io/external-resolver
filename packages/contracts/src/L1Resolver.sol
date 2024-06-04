@@ -37,6 +37,7 @@ contract L1Resolver is
     //////// ERRORS ////////
 
     error L1Resolver__UnavailableDomain(bytes32 node);
+    error L1Resolver__ForbiddenAction(bytes32 node);
 
     //////// CONTRACT STATE ////////
 
@@ -79,13 +80,6 @@ contract L1Resolver is
         setChainId(_chainId);
     }
 
-    //////// MODIFIERS ////////
-
-    modifier authorised(bytes32 node) {
-        require(isAuthorised(node));
-        _;
-    }
-
     //////// OFFCHAIN STORAGE REGISTER DOMAIN ////////
 
     /**
@@ -100,7 +94,14 @@ contract L1Resolver is
         }
 
         setTarget(name, resolver);
-        revert StorageHandledByL2(chainId, resolver);
+    }
+
+    /**
+     * Forwards the ownership setting to the L2 contracts
+     * @param name The DNS-encoded name to resolve.
+     */
+    function setOwner(bytes calldata name, address /*owner*/ ) public view {
+        _offChainStorage(name);
     }
 
     //////// ENSIP 10 ////////
@@ -296,7 +297,9 @@ contract L1Resolver is
      */
     function setTarget(bytes calldata name, address target) public {
         (bytes32 node, address prevAddr) = getTarget(name);
-        require(isAuthorised(node));
+        if (!isAuthorised(node)) {
+            revert L1Resolver__ForbiddenAction(node);
+        }
         _targets[node] = target;
         emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
     }

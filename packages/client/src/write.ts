@@ -4,7 +4,14 @@
  */
 
 import { Command } from 'commander'
-import { Hash, createPublicClient, http, namehash, toHex } from 'viem'
+import {
+  Hash,
+  createPublicClient,
+  http,
+  namehash,
+  toHex,
+  walletActions,
+} from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
@@ -47,7 +54,7 @@ console.log(`Connecting to ${chain?.name}.`)
 const client = createPublicClient({
   chain,
   transport: http(provider),
-})
+}).extend(walletActions)
 
 // eslint-disable-next-line
 const _ = (async () => {
@@ -63,11 +70,19 @@ const _ = (async () => {
 
   // REGISTER NEW DOMAIN
   try {
-    await client.simulateContract({
+    const { request } = await client.simulateContract({
       functionName: 'register',
       abi: l1Abi,
       args: [toHex(packetToBytes(publicAddress)), l2resolver],
+      address: resolverAddr,
       account: signer.address,
+    })
+    await client.writeContract(request)
+
+    await client.simulateContract({
+      functionName: 'setOwner',
+      abi: l1Abi,
+      args: [toHex(packetToBytes(publicAddress)), signer.address],
       address: resolverAddr,
     })
   } catch (err) {
@@ -85,13 +100,13 @@ const _ = (async () => {
       case 'StorageHandledByL2': {
         const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-        handleL2Storage({
+        await handleL2Storage({
           chainId,
           l2Url: providerL2,
           args: {
-            functionName: 'register',
+            functionName: 'setOwner',
             abi: l2Abi,
-            args: [namehash(publicAddress)],
+            args: [namehash(publicAddress), signer.address],
             address: contractAddress,
             account: signer.address,
           },
@@ -131,17 +146,13 @@ const _ = (async () => {
       case 'StorageHandledByL2': {
         const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-        handleL2Storage({
+        await handleL2Storage({
           chainId,
           l2Url: providerL2,
           args: {
             functionName: 'setText',
             abi: l2Abi,
-            args: [
-              namehash(normalize(publicAddress)),
-              'com.twitter',
-              '@tartaruga.eth',
-            ],
+            args: [namehash(publicAddress), 'com.twitter', '@tartaruga.eth'],
             address: contractAddress,
             account: signer.address,
           },
