@@ -75,6 +75,10 @@ contract L2Resolver is
         )
         returns (bool)
     {
-        return super.supportsInterface(interfaceID);
+        return interfaceID == type(Multicallable).interfaceId || interfaceID == type(ABIResolver).interfaceId
+            || interfaceID == type(AddrResolver).interfaceId || interfaceID == type(ContentHashResolver).interfaceId
+            || interfaceID == type(DNSResolver).interfaceId || interfaceID == type(InterfaceResolver).interfaceId
+            || interfaceID == type(NameResolver).interfaceId || interfaceID == type(PubkeyResolver).interfaceId
+            || interfaceID == type(TextResolver).interfaceId;
     }
 }

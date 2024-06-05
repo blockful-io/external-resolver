@@ -11,7 +11,7 @@ import {IAddrResolver} from "@ens-contracts/resolvers/profiles/IAddrResolver.sol
 import {IAddressResolver} from "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
 import {ITextResolver} from "@ens-contracts/resolvers/profiles/ITextResolver.sol";
 import {IContentHashResolver} from "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 import "./IWriteDeferral.sol";

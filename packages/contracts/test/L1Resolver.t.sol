@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/console.sol";
 import {Test} from "forge-std/Test.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -21,7 +20,7 @@ import {L1Verifier} from "../src/evmgateway/L1Verifier.sol";
 import {IEVMVerifier} from "../src/evmgateway/IEVMVerifier.sol";
 import {EVMFetcher} from "../src/evmgateway/EVMFetcher.sol";
 import {IWriteDeferral} from "../src/IWriteDeferral.sol";
-import "../script/Helper.sol";
+import {ENSHelper} from "../script/Helper.sol";
 
 contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
     ENS register;
@@ -30,16 +29,18 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
     uint32 chainId;
 
     bytes dnsName;
-    bytes32 testNode = namehash("test.eth");
+    bytes32 testNode;
 
     function setUp() public {
+        chainId = 31337;
+        testNode = namehash("test.eth");
+        (dnsName,) = NameEncoder.dnsEncodeName("test.eth");
+
         register = new ENSRegistry();
         string[] memory urls = new string[](1);
         urls[0] = "http://localhost:3000/{sender}/{data}.json";
         verifier = new L1Verifier(urls);
-        chainId = 31337;
         l1Resolver = new L1Resolver(chainId, verifier, register, INameWrapper(msg.sender));
-        (dnsName,) = NameEncoder.dnsEncodeName("test.eth");
 
         register.setSubnodeOwner(rootNode, labelhash("eth"), address(this));
         register.setSubnodeOwner(namehash("eth"), labelhash("test"), address(this));
