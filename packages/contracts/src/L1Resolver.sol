@@ -19,33 +19,28 @@ import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 
-contract L1Resolver is
-    EVMFetchTarget,
-    IExtendedResolver,
-    IERC165,
-    IAddrResolver,
-    IAddressResolver,
-    ITextResolver,
-    IContentHashResolver,
-    IWriteDeferral,
-    Ownable
-{
+contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferral, Ownable {
     using EVMFetcher for EVMFetcher.EVMFetchRequest;
     using BytesUtils for bytes;
     using HexUtils for bytes;
 
-    //////// CONTRACT STATE ////////
+    //////// ERRORS ////////
 
+    error L1Resolver__ForbiddenAction(bytes32 node);
+
+    //////// CONTRACT VARIABLE STATE ////////
+
+    // id of chain that is storing the domains
     uint32 public chainId;
     // Mapping domain -> offchain contract address
     mapping(bytes32 => address) private _targets;
 
-    // ENS Registry
+    //////// CONTRACT IMMUTABLE STATE ////////
+
     ENS immutable ens;
+    INameWrapper immutable nameWrapper;
     // EVM Verifier to handle data validation based on Merkle Proof
     IEVMVerifier immutable verifier;
-    // TODO what does it do?
-    INameWrapper immutable nameWrapper;
 
     //////// CONSTANTS ////////
 
@@ -62,9 +57,9 @@ contract L1Resolver is
      * @notice Initializes the contract with the initial parameters
      * @param _verifier Gateway UR.
      * @param _ens Signer addresses
-     * @param _nameWrapper TODO
+     * @param _nameWrapper ENS' NameWrapper
      */
-    constructor(uint32 _chainId, IEVMVerifier _verifier, ENS _ens, INameWrapper _nameWrapper) Ownable() {
+    constructor(uint32 _chainId, IEVMVerifier _verifier, ENS _ens, INameWrapper _nameWrapper) {
         require(address(_nameWrapper) != address(0), "Name Wrapper address must be set");
         require(address(_verifier) != address(0), "Verifier address must be set");
         require(address(_ens) != address(0), "Registry address must be set");
@@ -73,13 +68,6 @@ contract L1Resolver is
         nameWrapper = _nameWrapper;
 
         setChainId(_chainId);
-    }
-
-    //////// MODIFIERS ////////
-
-    modifier authorised(bytes32 node) {
-        require(isAuthorised(node));
-        _;
     }
 
     //////// ENSIP 10 ////////
@@ -124,10 +112,6 @@ contract L1Resolver is
         _offChainStorage(name);
     }
 
-    function addr(bytes32 node) external view override returns (address payable) {
-        this.resolve(abi.encodePacked(node), msg.data);
-    }
-
     function _addr(bytes32 node, address target) private view returns (bytes memory) {
         EVMFetcher.newFetchRequest(verifier, target).getStatic(RECORD_VERSIONS_SLOT).element(node).getDynamic(
             VERSIONABLE_ADDRESSES_SLOT
@@ -149,10 +133,6 @@ contract L1Resolver is
      */
     function setAddr(bytes calldata name, uint256 coinType, bytes memory a) public {
         _offChainStorage(name);
-    }
-
-    function addr(bytes32 node, uint256 coinType) external view override returns (bytes memory) {
-        this.resolve(abi.encodePacked(node), msg.data);
     }
 
     function _addr(bytes32 node, uint256 coinType, address target) private view returns (bytes memory) {
@@ -178,10 +158,6 @@ contract L1Resolver is
         _offChainStorage(name);
     }
 
-    function text(bytes32 node, string memory key) external view override returns (string memory) {
-        this.resolve(abi.encodePacked(node), msg.data);
-    }
-
     function _text(bytes32 node, string memory key, address target) private view returns (bytes memory) {
         EVMFetcher.newFetchRequest(verifier, target).getStatic(RECORD_VERSIONS_SLOT).element(node).getDynamic(
             VERSIONABLE_TEXTS_SLOT
@@ -202,10 +178,6 @@ contract L1Resolver is
      */
     function setContenthash(bytes calldata name, bytes calldata hash) external {
         _offChainStorage(name);
-    }
-
-    function contenthash(bytes32 node) external view override returns (bytes memory) {
-        this.resolve(abi.encodePacked(node), msg.data);
     }
 
     function _contenthash(bytes32 node, address target) private view returns (bytes memory) {
@@ -275,7 +247,9 @@ contract L1Resolver is
      */
     function setTarget(bytes calldata name, address target) public {
         (bytes32 node, address prevAddr) = getTarget(name);
-        require(isAuthorised(node));
+        if (!isAuthorised(node)) {
+            revert L1Resolver__ForbiddenAction(node);
+        }
         _targets[node] = target;
         emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
     }
@@ -300,6 +274,7 @@ contract L1Resolver is
         // isApprovedFor
         address owner = ens.owner(node);
 
+        // TODO fix local namewrapper deployment
         // if (owner == address(nameWrapper)) {
         //     owner = nameWrapper.ownerOf(uint256(node));
         // }
