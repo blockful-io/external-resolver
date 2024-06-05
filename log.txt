@@ -1,0 +1,23 @@
+• Packages in scope: @blockful/ccip-server, @blockful/client, @blockful/contracts, @blockful/gateway, @blockful/tsconfig
+• Running build in 5 packages
+• Remote caching disabled
+@blockful/contracts:build: cache miss, executing 9122d898370d36ab
+@blockful/ccip-server:build: cache miss, executing 41030cee134eb99f
+@blockful/contracts:build: 
+@blockful/contracts:build: > build
+@blockful/contracts:build: > forge build
+@blockful/contracts:build: 
+@blockful/ccip-server:build: 
+@blockful/ccip-server:build: > build
+@blockful/ccip-server:build: > tsup
+@blockful/ccip-server:build: 
+@blockful/ccip-server:build: CLI Building entry: ./src/index.ts
+@blockful/ccip-server:build: CLI Using tsconfig: tsconfig.json
+@blockful/ccip-server:build: CLI tsup v8.0.2
+@blockful/ccip-server:build: CLI Using tsup config: /Users/leonardovieira/Documents/blockful/2909/external-resolver/packages/ccip-server/tsup.config.ts
+@blockful/ccip-server:build: CLI Target: es2022
+@blockful/ccip-server:build: CLI Cleaning output folder
+@blockful/ccip-server:build: ESM Build start
+@blockful/ccip-server:build: ESM dist/index.mjs 654.17 KB
+@blockful/ccip-server:build: ESM ⚡️ Build success in 82ms
+@blockful/gateway:build: cache miss, executing 3601a5f11d742cba
