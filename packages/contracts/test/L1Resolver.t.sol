@@ -24,22 +24,23 @@ import {IWriteDeferral} from "../src/IWriteDeferral.sol";
 import "../script/Helper.sol";
 
 contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
-    ENS ens;
+    ENS register;
     IEVMVerifier verifier;
     L1Resolver l1Resolver;
-    INameWrapper nameWrapper;
 
     bytes dnsName;
     bytes32 testNode = namehash("test.eth");
 
     function setUp() public {
-        ens = new ENSRegistry();
-        nameWrapper = INameWrapper(msg.sender);
+        register = new ENSRegistry();
         string[] memory urls = new string[](1);
         urls[0] = "http://localhost:3000/{sender}/{data}.json";
         verifier = new L1Verifier(urls);
-        l1Resolver = new L1Resolver(31337, verifier, ens, nameWrapper);
+        l1Resolver = new L1Resolver(31337, verifier, register, INameWrapper(msg.sender));
         (dnsName,) = NameEncoder.dnsEncodeName("test.eth");
+
+        register.setSubnodeOwner(rootNode, labelhash("eth"), address(this));
+        register.setSubnodeOwner(namehash("eth"), labelhash("test"), address(this));
     }
 
     function test_ConstructorChainId() public {
@@ -56,6 +57,13 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
         address target = address(0x123);
         vm.expectEmit(true, true, true, true);
         emit L2HandlerContractAddressChanged(31337, address(0), target);
+        l1Resolver.setTarget(dnsName, target);
+    }
+
+    function test_RevertWhen_SetTargetUnauthorizedOwner() public {
+        address target = address(0x123);
+        vm.expectRevert();
+        vm.prank(address(0x2024));
         l1Resolver.setTarget(dnsName, target);
     }
 
@@ -115,7 +123,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_RevertWhen_GetAddr() public {
         vm.expectRevert();
-        l1Resolver.addr(testNode);
+        l1Resolver.resolve(dnsName, abi.encodeWithSelector(IAddrResolver.addr.selector, address(0)));
     }
 
     function test_RevertWhen_SetText() public {
@@ -128,7 +136,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_RevertWhen_GetText() public {
         vm.expectRevert();
-        l1Resolver.text(testNode, "com.twitter");
+        l1Resolver.resolve(dnsName, abi.encodeWithSelector(ITextResolver.text.selector, testNode, "com.twitter"));
     }
 
     function test_RevertWhen_SetContentHash() public {
@@ -141,6 +149,6 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_RevertWhen_GetContentHash() public {
         vm.expectRevert();
-        l1Resolver.contenthash(testNode);
+        l1Resolver.resolve(dnsName, abi.encodeWithSelector(IContentHashResolver.contenthash.selector, testNode));
     }
 }
