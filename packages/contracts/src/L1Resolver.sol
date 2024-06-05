@@ -28,6 +28,7 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
 
     error L1Resolver__UnavailableDomain(bytes32 node);
     error L1Resolver__ForbiddenAction(bytes32 node);
+    error L1Resolver__DomainNotFound(bytes32 node);
 
     //////// CONTRACT VARIABLE STATE ////////
 
@@ -223,7 +224,10 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
      * @param name The DNS encoded node to update.
      */
     function _offChainStorage(bytes calldata name) internal view {
-        (, address target) = this.getTarget(name);
+        (bytes32 node, address target) = this.getTarget(name);
+        if (target == address(0)) {
+            revert L1Resolver__DomainNotFound(node);
+        }
         revert StorageHandledByL2(chainId, target);
     }
 
