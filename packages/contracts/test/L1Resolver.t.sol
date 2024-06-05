@@ -59,6 +59,12 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
         l1Resolver.setTarget(dnsName, target);
     }
 
+    function test_RevertWhen_SetTargetUnauthorizedOwner() public {
+        address target = address(0x123);
+        vm.expectRevert();
+        l1Resolver.setTarget(dnsName, target);
+    }
+
     function test_GetExistingTarget() public {
         address target = address(0x123);
         l1Resolver.setTarget(dnsName, target);
@@ -115,7 +121,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_RevertWhen_GetAddr() public {
         vm.expectRevert();
-        l1Resolver.addr(testNode);
+        l1Resolver.resolve(dnsName, abi.encodeWithSelector(IAddrResolver.addr.selector, address(0)));
     }
 
     function test_RevertWhen_SetText() public {
@@ -128,7 +134,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_RevertWhen_GetText() public {
         vm.expectRevert();
-        l1Resolver.text(testNode, "com.twitter");
+        l1Resolver.resolve(dnsName, abi.encodeWithSelector(ITextResolver.text.selector, testNode, "com.twitter"));
     }
 
     function test_RevertWhen_SetContentHash() public {
@@ -141,6 +147,6 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_RevertWhen_GetContentHash() public {
         vm.expectRevert();
-        l1Resolver.contenthash(testNode);
+        l1Resolver.resolve(dnsName, abi.encodeWithSelector(IContentHashResolver.contenthash.selector, testNode));
     }
 }
