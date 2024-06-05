@@ -80,29 +80,12 @@ const _ = (async () => {
         await handleDBStorage({ domain, url, message, signer })
         break
       }
-      case 'StorageHandledByL2': {
-        const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
-
-        handleL2Storage({
-          chainId,
-          l2Url: providerL2,
-          args: {
-            functionName: 'register',
-            abi: l2Abi,
-            args: [namehash(publicAddress)],
-            address: contractAddress,
-            account: signer.address,
-          },
-        })
-        break
-      }
       default:
         console.error({ err })
     }
   }
 
   // SET TEXT
-
   try {
     await client.simulateContract({
       functionName: 'setText',
