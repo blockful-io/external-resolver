@@ -119,7 +119,6 @@ const _ = (async () => {
   }
 
   // SET TEXT
-
   try {
     await client.simulateContract({
       functionName: 'setText',
