@@ -1,9 +1,9 @@
 {
   "name": "@blockful/ccip-server",
-  "types": "./src/index.ts",
-  "main": "./src/index.ts",
+  "types": "./dist/index.js",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup"
