@@ -179,16 +179,18 @@ export class ArbProofService<chain extends Chain>
     }
 
     private async getBlockHashAndSendRoot(nodeIndex: bigint): Promise<[Hash, Hash]> {
+        const latestBlock = await this.l1Provider.getBlockNumber();
+        const blockInterval = 100000n;
+        const fromBlock = latestBlock > blockInterval ? BigInt(latestBlock - blockInterval) : 0n;
         // Get logs based on the event
         const logs = (
             await this.l1Provider.getLogs({
                 address: this.rollupAddress as Hash,
-                fromBlock:  6030287n,
-                // toBlock:  "latest",
+                fromBlock,
                 event: parseAbiItem(
-                    'event NodeCreated(uint64 indexed nodeIndex, bytes32, bytes32, bytes32, (((bytes32[2],uint64[2]), uint8),((bytes32[2],uint64[2]), uint8), uint64), bytes32, bytes32, uint256)',
+                    'event NodeCreated(uint64, bytes32, bytes32, bytes32, (((bytes32[2],uint64[2]), uint8),((bytes32[2],uint64[2]), uint8), uint64), bytes32, bytes32, uint256)',
                 ),
-                args: {nodeIndex},
+                args: { nodeIndex },
             })
         ).reverse()
 
