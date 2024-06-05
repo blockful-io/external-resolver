@@ -66,24 +66,6 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug E2E",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register",
-        "${relativeFile}",
-      ],
-      "env": {
-        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
-      },
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-    },
-    {
-      "type": "node",
-      "request": "launch",
       "name": "gateway db",
       "skipFiles": [
         "<node_internals>/**"
@@ -130,6 +112,24 @@
         "${workspaceFolder}/**/*.js",
         "!**/node_modules/**"
       ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug E2E",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+        "${relativeFile}",
+      ],
+      "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
     },
   ]
 }

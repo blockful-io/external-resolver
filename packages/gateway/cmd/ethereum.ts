@@ -5,9 +5,11 @@ import 'reflect-metadata'
 import { config } from 'dotenv'
 import { createPublicClient, http } from 'viem'
 import * as chains from 'viem/chains'
+import * as ccip from '@blockful/ccip-server'
 
-import { NewApp } from '../src/app'
+import { abi } from '../src/abi'
 import { L1ProofService } from '../src/services'
+import { withLogger } from '../src/middlewares'
 import { withQuery, withGetStorageSlot } from '../src/handlers'
 
 function getChain(chainId: number) {
@@ -36,14 +38,17 @@ const _ = (async () => {
     transport: http(process.env.RPC_URL || 'http://127.0.0.1:8545'),
   })
 
-  const proofService = new L1ProofService(provider)
-  const app = NewApp([
+  const server = new ccip.Server()
+  server.app.use(withLogger({ abi, debug: process.env.DEBUG === 'true' }))
+
+  server.add(
+    abi,
     withQuery(), // required for Universal Resolver integration
-    withGetStorageSlot(proofService),
-  ])
+    withGetStorageSlot(new L1ProofService(provider)),
+  )
 
   const port = process.env.PORT || 3000
-  app.listen(port, () => {
+  server.makeApp('/').listen(port, () => {
     console.log(`Gateway bound to port ${port}.`)
   })
 })()

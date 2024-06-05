@@ -20,8 +20,9 @@ import {
 } from 'viem'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 import request from 'supertest'
+import * as ccip from '@blockful/ccip-server'
 
-import { NewServer, abi as serverAbi } from '../src/server'
+import { abi as serverAbi } from '../src/abi'
 import { serializeTypedSignature, signData } from './helper'
 import {
   withGetAddr,
@@ -32,7 +33,7 @@ import {
   withSetText,
 } from '../src/handlers'
 import { InMemoryRepository } from '../src/repositories'
-import { withSigner, makeMessageHash } from '../src/middlewares'
+import { withSigner, makeMessageHash, withLogger } from '../src/middlewares'
 import { Domain } from '../src/entities'
 import { OwnershipValidator } from '../src/services'
 
@@ -74,7 +75,9 @@ describe('Gateway API', () => {
       const contenthash =
         '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
 
-      const app = NewServer(withSetContentHash(repo, validator)).makeApp('/')
+      const server = new ccip.Server()
+      server.add(serverAbi, withSetContentHash(repo, validator))
+      const app = server.makeApp('/')
 
       const args = [domain.node, contenthash]
       const data = encodeFunctionData({
@@ -110,10 +113,10 @@ describe('Gateway API', () => {
     })
 
     it('should handle GET contenthash', async () => {
-      const app = NewServer(withGetContentHash(repo)).makeApp(
-        '/',
-        withSigner(privateKey, ['function contenthash(bytes32 node)']),
-      )
+      const server = new ccip.Server()
+      server.app.use(withSigner(privateKey))
+      server.add(serverAbi, withGetContentHash(repo))
+      const app = server.makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
@@ -156,7 +159,9 @@ describe('Gateway API', () => {
     it('should handle request for set new text', async () => {
       const key = 'company'
       const value = 'blockful'
-      const app = NewServer(withSetText(repo, validator)).makeApp('/')
+      const server = new ccip.Server()
+      server.add(serverAbi, withSetText(repo, validator))
+      const app = server.makeApp('/')
 
       const args = [domain.node, key, value]
       const data = encodeFunctionData({
@@ -203,7 +208,9 @@ describe('Gateway API', () => {
           value: 'blockful',
         },
       ])
-      const app = NewServer(withSetText(repo, validator)).makeApp('/')
+      const server = new ccip.Server()
+      server.add(serverAbi, withSetText(repo, validator))
+      const app = server.makeApp('/')
 
       const args = [domain.node, key, value]
       const data = encodeFunctionData({
@@ -249,10 +256,10 @@ describe('Gateway API', () => {
           value,
         },
       ])
-      const app = NewServer(withGetText(repo)).makeApp(
-        '/',
-        withSigner(privateKey, ['function text(bytes32 node, string key)']),
-      )
+      const server = new ccip.Server()
+      server.app.use(withSigner(privateKey))
+      server.add(serverAbi, withGetText(repo))
+      const app = server.makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
@@ -290,10 +297,11 @@ describe('Gateway API', () => {
     })
 
     it('should handle GET request for not existing text', async () => {
-      const app = NewServer(withGetText(repo)).makeApp(
-        '/',
-        withSigner(privateKey, ['function text(bytes32 node, string key)']),
-      )
+      const server = new ccip.Server()
+      server.app.use(withSigner(privateKey))
+      server.app.use(withLogger({ abi: serverAbi }))
+      server.add(serverAbi, withGetText(repo))
+      const app = server.makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
@@ -315,7 +323,9 @@ describe('Gateway API', () => {
 
     it('should handle set request for setAddr on ethereum', async () => {
       const address = privateKeyToAddress(privateKey)
-      const app = NewServer(withSetAddr(repo, validator)).makeApp('/')
+      const server = new ccip.Server()
+      server.add(serverAbi, withSetAddr(repo, validator))
+      const app = server.makeApp('/')
 
       const args = [domain.node, address]
       const data = encodeFunctionData({
@@ -359,10 +369,10 @@ describe('Gateway API', () => {
         },
       ])
       const address = privateKeyToAddress(privateKey)
-      const app = NewServer(withSetAddr(repo, validator)).makeApp(
-        '/',
-        withSigner(privateKey, []),
-      )
+      const server = new ccip.Server()
+      server.app.use(withSigner(privateKey))
+      server.add(serverAbi, withSetAddr(repo, validator))
+      const app = server.makeApp('/')
 
       const args = [domain.node, address]
       const data = encodeFunctionData({
@@ -406,10 +416,10 @@ describe('Gateway API', () => {
           address,
         },
       ])
-      const app = NewServer(withGetAddr(repo)).makeApp(
-        '/',
-        withSigner(privateKey, ['function addr(bytes32 node)']),
-      )
+      const server = new ccip.Server()
+      server.app.use(withSigner(privateKey))
+      server.add(serverAbi, withGetAddr(repo))
+      const app = server.makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
@@ -447,10 +457,10 @@ describe('Gateway API', () => {
     })
 
     it('should handle GET request for invalid address ', async () => {
-      const app = NewServer(withGetAddr(repo)).makeApp(
-        '/',
-        withSigner(privateKey, ['function addr(bytes32 node)']),
-      )
+      const server = new ccip.Server()
+      server.app.use(withSigner(privateKey))
+      server.add(serverAbi, withGetAddr(repo))
+      const app = server.makeApp('/')
 
       const calldata = encodeFunctionData({
         abi,
