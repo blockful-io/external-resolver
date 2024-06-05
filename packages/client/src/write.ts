@@ -7,6 +7,7 @@ import { Command } from 'commander'
 import {
   Hash,
   createPublicClient,
+  getChainContractAddress,
   http,
   namehash,
   toHex,
@@ -16,9 +17,10 @@ import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
 import { MessageData, DomainData } from '@blockful/gateway/src/types'
+import { abi as dbAbi } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
 import { abi as l2Abi } from '@blockful/contracts/out/L2Resolver.sol/L2Resolver.json'
-import { abi as uABI } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
+import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import {
   getRevertErrorData,
   handleL2Storage,
@@ -28,7 +30,7 @@ import {
 
 const program = new Command()
 program
-  .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
+  .option('-r --resolver <address>', 'ENS Universal Resolver address')
   .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
   .option(
     '-pl2 --providerl2 <url>',
@@ -45,7 +47,7 @@ program
 
 program.parse(process.argv)
 
-const { resolver, provider, providerL2, chainId, privateKey, l2resolver } =
+let { resolver, provider, providerL2, chainId, privateKey, l2resolver } =
   program.opts()
 
 const chain = getChain(parseInt(chainId))
@@ -61,10 +63,17 @@ const _ = (async () => {
   const publicAddress = normalize('floripa.eth')
   const signer = privateKeyToAccount(privateKey)
 
+  if (!resolver) {
+    resolver = getChainContractAddress({
+      chain: client.chain,
+      contract: 'ensUniversalResolver',
+    })
+  }
+
   const [resolverAddr] = (await client.readContract({
     address: resolver,
     functionName: 'findResolver',
-    abi: uABI,
+    abi: uAbi,
     args: [toHex(packetToBytes(publicAddress))],
   })) as Hash[]
 

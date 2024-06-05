@@ -36,18 +36,22 @@ export function withLogger({
       return next()
     }
 
-    const func = decodeFunctionData({ abi: parseAbi(abi), data: callData })
+    try {
+      const func = decodeFunctionData({ abi: parseAbi(abi), data: callData })
 
-    next()
+      next()
 
-    logger.log({
-      level: 'info',
-      message: JSON.stringify({
-        method: req.method,
-        function: func.functionName,
-        args: func.args,
-        status: res.statusCode,
-      }),
-    })
+      logger.log({
+        level: 'info',
+        message: JSON.stringify({
+          method: req.method,
+          function: func.functionName,
+          args: func.args,
+          status: res.statusCode,
+        }),
+      })
+    } catch (err) {
+      console.error(err)
+    }
   }
 }
