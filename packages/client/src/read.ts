@@ -42,7 +42,7 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const publicAddress = normalize('picollo.eth')
+  const publicAddress = normalize('blockful.eth')
 
   const twitter = await client.getEnsText({
     name: publicAddress,
