@@ -4,8 +4,7 @@
     "module": "CommonJS",
     "resolveJsonModule": true,
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "module": "CommonJS"
+    "experimentalDecorators": true
   },
   "include": [
     "src"
