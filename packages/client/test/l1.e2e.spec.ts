@@ -63,7 +63,11 @@ let l2Resolver: GetContractReturnType<
   typeof abiL2Resolver,
   { wallet: WalletClient }
 >
-let l1ResolverAddr: Hash, universalResolverAddr: Hash
+let l1Resolver: GetContractReturnType<
+  typeof abiL1Resolver,
+  { wallet: WalletClient }
+>
+let universalResolverAddr: Hash
 
 const client = createTestClient({
   chain: anvil,
@@ -128,11 +132,19 @@ async function deployContracts(signer: Hash) {
     args: [GATEWAY_URLS],
   })
 
-  l1ResolverAddr = await deployContract({
+  const l1ResolverAddr = await deployContract({
     abi: abiL1Resolver,
     bytecode: bytecodeL1Resolver.object as Hash,
     account: signer,
     args: [anvil.id, verifier, registryAddr, nameWrapper],
+  })
+
+  l1Resolver = await getContract({
+    abi: abiL1Resolver,
+    address: l1ResolverAddr,
+    client: {
+      wallet: client,
+    },
   })
 
   const registry = await getContract({
@@ -202,14 +214,6 @@ describe('L1Resolver', () => {
       abi: abiL2Resolver,
       address: l2ResolverAddr,
       client,
-    })
-
-    const l1Resolver = await getContract({
-      abi: abiL1Resolver,
-      address: l1ResolverAddr,
-      client: {
-        wallet: client,
-      },
     })
 
     await client.impersonateAccount({ address: signer })
