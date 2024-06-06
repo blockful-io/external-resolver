@@ -7,9 +7,9 @@ import {INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 
 import "../Helper.sol";
 import "../../src/evmgateway/L1Verifier.sol";
-import {L1Resolver} from "../../src/evmgateway/L1Resolver.sol";
+import {L1Resolver} from "../../src/L1Resolver.sol";
 
-contract OffchainResolverScript is Script, ENSHelper {
+contract L1ResolverScript is Script, ENSHelper {
     function run() external {
         string memory gatewayUrl = vm.envString("GATEWAY_URL");
         address registryAddress = vm.envAddress("REGISTRY_ADDRESS");
@@ -22,7 +22,7 @@ contract OffchainResolverScript is Script, ENSHelper {
 
         ENSRegistry registry = ENSRegistry(registryAddress);
         L1Verifier verifier = new L1Verifier(urls);
-        new L1Resolver(verifier, registry, INameWrapper(publicKey));
+        new L1Resolver(31337, verifier, registry, INameWrapper(publicKey));
 
         vm.stopBroadcast();
     }
