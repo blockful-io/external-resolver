@@ -17,7 +17,7 @@ export function withSetAddr(
   validator: OwnershipValidator,
 ): ccip.HandlerDescription {
   return {
-    type: 'function setAddr(bytes32 node, address addr)',
+    type: 'setAddr(bytes32 node, address addr)',
     func: async ({ node, addr }, { signature }) => {
       try {
         const isOwner = await validator.verifyOwnership({
@@ -40,7 +40,7 @@ export function withSetAddrByCoin(
   validator: OwnershipValidator,
 ): ccip.HandlerDescription {
   return {
-    type: 'function setAddr(bytes32 node, uint coinType, bytes calldata addr)',
+    type: 'setAddr(bytes32 node, uint256 coinType, bytes memory addr)',
     func: async ({ node, coin, addr }, { signature }) => {
       try {
         const isOwner = await validator.verifyOwnership({
@@ -64,7 +64,7 @@ interface ReadRepository {
 
 export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
   return {
-    type: 'function addr(bytes32 node)',
+    type: 'addr(bytes32 node)',
     func: async ({ node, coin = 60 }) => {
       const addr = await repo.getAddr({ node, coin })
       if (addr) return { data: [addr.value], extraData: addr.ttl }
@@ -76,7 +76,7 @@ export function withGetAddrByCoin(
   repo: ReadRepository,
 ): ccip.HandlerDescription {
   return {
-    type: 'function addr(bytes32 node, uint coinType)',
+    type: 'addr(bytes32 node, uint256 coinType)',
     func: async ({ node, coin }) => {
       const addr = await repo.getAddr({ node, coin })
       if (addr) return { data: [addr.value], extraData: addr.ttl }
