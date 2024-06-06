@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "@ens-contracts/registry/ENS.sol";
+import {DummyNameWrapper} from "@ens-contracts/resolvers/mocks/DummyNameWrapper.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {BytesUtils} from "@ens-contracts/dnssec-oracle/BytesUtils.sol";
@@ -14,10 +15,10 @@ import {IContentHashResolver} from "@ens-contracts/resolvers/profiles/IContentHa
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
-import "./IWriteDeferral.sol";
+import {IWriteDeferral} from "./IWriteDeferral.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
-import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
+import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 
 contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferral, Ownable {
     using EVMFetcher for EVMFetcher.EVMFetchRequest;

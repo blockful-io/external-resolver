@@ -15,13 +15,13 @@ contract Config is Script {
         if (chainId == 11155111) {
             activeNetworkConfig = _getSepoliaConfig();
         } else if (chainId == 1) {
-            activeNetworkConfig = _getMemoliaConfig();
+            activeNetworkConfig = _getMainnetConfig();
         } else {
             activeNetworkConfig = _getAnvilConfig();
         }
     }
 
-    function _getMemoliaConfig() private view returns (NetworkConfig memory) {
+    function _getMainnetConfig() private view returns (NetworkConfig memory) {
         NetworkConfig({gatewayUrl: vm.envString("GATEWAY_URL"), gatewayTimestamp: 600});
     }
 
