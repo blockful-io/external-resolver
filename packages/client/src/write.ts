@@ -77,6 +77,8 @@ const _ = (async () => {
         MessageData,
       ]
       await handleOffchainStorage({ domain, url, message, signer })
+    } else {
+      console.log('writing failed', err)
     }
   }
 
@@ -99,6 +101,8 @@ const _ = (async () => {
       ]
 
       await handleOffchainStorage({ domain, url, message, signer })
+    } else {
+      console.log('writing failed', err)
     }
   }
 })()

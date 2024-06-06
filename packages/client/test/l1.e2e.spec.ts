@@ -9,13 +9,13 @@
 
 // Importing abi and bytecode from contracts folder
 import {
+  abi as abiL2Resolver,
+  bytecode as bytecodeL2Resolver,
+} from '@blockful/contracts/out/L2Resolver.sol/L2Resolver.json'
+import {
   abi as abiL1Resolver,
   bytecode as bytecodeL1Resolver,
 } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
-import {
-  abi as abiOffchainResolver,
-  bytecode as bytecodeOffchainResolver,
-} from '@blockful/contracts/out/OffchainResolver.sol/OffchainResolver.json'
 import {
   abi as abiDummyNameWrapper,
   bytecode as bytecodeDummyNameWrapper,
@@ -34,7 +34,7 @@ import {
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
 import * as ccip from '@blockful/ccip-server'
-import { normalize, labelhash, namehash } from 'viem/ens'
+import { normalize, labelhash, namehash, packetToBytes } from 'viem/ens'
 import { ChildProcess, spawn } from 'child_process'
 import { anvil } from 'viem/chains'
 import {
@@ -47,6 +47,7 @@ import {
   getContractAddress,
   http,
   publicActions,
+  toHex,
   walletActions,
   zeroHash,
 } from 'viem'
@@ -58,11 +59,11 @@ import { withGetStorageSlot, withQuery } from '@blockful/gateway/src/handlers'
 
 const GATEWAY_URLS = ['http://127.0.0.1:3000/{sender}/{data}.json']
 
-let l1Resolver: GetContractReturnType<
-  typeof abiL1Resolver,
+let l2Resolver: GetContractReturnType<
+  typeof abiL2Resolver,
   { wallet: WalletClient }
 >
-let offchainResolverAddr: Hash, universalResolverAddr: Hash
+let l1ResolverAddr: Hash, universalResolverAddr: Hash
 
 const client = createTestClient({
   chain: anvil,
@@ -127,11 +128,11 @@ async function deployContracts(signer: Hash) {
     args: [GATEWAY_URLS],
   })
 
-  offchainResolverAddr = await deployContract({
-    abi: abiOffchainResolver,
-    bytecode: bytecodeOffchainResolver.object as Hash,
+  l1ResolverAddr = await deployContract({
+    abi: abiL1Resolver,
+    bytecode: bytecodeL1Resolver.object as Hash,
     account: signer,
-    args: [verifier, registryAddr, nameWrapper],
+    args: [anvil.id, verifier, registryAddr, nameWrapper],
   })
 
   const registry = await getContract({
@@ -141,7 +142,7 @@ async function deployContracts(signer: Hash) {
   })
 
   await registry.write.setSubnodeRecord(
-    [zeroHash, labelhash('eth'), signer, offchainResolverAddr, 10000000],
+    [zeroHash, labelhash('eth'), signer, l1ResolverAddr, 9999999999],
     {
       account: signer,
     },
@@ -152,8 +153,8 @@ async function deployContracts(signer: Hash) {
       namehash('eth'),
       labelhash('blockful'),
       signer,
-      offchainResolverAddr,
-      10000000,
+      l1ResolverAddr,
+      9999999999,
     ],
     {
       account: signer,
@@ -191,29 +192,29 @@ describe('L1Resolver', () => {
   beforeEach(async () => {
     const [signer] = await client.getAddresses()
 
-    const l1ResolverAddr = await deployContract({
-      abi: abiL1Resolver,
-      bytecode: bytecodeL1Resolver.object as Hash,
+    const l2ResolverAddr = await deployContract({
+      abi: abiL2Resolver,
+      bytecode: bytecodeL2Resolver.object as Hash,
       account: signer,
     })
 
-    l1Resolver = await getContract({
-      abi: abiL1Resolver,
-      address: l1ResolverAddr,
+    l2Resolver = await getContract({
+      abi: abiL2Resolver,
+      address: l2ResolverAddr,
       client,
     })
 
-    const offchainResolver = await getContract({
-      abi: abiOffchainResolver,
-      address: offchainResolverAddr,
+    const l1Resolver = await getContract({
+      abi: abiL1Resolver,
+      address: l1ResolverAddr,
       client: {
         wallet: client,
       },
     })
 
     await client.impersonateAccount({ address: signer })
-    await offchainResolver.write.setTarget(
-      [namehash('blockful.eth'), l1ResolverAddr],
+    await l1Resolver.write.setTarget(
+      [toHex(packetToBytes(rawNode)), l2ResolverAddr],
       {
         account: signer,
       },
@@ -221,7 +222,7 @@ describe('L1Resolver', () => {
   })
 
   it('should read valid text record', async () => {
-    await l1Resolver.write.setText([node, 'com.twitter', '@database'], {
+    await l2Resolver.write.setText([node, 'com.twitter', '@database'], {
       account,
     })
     const twitter = await client.getEnsText({
@@ -243,7 +244,7 @@ describe('L1Resolver', () => {
   })
 
   it('should read ETH address', async () => {
-    await l1Resolver.write.setAddr(
+    await l2Resolver.write.setAddr(
       [node, '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
       { account },
     )
