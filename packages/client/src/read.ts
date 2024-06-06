@@ -6,13 +6,13 @@
 import { Command } from 'commander'
 import { createPublicClient, http } from 'viem'
 import { normalize } from 'viem/ens'
-import * as chains from 'viem/chains'
+import { getChain } from './client'
 
 const program = new Command()
 program
   .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
   .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
-  .option('-i --chainId <chainId>', 'chainId', '1337')
+  .option('-i --chainId <chainId>', 'chainId', '31337')
   .option(
     '-g --gateway <gateway>',
     'gateway',
@@ -23,16 +23,7 @@ program.parse(process.argv)
 
 const { resolver, provider, chainId, gateway } = program.opts()
 
-function getChain(chainId: number) {
-  for (const chain of Object.values(chains)) {
-    if ('id' in chain && chain.id === chainId) {
-      return chain
-    }
-  }
-}
-
 const chain = getChain(parseInt(chainId))
-
 console.log(`Connecting to ${chain?.name}.`)
 
 const client = createPublicClient({
