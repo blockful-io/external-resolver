@@ -21,6 +21,7 @@ contract L1ResolverScript is Script, ENSHelper {
         ENSRegistry registry = new ENSRegistry();
         string[] memory urls = new string[](1);
         urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
+
         new UniversalResolver(address(registry), urls);
 
         ReverseRegistrar registrar = new ReverseRegistrar(registry);

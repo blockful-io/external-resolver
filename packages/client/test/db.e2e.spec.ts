@@ -6,7 +6,6 @@
   environment and stops at the gateway call. It still requires implementing the connection between the gateway and 
   layer two, or the gateway and the database.
 */
-import { spawn } from 'child_process'
 
 // Importing abi and bytecode from contracts folder
 import {
@@ -22,26 +21,27 @@ import {
   bytecode as bytecodeUniversalResolver,
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
+import { abi } from '@blockful/gateway/src/abi'
+import { ChildProcess, spawn } from 'child_process'
 import { normalize, labelhash, namehash, packetToBytes } from 'viem/ens'
 import { anvil } from 'viem/chains'
 import {
-  Hash,
   createTestClient,
-  getContract,
-  getContractAddress,
   http,
   publicActions,
-  zeroHash,
+  Hash,
+  getContractAddress,
   walletActions,
-  Address,
-  Hex,
+  zeroHash,
+  getContract,
   encodeFunctionData,
-  toHex,
+  Hex,
   PrivateKeyAccount,
+  toHex,
 } from 'viem'
 import { expect } from 'chai'
 
-import { NewApp } from '@blockful/gateway/src/app'
+import * as ccip from '@blockful/ccip-server'
 import {
   withGetAddr,
   withGetContentHash,
@@ -56,11 +56,11 @@ import { InMemoryRepository } from '@blockful/gateway/src/repositories'
 import { withSigner } from '@blockful/gateway/src/middlewares'
 import { OwnershipValidator } from '@blockful/gateway/src/services'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
-import { getRevertErrorData, ccipRequest } from '../src/write'
+import { getRevertErrorData, ccipRequest } from '../src/client'
 
 const GATEWAY_URL = 'http://127.0.0.1:3000/{sender}/{data}.json'
 
-let offchainResolverAddr: Hash, universalResolverAddress: Hash
+let universalResolverAddress: Hash
 
 const client = createTestClient({
   chain: anvil,
@@ -105,6 +105,12 @@ async function deployContracts(signer: Hash) {
     account: signer,
   })
 
+  const registry = await getContract({
+    abi: abiRegistry,
+    address: registryAddr,
+    client,
+  })
+
   universalResolverAddress = await deployContract({
     abi: abiUniversalResolver,
     bytecode: bytecodeUniversalResolver.object as Hash,
@@ -112,37 +118,20 @@ async function deployContracts(signer: Hash) {
     args: [registryAddr, [GATEWAY_URL]],
   })
 
-  offchainResolverAddr = await deployContract({
+  const dbResolverAddr = await deployContract({
     abi: abiDBResolver,
     bytecode: bytecodeDBResolver.object as Hash,
     account: signer,
     args: [GATEWAY_URL, 600, [signer]],
   })
 
-  const registry = await getContract({
-    abi: abiRegistry,
-    address: registryAddr,
-    client,
-  })
-
   await registry.write.setSubnodeRecord(
-    [zeroHash, labelhash('eth'), signer, offchainResolverAddr, 10000000],
-    {
-      account: signer,
-    },
+    [zeroHash, labelhash('eth'), signer, dbResolverAddr, 10000000],
+    { account: signer },
   )
-
   await registry.write.setSubnodeRecord(
-    [
-      namehash('eth'),
-      labelhash('blockful'),
-      signer,
-      offchainResolverAddr,
-      10000000,
-    ],
-    {
-      account: signer,
-    },
+    [namehash('eth'), labelhash('offchain'), signer, dbResolverAddr, 10000000],
+    { account: signer },
   )
 }
 
@@ -151,25 +140,21 @@ function setupGateway(
   { repo }: { repo: InMemoryRepository },
 ) {
   const validator = new OwnershipValidator(repo)
-  const app = NewApp(
-    [
-      withQuery(),
-      withGetText(repo),
-      withRegisterDomain(repo, validator),
-      withSetText(repo, validator),
-      withGetAddr(repo),
-      withSetAddr(repo, validator),
-      withGetContentHash(repo),
-    ],
-    [
-      withSigner(privateKey, [
-        'function text(bytes32 node, string key)',
-        'function addr(bytes32 node)',
-        'function contenthash(bytes32 node)',
-      ]),
-    ],
+
+  const server = new ccip.Server()
+  server.app.use(withSigner(privateKey))
+
+  server.add(
+    abi,
+    withQuery(),
+    withGetText(repo),
+    withRegisterDomain(repo, validator),
+    withSetText(repo, validator),
+    withGetAddr(repo),
+    withSetAddr(repo, validator),
+    withGetContentHash(repo),
   )
-  app.listen('3000')
+  server.makeApp('/').listen('3000')
 }
 
 async function offchainWriting({
@@ -259,14 +244,13 @@ describe('DatabaseResolver', () => {
     texts: [],
   }
   domains.set(node, domain)
-  let account: Address
+  let localNode: ChildProcess
 
   before(async () => {
-    spawn('anvil')
+    localNode = spawn('anvil')
 
     const [signer] = await client.getAddresses()
-    account = signer
-    await deployContracts(account)
+    await deployContracts(signer)
 
     repo = new InMemoryRepository()
     setupGateway(
@@ -279,6 +263,10 @@ describe('DatabaseResolver', () => {
     repo.setDomains(domains)
     repo.setTexts([])
     repo.setAddresses([])
+  })
+
+  after(async () => {
+    localNode.kill()
   })
 
   it('should read and parse the avatar from database', async () => {

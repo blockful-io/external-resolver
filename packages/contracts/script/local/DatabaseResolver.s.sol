@@ -2,11 +2,11 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import "@ens-contracts/registry/ENSRegistry.sol";
-import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
-import "@ens-contracts/utils/UniversalResolver.sol";
+import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
+import {ReverseRegistrar} from "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
+import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 
-import "../Helper.sol";
+import {ENSHelper} from "../Helper.sol";
 import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 
 contract DatabaseResolverScript is Script, ENSHelper {

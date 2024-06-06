@@ -42,3 +42,6 @@ jobs:
 
       - name: Run tests
         run: npm run test
+
+      - name: Run E2E tests
+        run: npm run client test:e2e
