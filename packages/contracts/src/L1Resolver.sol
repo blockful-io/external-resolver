@@ -20,13 +20,7 @@ import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 
-contract L1Resolver is
-    EVMFetchTarget,
-    IExtendedResolver,
-    IERC165,
-    IWriteDeferral,
-    Ownable
-{
+contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferral, Ownable {
     using EVMFetcher for EVMFetcher.EVMFetchRequest;
     using BytesUtils for bytes;
     using HexUtils for bytes;
@@ -66,20 +60,9 @@ contract L1Resolver is
      * @param _ens Signer addresses
      * @param _nameWrapper ENS' NameWrapper
      */
-    constructor(
-        uint32 _chainId,
-        IEVMVerifier _verifier,
-        ENS _ens,
-        INameWrapper _nameWrapper
-    ) {
-        require(
-            address(_nameWrapper) != address(0),
-            "Name Wrapper address must be set"
-        );
-        require(
-            address(_verifier) != address(0),
-            "Verifier address must be set"
-        );
+    constructor(uint32 _chainId, IEVMVerifier _verifier, ENS _ens, INameWrapper _nameWrapper) {
+        require(address(_nameWrapper) != address(0), "Name Wrapper address must be set");
+        require(address(_verifier) != address(0), "Verifier address must be set");
         require(address(_ens) != address(0), "Registry address must be set");
         ens = _ens;
         verifier = _verifier;
@@ -96,10 +79,7 @@ contract L1Resolver is
      * @param data The actual calldata
      * @return result result of the call
      */
-    function resolve(
-        bytes calldata name,
-        bytes calldata data
-    ) external view returns (bytes memory result) {
+    function resolve(bytes calldata name, bytes calldata data) external view returns (bytes memory result) {
         (, address target) = getTarget(name);
         bytes4 selector = bytes4(data);
 
@@ -108,17 +88,11 @@ contract L1Resolver is
             return _addr(node, target);
         }
         if (selector == IAddressResolver.addr.selector) {
-            (bytes32 node, uint256 cointype) = abi.decode(
-                data[4:],
-                (bytes32, uint256)
-            );
+            (bytes32 node, uint256 cointype) = abi.decode(data[4:], (bytes32, uint256));
             return _addr(node, cointype, target);
         }
         if (selector == ITextResolver.text.selector) {
-            (bytes32 node, string memory key) = abi.decode(
-                data[4:],
-                (bytes32, string)
-            );
+            (bytes32 node, string memory key) = abi.decode(data[4:], (bytes32, string));
             return bytes(_text(node, key, target));
         }
         if (selector == IContentHashResolver.contenthash.selector) {
@@ -139,25 +113,13 @@ contract L1Resolver is
         _offChainStorage(name);
     }
 
-    function _addr(
-        bytes32 node,
-        address target
-    ) private view returns (bytes memory) {
-        EVMFetcher
-            .newFetchRequest(verifier, target)
-            .getStatic(RECORD_VERSIONS_SLOT)
-            .element(node)
-            .getDynamic(VERSIONABLE_ADDRESSES_SLOT)
-            .ref(0)
-            .element(node)
-            .element(COIN_TYPE_ETH)
-            .fetch(this.addrCallback.selector, ""); // recordVersions
+    function _addr(bytes32 node, address target) private view returns (bytes memory) {
+        EVMFetcher.newFetchRequest(verifier, target).getStatic(RECORD_VERSIONS_SLOT).element(node).getDynamic(
+            VERSIONABLE_ADDRESSES_SLOT
+        ).ref(0).element(node).element(COIN_TYPE_ETH).fetch(this.addrCallback.selector, ""); // recordVersions
     }
 
-    function addrCallback(
-        bytes[] memory values,
-        bytes memory
-    ) public pure returns (bytes memory) {
+    function addrCallback(bytes[] memory values, bytes memory) public pure returns (bytes memory) {
         return abi.encode(address(bytes20(values[1])));
     }
 
@@ -170,34 +132,17 @@ contract L1Resolver is
      * @param coinType The constant used to define the coin type of the corresponding address.
      * @param a The address to set.
      */
-    function setAddr(
-        bytes calldata name,
-        uint256 coinType,
-        bytes memory a
-    ) public {
+    function setAddr(bytes calldata name, uint256 coinType, bytes memory a) public {
         _offChainStorage(name);
     }
 
-    function _addr(
-        bytes32 node,
-        uint256 coinType,
-        address target
-    ) private view returns (bytes memory) {
-        EVMFetcher
-            .newFetchRequest(verifier, target)
-            .getStatic(RECORD_VERSIONS_SLOT)
-            .element(node)
-            .getDynamic(VERSIONABLE_ADDRESSES_SLOT)
-            .ref(0)
-            .element(node)
-            .element(coinType)
-            .fetch(this.addrCoinTypeCallback.selector, "");
+    function _addr(bytes32 node, uint256 coinType, address target) private view returns (bytes memory) {
+        EVMFetcher.newFetchRequest(verifier, target).getStatic(RECORD_VERSIONS_SLOT).element(node).getDynamic(
+            VERSIONABLE_ADDRESSES_SLOT
+        ).ref(0).element(node).element(coinType).fetch(this.addrCoinTypeCallback.selector, "");
     }
 
-    function addrCoinTypeCallback(
-        bytes[] memory values,
-        bytes memory
-    ) public pure returns (bytes memory) {
+    function addrCoinTypeCallback(bytes[] memory values, bytes memory) public pure returns (bytes memory) {
         return abi.encode(values[1]);
     }
 
@@ -210,34 +155,17 @@ contract L1Resolver is
      * @param key The key to set.
      * @param value The text data value to set.
      */
-    function setText(
-        bytes calldata name,
-        string calldata key,
-        string calldata value
-    ) external {
+    function setText(bytes calldata name, string calldata key, string calldata value) external {
         _offChainStorage(name);
     }
 
-    function _text(
-        bytes32 node,
-        string memory key,
-        address target
-    ) private view returns (bytes memory) {
-        EVMFetcher
-            .newFetchRequest(verifier, target)
-            .getStatic(RECORD_VERSIONS_SLOT)
-            .element(node)
-            .getDynamic(VERSIONABLE_TEXTS_SLOT)
-            .ref(0)
-            .element(node)
-            .element(key)
-            .fetch(this.textCallback.selector, "");
+    function _text(bytes32 node, string memory key, address target) private view returns (bytes memory) {
+        EVMFetcher.newFetchRequest(verifier, target).getStatic(RECORD_VERSIONS_SLOT).element(node).getDynamic(
+            VERSIONABLE_TEXTS_SLOT
+        ).ref(0).element(node).element(key).fetch(this.textCallback.selector, "");
     }
 
-    function textCallback(
-        bytes[] memory values,
-        bytes memory
-    ) public pure returns (bytes memory) {
+    function textCallback(bytes[] memory values, bytes memory) public pure returns (bytes memory) {
         return abi.encode(string(values[1]));
     }
 
@@ -253,24 +181,13 @@ contract L1Resolver is
         _offChainStorage(name);
     }
 
-    function _contenthash(
-        bytes32 node,
-        address target
-    ) private view returns (bytes memory) {
-        EVMFetcher
-            .newFetchRequest(verifier, target)
-            .getStatic(RECORD_VERSIONS_SLOT)
-            .element(node)
-            .getDynamic(VERSIONABLE_HASHES_SLOT)
-            .ref(0)
-            .element(node)
-            .fetch(this.contenthashCallback.selector, "");
+    function _contenthash(bytes32 node, address target) private view returns (bytes memory) {
+        EVMFetcher.newFetchRequest(verifier, target).getStatic(RECORD_VERSIONS_SLOT).element(node).getDynamic(
+            VERSIONABLE_HASHES_SLOT
+        ).ref(0).element(node).fetch(this.contenthashCallback.selector, "");
     }
 
-    function contenthashCallback(
-        bytes[] memory values,
-        bytes memory
-    ) public pure returns (bytes memory) {
+    function contenthashCallback(bytes[] memory values, bytes memory) public pure returns (bytes memory) {
         return abi.encode(values[1]);
     }
 
@@ -289,17 +206,13 @@ contract L1Resolver is
     //////// ENS ERC-165 ////////
 
     function supportsInterface(bytes4 interfaceID) public pure returns (bool) {
-        return
-            interfaceID == type(IExtendedResolver).interfaceId ||
-            interfaceID == type(IERC165).interfaceId ||
-            interfaceID == type(EVMFetchTarget).interfaceId;
+        return interfaceID == type(IExtendedResolver).interfaceId || interfaceID == type(IERC165).interfaceId
+            || interfaceID == type(EVMFetchTarget).interfaceId;
     }
 
     //////// PUBLIC VIEW FUNCTIONS ////////
 
-    function getTarget(
-        bytes calldata name
-    ) public view returns (bytes32, address) {
+    function getTarget(bytes calldata name) public view returns (bytes32, address) {
         return getTarget(name, 0);
     }
 
@@ -310,10 +223,7 @@ contract L1Resolver is
      * @return node namehash of resolved domain
      * @return target The L2 resolver address to verify against.
      */
-    function getTarget(
-        bytes calldata name,
-        uint256 offset
-    ) public view returns (bytes32 node, address target) {
+    function getTarget(bytes calldata name, uint256 offset) public view returns (bytes32 node, address target) {
         uint256 len = name.readUint8(offset);
         node = bytes32(0);
         if (len > 0) {

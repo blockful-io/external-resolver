@@ -62,5 +62,6 @@ const _ = (async () => {
     twitter,
     avatar,
     address,
+    name,
   })
 })()

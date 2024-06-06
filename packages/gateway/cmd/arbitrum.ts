@@ -6,11 +6,12 @@ import 'reflect-metadata'
 import { config } from 'dotenv'
 import { Hash, createPublicClient, http } from 'viem'
 import * as chains from 'viem/chains'
-
+import * as ccip from '@blockful/ccip-server'
 import { InMemoryBlockCache } from '../src/services/InMemoryBlockCache'
-import { NewApp } from '../src/app'
 import { ArbProofService } from '../src/services/ArbProof'
 import { withQuery, withGetStorageSlot } from '../src/handlers'
+import { abi } from '../src/abi'
+import { withLogger } from '../src/middlewares'
 
 config({ path: process.env.ENV_FILE || '../../.env' })
 
@@ -48,10 +49,18 @@ const _ = (async () => {
     rollupAddr as Hash,
     new InMemoryBlockCache(),
   )
-  const app = NewApp([withQuery(), withGetStorageSlot(proofService)], [])
+
+  const server = new ccip.Server()
+  server.app.use(withLogger({ abi, debug: process.env.DEBUG === 'true' }))
+
+  server.add(
+    abi,
+    withQuery(), // required for Universal Resolver integration
+    withGetStorageSlot(proofService),
+  )
 
   const port = process.env.PORT || 3000
-  app.listen(port, () => {
+  server.makeApp('/').listen(port, () => {
     console.log(`Gateway bound to port ${port}.`)
   })
 })()

@@ -11,9 +11,9 @@ import {Script, console} from "forge-std/Script.sol";
 import {IRollupCore} from "@nitro-contracts/src/rollup/IRollupCore.sol";
 import {ArbVerifier} from "../../src/ArbVerifier.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
-import {L1Resolver} from "../../src/evmgateway/L1Resolver.sol";
+import {L1Resolver} from "../../src/L1Resolver.sol";
 
-contract OffchainResolverScript is Script, ENSHelper {
+contract arbResolverL2Script is Script, ENSHelper {
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         address publicKey = vm.addr(privateKey);

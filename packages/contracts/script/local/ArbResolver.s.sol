@@ -13,10 +13,10 @@ import {IRollupCore} from "@nitro-contracts/src/rollup/IRollupCore.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {ArbVerifier} from "../../src/ArbVerifier.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
-import {L1Resolver} from "../../src/evmgateway/L1Resolver.sol";
+import {L1Resolver} from "../../src/L1Resolver.sol";
 import {Script, console} from "forge-std/Script.sol";
 
-contract OffchainResolverScript is Script, ENSHelper {
+contract arbResolverScript is Script, ENSHelper {
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         address publicKey = vm.addr(privateKey);
@@ -56,7 +56,12 @@ contract OffchainResolverScript is Script, ENSHelper {
             IMetadataService(publicKey)
         );
 
-        L1Resolver l1resolver = new L1Resolver(verifier, registry, nameWrap);
+        L1Resolver l1resolver = new L1Resolver(
+            31337,
+            verifier,
+            registry,
+            nameWrap
+        );
 
         // .eth
         registry.setSubnodeRecord(
@@ -75,7 +80,7 @@ contract OffchainResolverScript is Script, ENSHelper {
             100000
         );
 
-        bytes32 node = namehash("blockful.eth");
+        (bytes memory node, ) = NameEncoder.dnsEncodeName("blockful.eth");
         l1resolver.setTarget(node, arbitrumL2ResolverAddress);
 
         vm.stopBroadcast();

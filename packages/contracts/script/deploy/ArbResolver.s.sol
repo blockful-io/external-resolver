@@ -10,7 +10,7 @@ import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
 import {PublicResolver, INameWrapper} from "@ens-contracts/resolvers/PublicResolver.sol";
 import {ArbVerifier} from "../../src/ArbVerifier.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
-import {L1Resolver} from "../../src/evmgateway/L1Resolver.sol";
+import {L1Resolver} from "../../src/L1Resolver.sol";
 import {IRollupCore} from "@nitro-contracts/src/rollup/IRollupCore.sol";
 
 contract ArbitrumResolverScript is Script, ENSHelper {
@@ -33,12 +33,13 @@ contract ArbitrumResolverScript is Script, ENSHelper {
             IRollupCore(arbitrumRollupAddress)
         );
         L1Resolver l1resolver = new L1Resolver(
+            31137,
             verifier,
             registry,
             INameWrapper(nameWrapperAddress)
         );
 
-        bytes32 node = namehash("blockful.eth");
+        (bytes memory node, ) = NameEncoder.dnsEncodeName("blockful.eth");
         l1resolver.setTarget(node, arbitrumL2ResolverAddress);
 
         vm.stopBroadcast();
