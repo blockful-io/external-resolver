@@ -72,7 +72,7 @@ export async function handleL2Storage({
     const { request } = await l2Client.simulateContract(args)
     await l2Client.writeContract(request)
   } catch (err) {
-    console.log({ err })
+    console.log('error while trying to make the request: ', { err })
   }
 }
 

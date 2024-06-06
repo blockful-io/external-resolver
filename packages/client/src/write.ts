@@ -81,7 +81,7 @@ const _ = (async () => {
         break
       }
       default:
-        console.error({ err })
+        console.error('writing failed: ', { err })
     }
   }
 
@@ -121,7 +121,7 @@ const _ = (async () => {
             args: [
               namehash(normalize(publicAddress)),
               'com.twitter',
-              '@tartaruga.eth',
+              '@blockful.eth',
             ],
             address: contractAddress,
             account: signer.address,
@@ -131,7 +131,7 @@ const _ = (async () => {
         break
       }
       default:
-        console.error({ err })
+        console.error('writing failed: ', { err })
     }
   }
 })()
