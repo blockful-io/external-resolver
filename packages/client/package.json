@@ -1,17 +1,19 @@
 {
   "name": "@blockful/client",
   "scripts": {
-    "test:db:e2e": "hardhat test ./test/db.e2e.spec.ts --network localhost",
+    "test:e2e": "npm-run-all test:e2e:**",
+    "test:e2e:l1": "hardhat test ./test/l1.e2e.spec.ts --network localhost",
+    "test:e2e:db": "hardhat test ./test/db.e2e.spec.ts --network localhost",
     "start:read": "ts-node src/read.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     "start:write": "ts-node src/write.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     "lint": "eslint . --ext .ts --fix"
   },
   "devDependencies": {
     "@blockful/gateway": "*",
+    "@blockful/ccip-server": "*",
     "nodemon": "^3.1.0",
-    "typescript": "^5.4.3"
-  },
-  "dependencies": {
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.4.3",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
     "@nomicfoundation/hardhat-ignition": "^0.15.0",

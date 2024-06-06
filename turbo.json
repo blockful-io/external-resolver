@@ -9,6 +9,11 @@
       "persistent": true
     },
     "test": {},
+    "@blockful/client#test": {
+      "dependsOn": [
+        "@blockful/contracts#build"
+      ]
+    },
     "test:watch": {},
     "lint": {},
     "build": {

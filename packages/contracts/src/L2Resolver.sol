@@ -29,8 +29,7 @@ contract L2Resolver is
     mapping(bytes32 => address) private _owners;
 
     function isAuthorised(bytes32 node) internal view override returns (bool) {
-        if (_owners[node] == address(0)) return true;
-        return _owners[node] == msg.sender;
+        return _owners[node] == msg.sender || _owners[node] == address(0);
     }
 
     function setOwner(bytes32 node, address _owner) public authorised(node) {

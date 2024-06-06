@@ -90,7 +90,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "gateway ethereum",
+      "name": "gateway eth",
       "skipFiles": [
         "<node_internals>/**"
       ],
@@ -122,6 +122,9 @@
         "ts-node/register",
         "-r",
         "tsconfig-paths/register",
+        "--timeout",
+        "999999",
+        "--colors",
         "${relativeFile}",
       ],
       "env": {
