@@ -10,25 +10,20 @@ import {
   http,
   namehash,
   toHex,
+  getChainContractAddress,
   walletActions,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
-import { MessageData, DomainData } from '@blockful/gateway/src/types'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
 import { abi as l2Abi } from '@blockful/contracts/out/L2Resolver.sol/L2Resolver.json'
 import { abi as uABI } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
-import {
-  getRevertErrorData,
-  handleL2Storage,
-  handleDBStorage,
-  getChain,
-} from './client'
+import { getRevertErrorData, handleL2Storage, getChain } from './client'
 
 const program = new Command()
 program
-  .requiredOption('-r --resolver <address>', 'ENS Universal Resolver address')
+  .option('-r --resolver <address>', 'ENS Universal Resolver address')
   .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
   .option(
     '-pl2 --providerl2 <url>',
@@ -45,8 +40,8 @@ program
 
 program.parse(process.argv)
 
-const { resolver, provider, providerL2, chainId, privateKey, l2resolver } =
-  program.opts()
+const { provider, providerL2, chainId, privateKey, l2resolver } = program.opts()
+let { resolver } = program.opts()
 
 const chain = getChain(parseInt(chainId))
 console.log(`Connecting to ${chain?.name}.`)
@@ -60,6 +55,13 @@ const client = createPublicClient({
 const _ = (async () => {
   const publicAddress = normalize('blockful.eth')
   const signer = privateKeyToAccount(privateKey)
+
+  if (!resolver) {
+    resolver = getChainContractAddress({
+      chain: client.chain,
+      contract: 'ensUniversalResolver',
+    })
+  }
 
   const [resolverAddr] = (await client.readContract({
     address: resolver,
@@ -87,34 +89,22 @@ const _ = (async () => {
     })
   } catch (err) {
     const data = getRevertErrorData(err)
-    switch (data?.errorName) {
-      case 'StorageHandledByOffChainDatabase': {
-        const [domain, url, message] = data.args as [
-          DomainData,
-          string,
-          MessageData,
-        ]
-        await handleDBStorage({ domain, url, message, signer })
-        break
-      }
-      case 'StorageHandledByL2': {
-        const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
+    if (data?.errorName === 'StorageHandledByL2') {
+      const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-        await handleL2Storage({
-          chainId,
-          l2Url: providerL2,
-          args: {
-            functionName: 'setOwner',
-            abi: l2Abi,
-            args: [namehash(publicAddress), signer.address],
-            address: contractAddress,
-            account: signer.address,
-          },
-        })
-        break
-      }
-      default:
-        console.error({ err })
+      await handleL2Storage({
+        chainId,
+        l2Url: providerL2,
+        args: {
+          functionName: 'setOwner',
+          abi: l2Abi,
+          args: [namehash(publicAddress), signer.address],
+          address: contractAddress,
+          account: signer.address,
+        },
+      })
+    } else {
+      console.error({ err })
     }
   }
 
@@ -132,35 +122,22 @@ const _ = (async () => {
     })
   } catch (err) {
     const data = getRevertErrorData(err)
-    switch (data?.errorName) {
-      case 'StorageHandledByOffChainDatabase': {
-        const [domain, url, message] = data.args as [
-          DomainData,
-          string,
-          MessageData,
-        ]
-        await handleDBStorage({ domain, url, message, signer })
-        break
-      }
-      case 'StorageHandledByL2': {
-        const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
+    if (data?.errorName === 'StorageHandledByL2') {
+      const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-        await handleL2Storage({
-          chainId,
-          l2Url: providerL2,
-          args: {
-            functionName: 'setText',
-            abi: l2Abi,
-            args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
-            address: contractAddress,
-            account: signer.address,
-          },
-        })
-
-        break
-      }
-      default:
-        console.error({ err })
+      await handleL2Storage({
+        chainId,
+        l2Url: providerL2,
+        args: {
+          functionName: 'setText',
+          abi: l2Abi,
+          args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
+          address: contractAddress,
+          account: signer.address,
+        },
+      })
+    } else {
+      console.error({ err })
     }
   }
 })()
