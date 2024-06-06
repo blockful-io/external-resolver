@@ -18,7 +18,7 @@
   "devDependencies": {
     "@blockful/tsconfig": "*",
     "@types/cors": "^2.8.17",
-    "tsup": "^8.0.2",
+    "tsup": "^8.1.0",
     "typescript": "^5.4.5"
   }
 }
