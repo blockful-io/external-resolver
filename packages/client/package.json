@@ -21,7 +21,6 @@
     "chai": "^4.2.0",
     "commander": "^12.1.0",
     "hardhat": "^2.22.5",
-    "hardhat-gas-reporter": "^2.2.0",
     "solidity-coverage": "^0.8.12",
     "viem": "^2.13.5"
   },
