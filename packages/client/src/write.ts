@@ -58,7 +58,7 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const publicAddress = normalize('floripa.eth')
+  const publicAddress = normalize('blockful.eth')
   const signer = privateKeyToAccount(privateKey)
 
   const [resolverAddr] = (await client.readContract({
@@ -151,7 +151,7 @@ const _ = (async () => {
           args: {
             functionName: 'setText',
             abi: l2Abi,
-            args: [namehash(publicAddress), 'com.twitter', '@tartaruga.eth'],
+            args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
             address: contractAddress,
             account: signer.address,
           },
