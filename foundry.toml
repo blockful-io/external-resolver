@@ -13,7 +13,8 @@ remappings = [
   "@eth-optimism/contracts-bedrock/src/libraries=packages/contracts/lib/optimism-bedrock-contracts",
 ]
 ignored_warnings_from = [
-  "**/node_modules/",
+  "node_modules/",
+  "packages/contracts/node_modules/",
   "packages/contracts/lib/**",
   "**/src/evmgateway/",
 ]
