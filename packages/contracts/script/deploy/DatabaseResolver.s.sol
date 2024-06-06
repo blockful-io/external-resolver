@@ -3,20 +3,21 @@ pragma solidity ^0.8.13;
 
 import {Script} from "forge-std/Script.sol";
 
-import "../Helper.sol";
+import {ENSHelper} from "../Helper.sol";
+import {Config} from "./Config.s.sol";
 import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 
 contract DatabaseResolverScript is Script, ENSHelper {
-    function run() external {
-        string memory gatewayUrl = vm.envString("GATEWAY_URL");
-        uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        address publicKey = vm.addr(privateKey);
-        vm.startBroadcast(privateKey);
+    function run() external returns (DatabaseResolver) {
+        address[] memory signers = new address[](0);
 
-        address[] memory signers = new address[](1);
-        signers[0] = publicKey;
-        new DatabaseResolver(gatewayUrl, 600, signers);
+        Config config = new Config(block.chainid);
+        (string memory gatewayUrl, uint32 gatewayTimestamp) = config.activeNetworkConfig();
 
+        vm.startBroadcast();
+        DatabaseResolver resolver = new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
         vm.stopBroadcast();
+
+        return resolver;
     }
 }

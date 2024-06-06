@@ -8,19 +8,26 @@ import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import "@ens-contracts/utils/UniversalResolver.sol";
 
 import "../script/Helper.sol";
+import {Config} from "../script/deploy/Config.s.sol";
 import {DatabaseResolver} from "../src/DatabaseResolver.sol";
+import {DatabaseResolverScript} from "../script/deploy/DatabaseResolver.s.sol";
 
 contract DatabaseResolverTest is Test, ENSHelper {
     DatabaseResolver public resolver;
     ENSRegistry public registry;
-    address constant owner = address(0x1337);
+    address owner;
 
     // Initial setup before each test
     function setUp() public {
+        owner = address(this);
+        Config config = new Config(block.chainid);
+        (string memory gatewayUrl, uint256 gatewayTimestamp) = config.activeNetworkConfig();
+        string[] memory urls = new string[](1);
+        urls[0] = gatewayUrl;
+
         vm.startPrank(owner);
         registry = new ENSRegistry();
-        string[] memory urls = new string[](1);
-        urls[0] = "localhost:8080";
+
         new UniversalResolver(address(registry), urls);
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
@@ -29,11 +36,10 @@ contract DatabaseResolverTest is Test, ENSHelper {
         // addr.reverse
         registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
 
-        // DatabaseResolver contract setup
         address[] memory signers = new address[](1);
         signers[0] = address(0x1337);
-        string memory url = "http://localhost:3000/{sender}/{data}.json";
-        resolver = new DatabaseResolver(url, 600, signers);
+        resolver = new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
+
         registrar.setDefaultResolver(address(resolver));
 
         vm.stopPrank();
@@ -62,7 +68,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
     // Test the resolver setup from the constructor
     function testResolverSetupFromConstructor() public {
         assertTrue(resolver.isSigner(address(0x1337)));
-        assertEq(resolver.gatewayUrl(), "http://localhost:3000/{sender}/{data}.json");
+        assertEq(resolver.gatewayUrl(), "http://127.0.0.1:3000/{sender}/{data}.json");
     }
 
     // Test updating the URL by the owner

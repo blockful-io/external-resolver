@@ -1,5 +1,5 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "$schema": "https://turbo.build/v1/schema.json",
   "globalDotEnv": [
     ".env"
   ],
@@ -9,6 +9,11 @@
       "persistent": true
     },
     "test": {},
+    "@blockful/client#test": {
+      "dependsOn": [
+        "@blockful/contracts#build"
+      ]
+    },
     "test:watch": {},
     "lint": {},
     "build": {
