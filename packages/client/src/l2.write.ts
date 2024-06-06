@@ -104,7 +104,7 @@ const _ = (async () => {
         },
       })
     } else {
-      console.error({ err })
+      console.error('error registering domain: ', { err })
     }
   }
 
@@ -137,7 +137,7 @@ const _ = (async () => {
         },
       })
     } else {
-      console.error({ err })
+      console.error('error setting text: ', { err })
     }
   }
 })()
