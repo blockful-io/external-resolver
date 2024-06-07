@@ -34,7 +34,7 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
     //////// CONTRACT VARIABLE STATE ////////
 
     // id of chain that is storing the domains
-    uint32 public chainId;
+    uint256 public chainId;
     // Mapping domain -> offchain contract address
     mapping(bytes32 => address) private _targets;
 
@@ -62,7 +62,7 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
      * @param _ens Signer addresses
      * @param _nameWrapper ENS' NameWrapper
      */
-    constructor(uint32 _chainId, IEVMVerifier _verifier, ENS _ens, INameWrapper _nameWrapper) {
+    constructor(uint256 _chainId, IEVMVerifier _verifier, ENS _ens, INameWrapper _nameWrapper) {
         require(address(_nameWrapper) != address(0), "Name Wrapper address must be set");
         require(address(_verifier) != address(0), "Verifier address must be set");
         require(address(_ens) != address(0), "Registry address must be set");
@@ -110,7 +110,7 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
         bytes4 selector = bytes4(data);
 
         if (selector == IAddrResolver.addr.selector) {
-            (bytes32 node) = abi.decode(data[4:], (bytes32));
+            bytes32 node = abi.decode(data[4:], (bytes32));
             return _addr(node, target);
         }
         if (selector == IAddressResolver.addr.selector) {
@@ -122,7 +122,7 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
             return bytes(_text(node, key, target));
         }
         if (selector == IContentHashResolver.contenthash.selector) {
-            (bytes32 node) = abi.decode(data[4:], (bytes32));
+            bytes32 node = abi.decode(data[4:], (bytes32));
             return _contenthash(node, target);
         }
     }
@@ -288,8 +288,8 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
      * Set chainId for offchain storage
      * @param _chainId id of the given chain
      */
-    function setChainId(uint32 _chainId) public onlyOwner {
-        uint32 prevChainId = chainId;
+    function setChainId(uint256 _chainId) public onlyOwner {
+        uint256 prevChainId = chainId;
         chainId = _chainId;
         emit L2HandlerDefaultChainIdChanged(prevChainId, chainId);
     }
@@ -304,10 +304,9 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
         // isApprovedFor
         address owner = ens.owner(node);
 
-        // TODO fix local namewrapper deployment
-        // if (owner == address(nameWrapper)) {
-        //     owner = nameWrapper.ownerOf(uint256(node));
-        // }
+        if (owner == address(nameWrapper)) {
+            owner = nameWrapper.ownerOf(uint256(node));
+        }
 
         return owner == msg.sender || owner == address(0);
     }

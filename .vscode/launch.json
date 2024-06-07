@@ -28,8 +28,8 @@
         "!**/node_modules/**"
       ],
       "args": [
-        "--resolver",
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+        "--chainId",
+        "11155111",
       ]
     },
     {
@@ -100,6 +100,31 @@
         "<node_internals>/**"
       ],
       "program": "${workspaceFolder}/packages/gateway/cmd/database.ts",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
+        "ENV_FILE": "${workspaceFolder}/.env"
+      },
+      "console": "integratedTerminal",
+      "outFiles": [
+        "${workspaceFolder}/**/*.js",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "gateway arbitrum",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/packages/gateway/cmd/arbitrum.ts",
       "runtimeArgs": [
         "-r",
         "ts-node/register",

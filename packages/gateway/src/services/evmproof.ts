@@ -32,8 +32,8 @@ export class EVMProofHelper<chain extends Chain> {
   ): Promise<Hash> {
     const storage = await this.provider.getStorageAt({
       blockNumber: blockNo,
-      address,
-      slot: slot.toString() as Hash,
+      address: address.toLowerCase() as Hash,
+      slot: ('0x' + slot.toString(16)) as Hash,
     })
     if (!storage) {
       throw new Error('slot not found')

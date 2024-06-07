@@ -31,7 +31,7 @@ contract L1ResolverScript is Script, ENSHelper {
         registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
 
         L1Verifier verifier = new L1Verifier(urls);
-        L1Resolver l1resolver = new L1Resolver(31337, verifier, registry, INameWrapper(publicKey));
+        L1Resolver l1resolver = new L1Resolver(block.chainid, verifier, registry, INameWrapper(publicKey));
 
         // .eth
         registry.setSubnodeRecord(rootNode, labelhash("eth"), publicKey, address(l1resolver), 9999999999);

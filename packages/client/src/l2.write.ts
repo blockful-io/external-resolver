@@ -26,15 +26,15 @@ program
   .option('-r --resolver <address>', 'ENS Universal Resolver address')
   .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
   .option(
-    '-pl2 --providerl2 <url>',
+    '-pl2 --providerL2 <url>',
     'web3 provider URL for layer2',
     'http://127.0.0.1:8547',
   )
-  .option('-i --chainId <chainId>', 'chainId', '31337')
+  .option('-i --chainId <chainId>', 'chainId', '1337')
   .option(
     '-pk --privateKey <privateKey>',
     'privateKey',
-    '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // anvil PK
+    '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // anvil PK
   )
   .option('-l2r --l2resolver <l2resolver>', 'l2resolver')
 
@@ -103,6 +103,8 @@ const _ = (async () => {
           account: signer.address,
         },
       })
+    } else if (data) {
+      console.error('error registering domain: ', data.errorName)
     } else {
       console.error('error registering domain: ', { err })
     }
@@ -136,6 +138,8 @@ const _ = (async () => {
           account: signer.address,
         },
       })
+    } else if (data) {
+      console.error('error setting text: ', data.errorName)
     } else {
       console.error('error setting text: ', { err })
     }
