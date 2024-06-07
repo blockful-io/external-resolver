@@ -28,7 +28,7 @@ const _ = (async () => {
     throw new Error('ROLLUP_ADDRESS is required')
   }
 
-  const chain1 = getChain(parseInt(process.env.CHAIN_ID || '31337'))
+  const chain1 = getChain(parseInt(process.env.CHAIN_ID || '1337'))
   console.debug(`layer 1: ${chain1.name}`)
 
   const chain2 = getChain(parseInt(process.env.CHAIN_ID_L2 || '412346'))

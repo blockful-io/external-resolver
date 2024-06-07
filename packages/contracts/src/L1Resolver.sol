@@ -34,7 +34,7 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
     //////// CONTRACT VARIABLE STATE ////////
 
     // id of chain that is storing the domains
-    uint32 public chainId;
+    uint256 public chainId;
     // Mapping domain -> offchain contract address
     mapping(bytes32 => address) private _targets;
 
@@ -62,7 +62,7 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
      * @param _ens Signer addresses
      * @param _nameWrapper ENS' NameWrapper
      */
-    constructor(uint32 _chainId, IEVMVerifier _verifier, ENS _ens, INameWrapper _nameWrapper) {
+    constructor(uint256 _chainId, IEVMVerifier _verifier, ENS _ens, INameWrapper _nameWrapper) {
         require(address(_nameWrapper) != address(0), "Name Wrapper address must be set");
         require(address(_verifier) != address(0), "Verifier address must be set");
         require(address(_ens) != address(0), "Registry address must be set");
@@ -288,8 +288,8 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
      * Set chainId for offchain storage
      * @param _chainId id of the given chain
      */
-    function setChainId(uint32 _chainId) public onlyOwner {
-        uint32 prevChainId = chainId;
+    function setChainId(uint256 _chainId) public onlyOwner {
+        uint256 prevChainId = chainId;
         chainId = _chainId;
         emit L2HandlerDefaultChainIdChanged(prevChainId, chainId);
     }

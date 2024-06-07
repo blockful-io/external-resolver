@@ -20,26 +20,16 @@ contract ArbitrumResolverScript is Script, ENSHelper {
         urls[0] = gatewayUrl;
         address registryAddress = vm.envAddress("REGISTRY_ADDRESS");
         address arbitrumRollupAddress = vm.envAddress("ROLLUP_ADDRESS");
-        address arbitrumL2ResolverAddress = vm.envAddress(
-            "L2_RESOLVER_ADDRESS"
-        );
+        address arbitrumL2ResolverAddress = vm.envAddress("L2_RESOLVER_ADDRESS");
         address nameWrapperAddress = vm.envAddress("NAME_WRAPPER");
         ENSRegistry registry = ENSRegistry(registryAddress);
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
 
         vm.startBroadcast(privateKey);
-        ArbVerifier verifier = new ArbVerifier(
-            urls,
-            IRollupCore(arbitrumRollupAddress)
-        );
-        L1Resolver l1resolver = new L1Resolver(
-            31137,
-            verifier,
-            registry,
-            INameWrapper(nameWrapperAddress)
-        );
+        ArbVerifier verifier = new ArbVerifier(urls, IRollupCore(arbitrumRollupAddress));
+        L1Resolver l1resolver = new L1Resolver(31137, verifier, registry, INameWrapper(nameWrapperAddress));
 
-        (bytes memory node, ) = NameEncoder.dnsEncodeName("blockful.eth");
+        (bytes memory node,) = NameEncoder.dnsEncodeName("blockful.eth");
         l1resolver.setTarget(node, arbitrumL2ResolverAddress);
 
         vm.stopBroadcast();

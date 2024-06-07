@@ -42,12 +42,15 @@ export function withLogger({
 
     logger.log({
       level: 'info',
-      message: JSON.stringify({
-        method: req.method,
-        function: func.functionName,
-        args: func.args,
-        status: res.statusCode,
-      }),
+      message: JSON.stringify(
+        {
+          method: req.method,
+          function: func.functionName,
+          args: func.args,
+          status: res.statusCode,
+        },
+        (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+      ),
     })
   }
 }

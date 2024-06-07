@@ -24,7 +24,7 @@ const program = new Command()
 program
   .option('-r --resolver <address>', 'ENS Universal Resolver address')
   .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
-  .option('-i --chainId <chainId>', 'chainId', '31337')
+  .option('-i --chainId <chainId>', 'chainId', '1337')
   .option(
     '-pk --privateKey <privateKey>',
     'privateKey',
@@ -68,7 +68,7 @@ const _ = (async () => {
     await client.simulateContract({
       functionName: 'register',
       abi: dbAbi,
-      args: [namehash(publicAddress), 9999999999n],
+      args: [namehash(publicAddress), 999999999n],
       account: signer.address,
       address: resolverAddr,
     })
@@ -93,6 +93,7 @@ const _ = (async () => {
       abi: dbAbi,
       args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
       address: resolverAddr,
+      account: signer.address,
     })
   } catch (err) {
     const data = getRevertErrorData(err)

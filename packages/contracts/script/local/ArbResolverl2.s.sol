@@ -15,7 +15,7 @@ import {L1Resolver} from "../../src/L1Resolver.sol";
 
 contract arbResolverL2Script is Script, ENSHelper {
     function run() external {
-        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        uint256 privateKey = 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659;
         address publicKey = vm.addr(privateKey);
         vm.startBroadcast(privateKey);
 
@@ -24,13 +24,9 @@ contract arbResolverL2Script is Script, ENSHelper {
 
         arbResolver.setOwner(node, publicKey);
         arbResolver.setAddr(node, publicKey);
-        arbResolver.setText(
-            node,
-            "avatar",
-            "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ"
-        ); // blockful.jpeg
-
+        arbResolver.setText(node, "avatar", "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ"); // blockful.jpeg
         arbResolver.setText(node, "com.twitter", "@blockful");
+
         vm.stopBroadcast();
     }
 }

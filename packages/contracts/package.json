@@ -13,15 +13,15 @@
     "build": "forge build",
     "dev:public": "forge script script/local/PublicResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vvv",
     "dev:db": "forge script script/local/DatabaseResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vvv",
-    "dev:l1": "forge script script/local/OffchainResolver.s.sol --rpc-url http://localhost:8545 --broadcast -vvv",
-    "dev:arb:l1": "forge script script/local/ArbResolver.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vvv --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659",
-    "dev:arb:l2": "forge script script/local/ArbResolverl2.s.sol --rpc-url http://127.0.0.1:8547 --broadcast -vvv --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
+    "dev:l1": "forge script script/local/L1Resolver.s.sol --rpc-url http://localhost:8545 --broadcast -vvv",
+    "dev:arb:l1": "forge script script/local/ArbResolver.s.sol --rpc-url http://127.0.0.1:8545 --broadcast -vvv",
+    "dev:arb:l2": "forge script script/local/ArbResolverl2.s.sol --rpc-url http://127.0.0.1:8547 --broadcast -vvv"
   },
   "dependencies": {
     "@arbitrum/nitro-contracts": "^1.2.1",
     "@openzeppelin/contracts": "^4.1.0",
     "@ensdomains/buffer": "^0.1.1",
-    "@ensdomains/ens-contracts": "^1.1.4",
+    "@ensdomains/ens-contracts": "1.0.0",
     "forge-std": "github:foundry-rs/forge-std"
   }
 }
