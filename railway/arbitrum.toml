@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "packages/gateway/docker/arbitrum/Dockerfile"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+restartolicyMaxRetires = 10
+startCommand = "npm run gateway start:arb"
