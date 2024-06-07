@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import "../Helper.sol";
+import {ENSHelper} from "../Helper.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
 
 contract L2ResolverScript is Script, ENSHelper {

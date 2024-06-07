@@ -5,21 +5,11 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 library SignatureVerifier {
-    /**
-     * @dev Generates a hash for signing/verifying.
-     * @param target: The address the signature is for.
-     * @param request: The original request that was sent.
-     * @param result: The `result` field of the response (not including the signature part).
-     */
-    function makeSignatureHash(address target, uint64 expires, bytes memory request, bytes memory result)
-        internal
-        pure
-        returns (bytes32)
-    {
-        return ECDSA.toEthSignedMessageHash(
-            keccak256(abi.encodePacked(hex"1900", target, expires, keccak256(request), keccak256(result)))
-        );
-    }
+    //////// ERRORS ////////
+
+    error SignatureVerifier__InvalidSignature(string cause);
+
+    //////// PUBLIC INTERFACE ////////
 
     /**
      * @dev Verifies a signed message returned from a callback.
@@ -34,7 +24,27 @@ library SignatureVerifier {
         (bytes memory result, uint64 expires, bytes memory sig) = abi.decode(response, (bytes, uint64, bytes));
         (bytes memory extraData, address sender) = abi.decode(request, (bytes, address));
         address signer = ECDSA.recover(makeSignatureHash(sender, expires, extraData, result), sig);
-        require(expires >= block.timestamp, "SignatureVerifier: Signature expired");
+        if (expires < block.timestamp) {
+            revert SignatureVerifier__InvalidSignature("signature expired");
+        }
         return (signer, result);
+    }
+
+    //////// INTERNAL INTERFACE ////////
+
+    /**
+     * @dev Generates a hash for signing/verifying.
+     * @param target: The address the signature is for.
+     * @param request: The original request that was sent.
+     * @param result: The `result` field of the response (not including the signature part).
+     */
+    function makeSignatureHash(address target, uint64 expires, bytes memory request, bytes memory result)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return ECDSA.toEthSignedMessageHash(
+            keccak256(abi.encodePacked(hex"1900", target, expires, keccak256(request), keccak256(result)))
+        );
     }
 }

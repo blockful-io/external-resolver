@@ -28,8 +28,8 @@
         "!**/node_modules/**"
       ],
       "args": [
-        "--resolver",
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+        "--chainId",
+        "11155111",
       ]
     },
     {
@@ -39,7 +39,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/packages/client/src/write.ts",
+      "program": "${workspaceFolder}/packages/client/src/db.write.ts",
       "runtimeArgs": [
         "-r",
         "ts-node/register",
@@ -58,8 +58,6 @@
       "args": [
         "--resolver",
         "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-        "-pk",
-        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
       ]
     },
     {
@@ -69,7 +67,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/packages/client/src/write.ts",
+      "program": "${workspaceFolder}/packages/client/src/l2.write.ts",
       "runtimeArgs": [
         "-r",
         "ts-node/register",
@@ -88,8 +86,6 @@
       "args": [
         "--resolver",
         "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-        "-pk",
-        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
         "--providerl2",
         "http://127.0.0.1:8545",
         "--l2resolver",
@@ -124,7 +120,32 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "gateway ethereum",
+      "name": "gateway arbitrum",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/packages/gateway/cmd/arbitrum.ts",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
+        "ENV_FILE": "${workspaceFolder}/.env"
+      },
+      "console": "integratedTerminal",
+      "outFiles": [
+        "${workspaceFolder}/**/*.js",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "gateway eth",
       "skipFiles": [
         "<node_internals>/**"
       ],
@@ -156,6 +177,9 @@
         "ts-node/register",
         "-r",
         "tsconfig-paths/register",
+        "--timeout",
+        "999999",
+        "--colors",
         "${relativeFile}",
       ],
       "env": {
