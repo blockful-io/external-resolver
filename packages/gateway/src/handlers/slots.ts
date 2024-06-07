@@ -7,6 +7,7 @@ import {
   pad,
   slice,
   toBytes,
+  zeroAddress,
 } from 'viem'
 import { IProofService, ProvableBlock } from '../interfaces'
 
@@ -34,8 +35,10 @@ export function withGetStorageSlot<T extends ProvableBlock>(
 ): ccip.HandlerDescription {
   return {
     type: 'getStorageSlots',
-    func: async (args) => {
-      const [addr, commands, constants] = args
+    func: async ([addr, commands, constants]) => {
+      if (addr === zeroAddress) {
+        return { error: { message: 'Invalid address', status: 400 } }
+      }
       const proofs = await createProofs(addr, commands, constants, proofService)
       return { data: [proofs] }
     },

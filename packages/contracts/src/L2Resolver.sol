@@ -26,19 +26,38 @@ contract L2Resolver is
     PubkeyResolver,
     TextResolver
 {
+    //////// ERRORS ////////
+
+    error L2Resolver__UnavailableDomain(bytes32 node);
+    error L2Resolver__ForbiddenAction(bytes32 node);
+
+    //////// STATE VARIABLES ////////
+
     mapping(bytes32 => address) private _owners;
+
+    //////// PUBLIC READ METHODS ////////
+
+    function owner(bytes32 node) public view returns (address) {
+        return _owners[node];
+    }
+
+    //////// PUBLIC WRITE METHODS ////////
+
+    function setOwner(bytes32 node, address _owner) public {
+        if (!isAuthorised(node)) {
+            revert L2Resolver__ForbiddenAction(node);
+        }
+
+        _owners[node] = _owner;
+    }
+
+    //////// INTERNAL READ METHODS ////////
 
     function isAuthorised(bytes32 node) internal view override returns (bool) {
         return _owners[node] == msg.sender || _owners[node] == address(0);
     }
 
-    function setOwner(bytes32 node, address _owner) public authorised(node) {
-        _owners[node] = _owner;
-    }
-
-    function owner(bytes32 node) public view returns (address) {
-        return _owners[node];
-    }
+    //////// ERC-165 ////////
 
     function supportsInterface(bytes4 interfaceID)
         public
@@ -56,6 +75,10 @@ contract L2Resolver is
         )
         returns (bool)
     {
-        return super.supportsInterface(interfaceID);
+        return interfaceID == type(Multicallable).interfaceId || interfaceID == type(ABIResolver).interfaceId
+            || interfaceID == type(AddrResolver).interfaceId || interfaceID == type(ContentHashResolver).interfaceId
+            || interfaceID == type(DNSResolver).interfaceId || interfaceID == type(InterfaceResolver).interfaceId
+            || interfaceID == type(NameResolver).interfaceId || interfaceID == type(PubkeyResolver).interfaceId
+            || interfaceID == type(TextResolver).interfaceId;
     }
 }
