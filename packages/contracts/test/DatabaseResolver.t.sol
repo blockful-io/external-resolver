@@ -66,7 +66,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
     }
 
     // Test the resolver setup from the constructor
-    function testResolverSetupFromConstructor() public {
+    function testResolverSetupFromConstructor() public view {
         assertTrue(resolver.isSigner(address(0x1337)));
         assertEq(resolver.gatewayUrl(), "http://127.0.0.1:3000/{sender}/{data}.json");
     }

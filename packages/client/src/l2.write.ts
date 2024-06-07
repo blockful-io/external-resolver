@@ -7,10 +7,11 @@ import { Command } from 'commander'
 import {
   Hash,
   createPublicClient,
-  getChainContractAddress,
   http,
   namehash,
   toHex,
+  getChainContractAddress,
+  walletActions,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
@@ -35,10 +36,11 @@ program
     'privateKey',
     '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // anvil PK
   )
+  .option('-l2r --l2resolver <l2resolver>', 'l2resolver')
 
 program.parse(process.argv)
 
-const { provider, providerL2, chainId, privateKey } = program.opts()
+const { provider, providerL2, chainId, privateKey, l2resolver } = program.opts()
 let { resolver } = program.opts()
 
 const chain = getChain(parseInt(chainId))
@@ -47,7 +49,7 @@ console.log(`Connecting to ${chain?.name}.`)
 const client = createPublicClient({
   chain,
   transport: http(provider),
-})
+}).extend(walletActions)
 
 // eslint-disable-next-line
 const _ = (async () => {
@@ -68,6 +70,44 @@ const _ = (async () => {
     args: [toHex(packetToBytes(publicAddress))],
   })) as Hash[]
 
+  // REGISTER NEW DOMAIN
+  try {
+    const { request } = await client.simulateContract({
+      functionName: 'register',
+      abi: l1Abi,
+      args: [toHex(packetToBytes(publicAddress)), l2resolver],
+      address: resolverAddr,
+      account: signer.address,
+    })
+    await client.writeContract(request)
+
+    await client.simulateContract({
+      functionName: 'setOwner',
+      abi: l1Abi,
+      args: [toHex(packetToBytes(publicAddress)), signer.address],
+      address: resolverAddr,
+    })
+  } catch (err) {
+    const data = getRevertErrorData(err)
+    if (data?.errorName === 'StorageHandledByL2') {
+      const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
+
+      await handleL2Storage({
+        chainId,
+        l2Url: providerL2,
+        args: {
+          functionName: 'setOwner',
+          abi: l2Abi,
+          args: [namehash(publicAddress), signer.address],
+          address: contractAddress,
+          account: signer.address,
+        },
+      })
+    } else {
+      console.error('error registering domain: ', { err })
+    }
+  }
+
   // SET TEXT
   try {
     await client.simulateContract({
@@ -85,23 +125,19 @@ const _ = (async () => {
     if (data?.errorName === 'StorageHandledByL2') {
       const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-      handleL2Storage({
+      await handleL2Storage({
         chainId,
         l2Url: providerL2,
         args: {
           functionName: 'setText',
           abi: l2Abi,
-          args: [
-            namehash(normalize(publicAddress)),
-            'com.twitter',
-            '@blockful.eth',
-          ],
+          args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
           address: contractAddress,
           account: signer.address,
         },
       })
     } else {
-      console.error('writing failed: ', { err })
+      console.error('error setting text: ', { err })
     }
   }
 })()

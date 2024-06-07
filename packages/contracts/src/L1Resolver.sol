@@ -12,7 +12,7 @@ import {IAddrResolver} from "@ens-contracts/resolvers/profiles/IAddrResolver.sol
 import {IAddressResolver} from "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
 import {ITextResolver} from "@ens-contracts/resolvers/profiles/ITextResolver.sol";
 import {IContentHashResolver} from "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 import {IWriteDeferral} from "./IWriteDeferral.sol";
@@ -27,7 +27,9 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
 
     //////// ERRORS ////////
 
+    error L1Resolver__UnavailableDomain(bytes32 node);
     error L1Resolver__ForbiddenAction(bytes32 node);
+    error L1Resolver__DomainNotFound(bytes32 node);
 
     //////// CONTRACT VARIABLE STATE ////////
 
@@ -69,6 +71,30 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
         nameWrapper = _nameWrapper;
 
         setChainId(_chainId);
+    }
+
+    //////// OFFCHAIN STORAGE REGISTER DOMAIN ////////
+
+    /**
+     * Resolves a name, as specified by ENSIP 10 (wildcard).
+     * @param name The DNS-encoded name to resolve.
+     * @param resolver Address of resolver that should will store this domain
+     */
+    function register(bytes calldata name, address resolver) external {
+        (bytes32 node, address target) = getTarget(name);
+        if (target != address(0)) {
+            revert L1Resolver__UnavailableDomain(node);
+        }
+
+        setTarget(name, resolver);
+    }
+
+    /**
+     * Forwards the ownership setting to the L2 contracts
+     * @param name The DNS-encoded name to resolve.
+     */
+    function setOwner(bytes calldata name, address /*owner*/ ) public view {
+        _offChainStorage(name);
     }
 
     //////// ENSIP 10 ////////
@@ -199,7 +225,10 @@ contract L1Resolver is EVMFetchTarget, IExtendedResolver, IERC165, IWriteDeferra
      * @param name The DNS encoded node to update.
      */
     function _offChainStorage(bytes calldata name) internal view {
-        (, address target) = this.getTarget(name);
+        (bytes32 node, address target) = this.getTarget(name);
+        if (target == address(0)) {
+            revert L1Resolver__DomainNotFound(node);
+        }
         revert StorageHandledByL2(chainId, target);
     }
 

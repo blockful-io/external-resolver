@@ -6,10 +6,10 @@ out = "packages/contracts/out"
 libs = ["packages/contracts/lib"]
 viaIR = true
 remappings = [
-  "@ens-contracts=node_modules/@ensdomains/ens-contracts/contracts",
+  "@ens-contracts=packages/contracts/node_modules/@ensdomains/ens-contracts/contracts",
+  "@ensdomains=packages/contracts/node_modules/@ensdomains",
   "@openzeppelin=node_modules/@openzeppelin",
-  "@ensdomains=packages/contracts/lib",
-  "forge-std=packages/contracts/lib/forge-std/src",
+  "forge-std=node_modules/forge-std/src",
   "@eth-optimism/contracts-bedrock/src/libraries=packages/contracts/lib/optimism-bedrock-contracts",
   "@nitro-contracts=node_modules/@arbitrum/nitro-contracts",
   "@evmgateway=packages/contracts/src/evmgateway",
@@ -17,6 +17,7 @@ remappings = [
 
 ignored_warnings_from = [
   "node_modules/",
+  "packages/contracts/node_modules/",
   "packages/contracts/lib/**",
   "**/src/evmgateway/",
 ]

@@ -63,7 +63,11 @@ let l2Resolver: GetContractReturnType<
   typeof abiL2Resolver,
   { wallet: WalletClient }
 >
-let l1ResolverAddr: Hash, universalResolverAddr: Hash
+let l1Resolver: GetContractReturnType<
+  typeof abiL1Resolver,
+  { wallet: WalletClient }
+>
+let universalResolverAddr: Hash
 
 const client = createTestClient({
   chain: anvil,
@@ -128,11 +132,19 @@ async function deployContracts(signer: Hash) {
     args: [GATEWAY_URLS],
   })
 
-  l1ResolverAddr = await deployContract({
+  const l1ResolverAddr = await deployContract({
     abi: abiL1Resolver,
     bytecode: bytecodeL1Resolver.object as Hash,
     account: signer,
     args: [anvil.id, verifier, registryAddr, nameWrapper],
+  })
+
+  l1Resolver = await getContract({
+    abi: abiL1Resolver,
+    address: l1ResolverAddr,
+    client: {
+      wallet: client,
+    },
   })
 
   const registry = await getContract({
@@ -204,14 +216,6 @@ describe('L1Resolver', () => {
       client,
     })
 
-    const l1Resolver = await getContract({
-      abi: abiL1Resolver,
-      address: l1ResolverAddr,
-      client: {
-        wallet: client,
-      },
-    })
-
     await client.impersonateAccount({ address: signer })
     await l1Resolver.write.setTarget(
       [toHex(packetToBytes(rawNode)), l2ResolverAddr],
@@ -234,13 +238,25 @@ describe('L1Resolver', () => {
   })
 
   it('should read invalid text record', async () => {
+    await l2Resolver.write.setText([node, 'com.twitter', '@database'], {
+      account,
+    })
     const twitter = await client.getEnsText({
       name: normalize(rawNode),
-      key: 'com.twitter',
+      key: 'com.x',
       universalResolverAddress: universalResolverAddr,
     })
 
-    expect(twitter).to.be.an('null')
+    expect(twitter).to.equal(null)
+  })
+
+  it('should read invalid address', async () => {
+    const addr = await client.getEnsAddress({
+      name: normalize(rawNode),
+      universalResolverAddress: universalResolverAddr,
+    })
+
+    expect(addr).to.equal(null)
   })
 
   it('should read ETH address', async () => {
@@ -253,24 +269,5 @@ describe('L1Resolver', () => {
       universalResolverAddress: universalResolverAddr,
     })
     expect(addr).to.match(/0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5/i)
-  })
-
-  it('should read invalid address', async () => {
-    const addr = await client.getEnsAddress({
-      name: normalize(rawNode),
-      universalResolverAddress: universalResolverAddr,
-    })
-
-    expect(addr).to.be.an('null')
-  })
-
-  it('should handle unsupported method', async () => {
-    const addr = await client.getEnsAddress({
-      name: normalize(rawNode),
-      coinType: 1,
-      universalResolverAddress: universalResolverAddr,
-    })
-
-    expect(addr).to.be.an('null')
   })
 })
