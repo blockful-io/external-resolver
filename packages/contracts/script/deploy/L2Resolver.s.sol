@@ -6,10 +6,12 @@ import {ENSHelper} from "../Helper.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
 
 contract L2ResolverScript is Script, ENSHelper {
+
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
         new L2Resolver();
         vm.stopBroadcast();
     }
+
 }

@@ -1,4 +1,12 @@
-import { Address, Chain, Hash, HttpTransport, PublicClient, toHex } from 'viem'
+import {
+  Address,
+  Chain,
+  Hash,
+  HttpTransport,
+  PublicClient,
+  toHex,
+  zeroHash,
+} from 'viem'
 
 export interface StateProof {
   stateTrieWitness: `0x${string}`[]
@@ -30,15 +38,16 @@ export class EVMProofHelper<chain extends Chain> {
     address: Address,
     slot: bigint,
   ): Promise<Hash> {
-    const storage = await this.provider.getStorageAt({
-      blockNumber: blockNo,
-      address: address.toLowerCase() as Hash,
-      slot: ('0x' + slot.toString(16)) as Hash,
-    })
-    if (!storage) {
-      throw new Error('slot not found')
+    try {
+      const storage = await this.provider.getStorageAt({
+        blockNumber: blockNo,
+        address: address.toLowerCase() as Hash,
+        slot: ('0x' + slot.toString(16)) as Hash,
+      })
+      return storage || zeroHash
+    } catch (err) {
+      return zeroHash
     }
-    return storage
   }
 
   /**

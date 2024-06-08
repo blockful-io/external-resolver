@@ -3,7 +3,7 @@ FROM node:18 as base
 FROM base as builder
 WORKDIR /app
 COPY . .
-RUN npx turbo prune @blockful/gateway --docker
+RUN npx turbo@1.13.3 prune @blockful/gateway --docker
 
 # Add lockfile and package.json's of isolated subworkspace
 FROM base AS installer
@@ -17,7 +17,7 @@ RUN npm install
 # Build the project and its dependencies
 COPY --from=builder /app/out/full/ .
 COPY turbo.json turbo.json
-RUN npx turbo build --filter=@blockful/gateway...
+RUN npx turbo@1.13.3 build --filter=@blockful/gateway...
 
 FROM base AS runner
 WORKDIR /app
@@ -27,4 +27,4 @@ USER expressjs
 COPY --from=installer /app .
 
 EXPOSE 3000
-CMD node packages/gateway/dist/arbitrum.mjs
+CMD node packages/gateway/dist/arbitrum.js

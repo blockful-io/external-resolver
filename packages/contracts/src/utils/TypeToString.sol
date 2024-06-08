@@ -2,12 +2,17 @@
 pragma solidity ^0.8.13;
 
 library TypeToString {
+
     /**
      * @notice Creates a hex based encoded string representation of the specified bytes.
      * @param b The bytes to be encoded.
      * @return _string The encoded string.
      */
-    function bytesToString(bytes memory b) internal pure returns (string memory) {
+    function bytesToString(bytes memory b)
+        internal
+        pure
+        returns (string memory)
+    {
         bytes memory HEX = "0123456789abcdef";
         bytes memory _string = new bytes(b.length << 1);
 
@@ -46,7 +51,11 @@ library TypeToString {
      * @param b32 The bytes32 to be encoded.
      * @return _string The encoded string.
      */
-    function bytes32ToString(bytes32 b32) internal pure returns (string memory) {
+    function bytes32ToString(bytes32 b32)
+        internal
+        pure
+        returns (string memory)
+    {
         bytes memory b = new bytes(32);
 
         assembly {
@@ -76,7 +85,11 @@ library TypeToString {
      * @param a The address to be encoded.
      * @return _string The encoded string.
      */
-    function addressToCheckSumCompliantString(address a) internal pure returns (string memory) {
+    function addressToCheckSumCompliantString(address a)
+        internal
+        pure
+        returns (string memory)
+    {
         string memory str = addressToString(a);
 
         bytes memory b = new bytes(20);
@@ -111,10 +124,13 @@ library TypeToString {
                 b2 := and(lb, 0x0f)
             }
 
-            _string[i * 2] = uint8(nibblets[i] >> 4) > 7 ? HEX_UPPER[b1] : HEX_LOWER[b1];
-            _string[i * 2 + 1] = uint8(nibblets[i] & 0x0f) > 7 ? HEX_UPPER[b2] : HEX_LOWER[b2];
+            _string[i * 2] =
+                uint8(nibblets[i] >> 4) > 7 ? HEX_UPPER[b1] : HEX_LOWER[b1];
+            _string[i * 2 + 1] =
+                uint8(nibblets[i] & 0x0f) > 7 ? HEX_UPPER[b2] : HEX_LOWER[b2];
         }
 
         return string(abi.encodePacked("0x", _string));
     }
+
 }

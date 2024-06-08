@@ -7,10 +7,10 @@ import { Command } from 'commander'
 import {
   Hash,
   createPublicClient,
+  getChainContractAddress,
   http,
   namehash,
   toHex,
-  getChainContractAddress,
   walletActions,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
@@ -18,7 +18,7 @@ import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
 import { abi as l2Abi } from '@blockful/contracts/out/L2Resolver.sol/L2Resolver.json'
-import { abi as uABI } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
+import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { getRevertErrorData, handleL2Storage, getChain } from './client'
 
 const program = new Command()
@@ -66,7 +66,7 @@ const _ = (async () => {
   const [resolverAddr] = (await client.readContract({
     address: resolver,
     functionName: 'findResolver',
-    abi: uABI,
+    abi: uAbi,
     args: [toHex(packetToBytes(publicAddress))],
   })) as Hash[]
 

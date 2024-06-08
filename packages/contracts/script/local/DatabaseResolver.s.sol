@@ -3,39 +3,58 @@ pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
 import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
-import {ReverseRegistrar} from "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
+import {ReverseRegistrar} from
+    "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 
 import {ENSHelper} from "../Helper.sol";
+import {Config} from "../Config.s.sol";
 import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 
 contract DatabaseResolverScript is Script, ENSHelper {
+
     function run() external {
-        string memory gatewayURL = vm.envString("GATEWAY_URL");
+        Config config = new Config(block.chainid);
+        (
+            string memory gatewayUrl,
+            uint32 gatewayTimestamp,
+            address[] memory signers
+        ) = config.activeNetworkConfig();
+        string[] memory urls = new string[](1);
+        urls[0] = gatewayUrl;
+
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         address publicKey = vm.addr(privateKey);
         vm.startBroadcast(privateKey);
 
         ENSRegistry registry = new ENSRegistry();
-        string[] memory urls = new string[](1);
-        urls[0] = gatewayURL;
         new UniversalResolver(address(registry), urls);
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
         // .reverse
         registry.setSubnodeOwner(rootNode, labelhash("reverse"), publicKey);
         // addr.reverse
-        registry.setSubnodeOwner(namehash("reverse"), labelhash("addr"), address(registrar));
+        registry.setSubnodeOwner(
+            namehash("reverse"), labelhash("addr"), address(registrar)
+        );
 
-        address[] memory signers = new address[](1);
-        signers[0] = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-        DatabaseResolver resolver = new DatabaseResolver(gatewayURL, 600, signers);
+        DatabaseResolver resolver =
+            new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
 
         // .eth
-        registry.setSubnodeRecord(rootNode, labelhash("eth"), publicKey, address(resolver), 100000);
+        registry.setSubnodeRecord(
+            rootNode, labelhash("eth"), publicKey, address(resolver), 100000
+        );
         // blockful.eth
-        registry.setSubnodeRecord(namehash("eth"), labelhash("blockful"), publicKey, address(resolver), 100000);
+        registry.setSubnodeRecord(
+            namehash("eth"),
+            labelhash("blockful"),
+            publicKey,
+            address(resolver),
+            100000
+        );
 
         vm.stopBroadcast();
     }
+
 }

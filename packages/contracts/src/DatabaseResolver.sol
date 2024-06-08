@@ -4,15 +4,23 @@ pragma solidity ^0.8.4;
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {OffchainLookup} from "@ens-contracts/dnsregistrar/OffchainDNSResolver.sol";
-import {IExtendedResolver} from "@ens-contracts/resolvers/profiles/IExtendedResolver.sol";
-import {IAddrResolver} from "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
-import {INameResolver} from "@ens-contracts/resolvers/profiles/INameResolver.sol";
+import {OffchainLookup} from
+    "@ens-contracts/dnsregistrar/OffchainDNSResolver.sol";
+import {IExtendedResolver} from
+    "@ens-contracts/resolvers/profiles/IExtendedResolver.sol";
+import {IAddrResolver} from
+    "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
+import {INameResolver} from
+    "@ens-contracts/resolvers/profiles/INameResolver.sol";
 import {IABIResolver} from "@ens-contracts/resolvers/profiles/IABIResolver.sol";
-import {IPubkeyResolver} from "@ens-contracts/resolvers/profiles/IPubkeyResolver.sol";
-import {ITextResolver} from "@ens-contracts/resolvers/profiles/ITextResolver.sol";
-import {IContentHashResolver} from "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
-import {IAddressResolver} from "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
+import {IPubkeyResolver} from
+    "@ens-contracts/resolvers/profiles/IPubkeyResolver.sol";
+import {ITextResolver} from
+    "@ens-contracts/resolvers/profiles/ITextResolver.sol";
+import {IContentHashResolver} from
+    "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
+import {IAddressResolver} from
+    "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
 
 import {IWriteDeferral} from "./IWriteDeferral.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
@@ -36,6 +44,7 @@ contract DatabaseResolver is
     IERC165,
     Ownable
 {
+
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     //////// CONTRACT STATE ////////
@@ -50,7 +59,9 @@ contract DatabaseResolver is
     event SignerAdded(address indexed addedSigner);
     event SignerRemoved(address indexed removedSigner);
     event GatewayUrlSet(string indexed previousUrl, string indexed newUrl);
-    event OffChainDatabaseTimeoutDurationSet(uint256 previousDuration, uint256 newDuration);
+    event OffChainDatabaseTimeoutDurationSet(
+        uint256 previousDuration, uint256 newDuration
+    );
 
     //////// CONSTANTS ////////
 
@@ -71,7 +82,11 @@ contract DatabaseResolver is
      * @param newOffChainDatabaseTimeoutDuration how long an offchain signature will last
      * @param newSigners Signer addresses.
      */
-    constructor(string memory newGatewayUrl, uint256 newOffChainDatabaseTimeoutDuration, address[] memory newSigners) {
+    constructor(
+        string memory newGatewayUrl,
+        uint256 newOffChainDatabaseTimeoutDuration,
+        address[] memory newSigners
+    ) {
         _addSigners(newSigners);
         _setGatewayUrl(newGatewayUrl);
         _setOffChainDatabaseTimeoutDuration(newOffChainDatabaseTimeoutDuration);
@@ -85,7 +100,8 @@ contract DatabaseResolver is
      * @param ttl Expiration timestamp of the domain
      */
     function register(bytes32 node, uint32 ttl) external view {
-        IWriteDeferral.parameter[] memory params = new IWriteDeferral.parameter[](2);
+        IWriteDeferral.parameter[] memory params =
+            new IWriteDeferral.parameter[](2);
 
         params[0].name = "node";
         params[0].value = TypeToString.bytes32ToString(node);
@@ -105,7 +121,15 @@ contract DatabaseResolver is
      * (Eg, addr(bytes32), text(bytes32,string), etc).
      * @return The return data, ABI encoded identically to the underlying function.
      */
-    function resolve(bytes calldata name, bytes calldata data) external view override returns (bytes memory) {
+    function resolve(
+        bytes calldata name,
+        bytes calldata data
+    )
+        external
+        view
+        override
+        returns (bytes memory)
+    {
         _offChainLookup(data);
     }
 
@@ -118,7 +142,8 @@ contract DatabaseResolver is
      * @param a The address to set.
      */
     function setAddr(bytes32 node, address a) external {
-        IWriteDeferral.parameter[] memory params = new IWriteDeferral.parameter[](2);
+        IWriteDeferral.parameter[] memory params =
+            new IWriteDeferral.parameter[](2);
 
         params[0].name = "node";
         params[0].value = TypeToString.bytes32ToString(node);
@@ -134,7 +159,13 @@ contract DatabaseResolver is
      * @param node The ENS node to query.
      * @return Always reverts with an OffchainLookup error.
      */
-    function addr(bytes32 node) public view virtual override returns (address payable) {
+    function addr(bytes32 node)
+        public
+        view
+        virtual
+        override
+        returns (address payable)
+    {
         addr(node, _COIN_TYPE_ETH);
     }
 
@@ -148,7 +179,8 @@ contract DatabaseResolver is
      * @param a The address to set.
      */
     function setAddr(bytes32 node, uint256 coinType, bytes memory a) public {
-        IWriteDeferral.parameter[] memory params = new IWriteDeferral.parameter[](3);
+        IWriteDeferral.parameter[] memory params =
+            new IWriteDeferral.parameter[](3);
 
         params[0].name = "node";
         params[0].value = TypeToString.bytes32ToString(node);
@@ -168,7 +200,15 @@ contract DatabaseResolver is
      * @param coinType The coin type of the corresponding address.
      * @return Always reverts with an OffchainLookup error.
      */
-    function addr(bytes32 node, uint256 coinType) public view override returns (bytes memory) {
+    function addr(
+        bytes32 node,
+        uint256 coinType
+    )
+        public
+        view
+        override
+        returns (bytes memory)
+    {
         _offChainLookup(msg.data);
     }
 
@@ -180,7 +220,8 @@ contract DatabaseResolver is
      * @param node The node to update.
      */
     function setName(bytes32 node, string calldata name) external {
-        IWriteDeferral.parameter[] memory params = new IWriteDeferral.parameter[](2);
+        IWriteDeferral.parameter[] memory params =
+            new IWriteDeferral.parameter[](2);
 
         params[0].name = "node";
         params[0].value = TypeToString.bytes32ToString(node);
@@ -197,7 +238,12 @@ contract DatabaseResolver is
      * @param node The ENS node to query.
      * @return Always reverts with an OffchainLookup error.
      */
-    function name(bytes32 node) external view override returns (string memory) {
+    function name(bytes32 node)
+        external
+        view
+        override
+        returns (string memory)
+    {
         _offChainLookup(msg.data);
     }
 
@@ -210,8 +256,15 @@ contract DatabaseResolver is
      * @param key The key to set.
      * @param value The text data value to set.
      */
-    function setText(bytes32 node, string calldata key, string calldata value) external {
-        IWriteDeferral.parameter[] memory params = new IWriteDeferral.parameter[](3);
+    function setText(
+        bytes32 node,
+        string calldata key,
+        string calldata value
+    )
+        external
+    {
+        IWriteDeferral.parameter[] memory params =
+            new IWriteDeferral.parameter[](3);
 
         params[0].name = "node";
         params[0].value = TypeToString.bytes32ToString(node);
@@ -231,7 +284,15 @@ contract DatabaseResolver is
      * @param key The text data key to query.
      * @return Always reverts with an OffchainLookup error.
      */
-    function text(bytes32 node, string calldata key) external view override returns (string memory) {
+    function text(
+        bytes32 node,
+        string calldata key
+    )
+        external
+        view
+        override
+        returns (string memory)
+    {
         _offChainLookup(msg.data);
     }
 
@@ -244,7 +305,8 @@ contract DatabaseResolver is
      * @param hash The contenthash to set
      */
     function setContenthash(bytes32 node, bytes calldata hash) external {
-        IWriteDeferral.parameter[] memory params = new IWriteDeferral.parameter[](2);
+        IWriteDeferral.parameter[] memory params =
+            new IWriteDeferral.parameter[](2);
 
         params[0].name = "node";
         params[0].value = TypeToString.bytes32ToString(node);
@@ -260,7 +322,12 @@ contract DatabaseResolver is
      * @param node The ENS node to query.
      * @return Always reverts with an OffchainLookup error.
      */
-    function contenthash(bytes32 node) external view override returns (bytes memory) {
+    function contenthash(bytes32 node)
+        external
+        view
+        override
+        returns (bytes memory)
+    {
         _offChainLookup(msg.data);
     }
 
@@ -271,22 +338,40 @@ contract DatabaseResolver is
      * @param callData The calldata for the corresponding lookup.
      * @return Always reverts with an OffchainLookup error.
      */
-    function _offChainLookup(bytes calldata callData) private view returns (bytes memory) {
+    function _offChainLookup(bytes calldata callData)
+        private
+        view
+        returns (bytes memory)
+    {
         string[] memory urls = new string[](1);
         urls[0] = gatewayUrl;
 
         revert OffchainLookup(
-            address(this), urls, callData, this.resolveWithProof.selector, abi.encode(callData, address(this))
+            address(this),
+            urls,
+            callData,
+            this.resolveWithProof.selector,
+            abi.encode(callData, address(this))
         );
     }
 
     /**
      * Callback used by CCIP read compatible clients to verify and parse the response.
      */
-    function resolveWithProof(bytes calldata response, bytes calldata extraData) external view returns (bytes memory) {
-        (address signer, bytes memory result) = SignatureVerifier.verify(extraData, response);
+    function resolveWithProof(
+        bytes calldata response,
+        bytes calldata extraData
+    )
+        external
+        view
+        returns (bytes memory)
+    {
+        (address signer, bytes memory result) =
+            SignatureVerifier.verify(extraData, response);
         if (!this.isSigner(signer)) {
-            revert SignatureVerifier.SignatureVerifier__InvalidSignature("invalid signer");
+            revert SignatureVerifier.SignatureVerifier__InvalidSignature(
+                "invalid signer"
+            );
         }
         return result;
     }
@@ -297,7 +382,10 @@ contract DatabaseResolver is
      * @notice Builds an StorageHandledByOffChainDatabase error.
      * @param params The offChainDatabaseParamters used to build the corresponding mutation action.
      */
-    function _offChainStorage(IWriteDeferral.parameter[] memory params) private view {
+    function _offChainStorage(IWriteDeferral.parameter[] memory params)
+        private
+        view
+    {
         revert StorageHandledByOffChainDatabase(
             IWriteDeferral.domainData({
                 name: _WRITE_DEFERRAL_DOMAIN_NAME,
@@ -310,7 +398,8 @@ contract DatabaseResolver is
                 functionSelector: msg.sig,
                 sender: msg.sender,
                 parameters: params,
-                expirationTimestamp: block.timestamp + gatewayDatabaseTimeoutDuration
+                expirationTimestamp: block.timestamp
+                    + gatewayDatabaseTimeoutDuration
             })
         );
     }
@@ -349,7 +438,10 @@ contract DatabaseResolver is
      * @dev Can only be called by the gateway manager.
      * @param newDuration New offChainDatabase timout duration.
      */
-    function setOffChainDatabaseTimoutDuration(uint256 newDuration) external onlyOwner {
+    function setOffChainDatabaseTimoutDuration(uint256 newDuration)
+        external
+        onlyOwner
+    {
         _setOffChainDatabaseTimeoutDuration(newDuration);
     }
 
@@ -367,13 +459,14 @@ contract DatabaseResolver is
      * @dev Can only be called by the signer manager.
      * @param signersToRemove Signer addresses.
      */
-    function removeSigners(address[] calldata signersToRemove) external onlyOwner {
+    function removeSigners(address[] calldata signersToRemove)
+        external
+        onlyOwner
+    {
         uint256 length = signersToRemove.length;
         for (uint256 i = 0; i < length; i++) {
             address signer = signersToRemove[i];
-            if (_signers.remove(signer)) {
-                emit SignerRemoved(signer);
-            }
+            if (_signers.remove(signer)) emit SignerRemoved(signer);
         }
     }
 
@@ -410,9 +503,7 @@ contract DatabaseResolver is
         uint256 length = signersToAdd.length;
         for (uint256 i = 0; i < length; i++) {
             address signer = signersToAdd[i];
-            if (_signers.add(signer)) {
-                emit SignerAdded(signer);
-            }
+            if (_signers.add(signer)) emit SignerAdded(signer);
         }
     }
 
@@ -422,10 +513,15 @@ contract DatabaseResolver is
      * @return True if a given interface ID is supported.
      */
     function supportsInterface(bytes4 interfaceID) public pure returns (bool) {
-        return interfaceID == type(IExtendedResolver).interfaceId || interfaceID == type(IAddrResolver).interfaceId
-            || interfaceID == type(IABIResolver).interfaceId || interfaceID == type(IPubkeyResolver).interfaceId
-            || interfaceID == type(ITextResolver).interfaceId || interfaceID == type(INameResolver).interfaceId
-            || interfaceID == type(IContentHashResolver).interfaceId || interfaceID == type(IAddressResolver).interfaceId
+        return interfaceID == type(IExtendedResolver).interfaceId
+            || interfaceID == type(IAddrResolver).interfaceId
+            || interfaceID == type(IABIResolver).interfaceId
+            || interfaceID == type(IPubkeyResolver).interfaceId
+            || interfaceID == type(ITextResolver).interfaceId
+            || interfaceID == type(INameResolver).interfaceId
+            || interfaceID == type(IContentHashResolver).interfaceId
+            || interfaceID == type(IAddressResolver).interfaceId
             || interfaceID == type(IWriteDeferral).interfaceId;
     }
+
 }

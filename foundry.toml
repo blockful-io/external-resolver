@@ -24,9 +24,17 @@ ignored_warnings_from = [
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
+[etherscan]
+sepolia = { key = "${ETHERSCAN_KEY}" }
+
+
 [rpc_endpoints]
 rpc_url = "${RPC_URL}"
 arbitrum_rpc_url = "${ARBITRUM_RPC_URL}"
 
-[etherscan]
-sepolia = { key = "${ETHERSCAN_API_KEY}" }
+
+[fmt]
+line_length = 80
+single_line_statement_blocks = "single"
+multiline_func_header = "all"
+contract_new_lines = true
