@@ -1,7 +1,7 @@
 {
   "name": "@blockful/ccip-server",
-  "types": "./dist/index.js",
-  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "main": "./src/index.ts",
   "exports": {
     ".": "./dist/index.js"
   },

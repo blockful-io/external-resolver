@@ -2,8 +2,8 @@
   "name": "@blockful/gateway",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/database.js",
-  "types": "dist/database.js",
+  "main": "src/database.ts",
+  "types": "src/database.ts",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
