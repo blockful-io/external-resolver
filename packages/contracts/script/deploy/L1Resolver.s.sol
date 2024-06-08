@@ -11,6 +11,7 @@ import {L2Resolver} from "../../src/L2Resolver.sol";
 import {L1Verifier} from "../../src/evmgateway/L1Verifier.sol";
 
 contract L2ResolverScript is Script, ENSHelper {
+
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
@@ -29,4 +30,5 @@ contract L2ResolverScript is Script, ENSHelper {
 
         vm.stopBroadcast();
     }
+
 }

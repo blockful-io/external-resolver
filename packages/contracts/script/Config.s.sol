@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import {Script} from "forge-std/Script.sol";
 
 contract Config is Script {
+
     NetworkConfig private _activeNetworkConfig;
 
     struct NetworkConfig {
@@ -13,31 +14,43 @@ contract Config is Script {
     }
 
     constructor(uint256 chainId) {
-        if (chainId == 11155111) {
-            _activeNetworkConfig = _getSepoliaConfig();
-        } else if (chainId == 1) {
-            _activeNetworkConfig = _getMainnetConfig();
-        } else {
-            _activeNetworkConfig = _getAnvilConfig();
-        }
+        if (chainId == 11155111) _activeNetworkConfig = _getSepoliaConfig();
+        else if (chainId == 1) _activeNetworkConfig = _getMainnetConfig();
+        else _activeNetworkConfig = _getAnvilConfig();
     }
 
     function activeNetworkConfig()
         public
         view
-        returns (string memory gatewayUrl, uint32 gatewayTimestamp, address[] memory signers)
+        returns (
+            string memory gatewayUrl,
+            uint32 gatewayTimestamp,
+            address[] memory signers
+        )
     {
-        return (_activeNetworkConfig.gatewayUrl, _activeNetworkConfig.gatewayTimestamp, _activeNetworkConfig.signers);
+        return (
+            _activeNetworkConfig.gatewayUrl,
+            _activeNetworkConfig.gatewayTimestamp,
+            _activeNetworkConfig.signers
+        );
     }
 
     function _getMainnetConfig() private view returns (NetworkConfig memory) {
         address[] memory signers = new address[](0);
-        return NetworkConfig({gatewayUrl: vm.envString("GATEWAY_URL"), gatewayTimestamp: 600, signers: signers});
+        return NetworkConfig({
+            gatewayUrl: vm.envString("GATEWAY_URL"),
+            gatewayTimestamp: 600,
+            signers: signers
+        });
     }
 
     function _getSepoliaConfig() private view returns (NetworkConfig memory) {
         address[] memory signers = new address[](0);
-        return NetworkConfig({gatewayUrl: vm.envString("GATEWAY_URL"), gatewayTimestamp: 600, signers: signers});
+        return NetworkConfig({
+            gatewayUrl: vm.envString("GATEWAY_URL"),
+            gatewayTimestamp: 600,
+            signers: signers
+        });
     }
 
     function _getAnvilConfig() private pure returns (NetworkConfig memory) {
@@ -49,4 +62,5 @@ contract Config is Script {
             signers: signers
         });
     }
+
 }

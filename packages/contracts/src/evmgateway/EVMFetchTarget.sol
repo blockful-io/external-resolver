@@ -9,6 +9,7 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
  *      inherit from this contract in order to handle callbacks correctly.
  */
 abstract contract EVMFetchTarget {
+
     using Address for address;
 
     error ResponseLengthMismatch(uint256 actual, uint256 expected);
@@ -16,7 +17,12 @@ abstract contract EVMFetchTarget {
     /**
      * @dev Internal callback function invoked by CCIP-Read in response to a `getStorageSlots` request.
      */
-    function getStorageSlotsCallback(bytes calldata response, bytes calldata extradata) external {
+    function getStorageSlotsCallback(
+        bytes calldata response,
+        bytes calldata extradata
+    )
+        external
+    {
         bytes memory proof = abi.decode(response, (bytes));
         (
             IEVMVerifier verifier,
@@ -25,14 +31,21 @@ abstract contract EVMFetchTarget {
             bytes[] memory constants,
             bytes4 callback,
             bytes memory callbackData
-        ) = abi.decode(extradata, (IEVMVerifier, address, bytes32[], bytes[], bytes4, bytes));
-        bytes[] memory values = verifier.getStorageValues(addr, commands, constants, proof);
+        ) = abi.decode(
+            extradata,
+            (IEVMVerifier, address, bytes32[], bytes[], bytes4, bytes)
+        );
+        bytes[] memory values =
+            verifier.getStorageValues(addr, commands, constants, proof);
         if (values.length != commands.length) {
             revert ResponseLengthMismatch(values.length, commands.length);
         }
-        bytes memory ret = address(this).functionCall(abi.encodeWithSelector(callback, values, callbackData));
+        bytes memory ret = address(this).functionCall(
+            abi.encodeWithSelector(callback, values, callbackData)
+        );
         assembly {
             return(add(ret, 32), mload(ret))
         }
     }
+
 }

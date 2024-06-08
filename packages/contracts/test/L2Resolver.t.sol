@@ -17,6 +17,7 @@ import {L2Resolver} from "../src/L2Resolver.sol";
 import {ENSHelper} from "../script/Helper.sol";
 
 contract L2ResolverTest is Test, ENSHelper {
+
     L2Resolver resolver;
     bytes32 testNode;
     address owner = address(0x123);
@@ -36,7 +37,11 @@ contract L2ResolverTest is Test, ENSHelper {
 
     function test_NonOwnerCannotSetOwner() public {
         vm.prank(nonOwner);
-        vm.expectRevert(abi.encodeWithSelector(L2Resolver.L2Resolver__ForbiddenAction.selector, testNode));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                L2Resolver.L2Resolver__ForbiddenAction.selector, testNode
+            )
+        );
         resolver.setOwner(testNode, nonOwner);
     }
 
@@ -72,9 +77,13 @@ contract L2ResolverTest is Test, ENSHelper {
     function test_SupportsInterface() public {
         assertTrue(resolver.supportsInterface(type(ABIResolver).interfaceId));
         assertTrue(resolver.supportsInterface(type(AddrResolver).interfaceId));
-        assertTrue(resolver.supportsInterface(type(ContentHashResolver).interfaceId));
+        assertTrue(
+            resolver.supportsInterface(type(ContentHashResolver).interfaceId)
+        );
         assertTrue(resolver.supportsInterface(type(DNSResolver).interfaceId));
-        assertTrue(resolver.supportsInterface(type(InterfaceResolver).interfaceId));
+        assertTrue(
+            resolver.supportsInterface(type(InterfaceResolver).interfaceId)
+        );
         assertTrue(resolver.supportsInterface(type(NameResolver).interfaceId));
         assertTrue(resolver.supportsInterface(type(PubkeyResolver).interfaceId));
         assertTrue(resolver.supportsInterface(type(TextResolver).interfaceId));
@@ -100,7 +109,8 @@ contract L2ResolverTest is Test, ENSHelper {
         bytes memory data = hex"1234";
         vm.prank(owner);
         resolver.setABI(testNode, contentType, data);
-        (uint256 retrievedContentType, bytes memory retrievedData) = resolver.ABI(testNode, contentType);
+        (uint256 retrievedContentType, bytes memory retrievedData) =
+            resolver.ABI(testNode, contentType);
         assertEq(retrievedContentType, contentType);
         assertEq(retrievedData, data);
     }
@@ -121,4 +131,5 @@ contract L2ResolverTest is Test, ENSHelper {
         resolver.setName(testNode, name);
         assertEq(resolver.name(testNode), name);
     }
+
 }

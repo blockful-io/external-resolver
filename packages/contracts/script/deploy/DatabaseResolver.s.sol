@@ -8,14 +8,21 @@ import {Config} from "../Config.s.sol";
 import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 
 contract DatabaseResolverScript is Script, ENSHelper {
+
     function run() external returns (DatabaseResolver) {
         Config config = new Config(block.chainid);
-        (string memory gatewayUrl, uint32 gatewayTimestamp, address[] memory signers) = config.activeNetworkConfig();
+        (
+            string memory gatewayUrl,
+            uint32 gatewayTimestamp,
+            address[] memory signers
+        ) = config.activeNetworkConfig();
 
         vm.startBroadcast();
-        DatabaseResolver resolver = new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
+        DatabaseResolver resolver =
+            new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
         vm.stopBroadcast();
 
         return resolver;
     }
+
 }

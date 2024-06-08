@@ -26,6 +26,7 @@ contract L2Resolver is
     PubkeyResolver,
     TextResolver
 {
+
     //////// ERRORS ////////
 
     error L2Resolver__UnavailableDomain(bytes32 node);
@@ -44,9 +45,7 @@ contract L2Resolver is
     //////// PUBLIC WRITE METHODS ////////
 
     function setOwner(bytes32 node, address _owner) public {
-        if (!isAuthorised(node)) {
-            revert L2Resolver__ForbiddenAction(node);
-        }
+        if (!isAuthorised(node)) revert L2Resolver__ForbiddenAction(node);
 
         _owners[node] = _owner;
     }
@@ -75,10 +74,15 @@ contract L2Resolver is
         )
         returns (bool)
     {
-        return interfaceID == type(Multicallable).interfaceId || interfaceID == type(ABIResolver).interfaceId
-            || interfaceID == type(AddrResolver).interfaceId || interfaceID == type(ContentHashResolver).interfaceId
-            || interfaceID == type(DNSResolver).interfaceId || interfaceID == type(InterfaceResolver).interfaceId
-            || interfaceID == type(NameResolver).interfaceId || interfaceID == type(PubkeyResolver).interfaceId
+        return interfaceID == type(Multicallable).interfaceId
+            || interfaceID == type(ABIResolver).interfaceId
+            || interfaceID == type(AddrResolver).interfaceId
+            || interfaceID == type(ContentHashResolver).interfaceId
+            || interfaceID == type(DNSResolver).interfaceId
+            || interfaceID == type(InterfaceResolver).interfaceId
+            || interfaceID == type(NameResolver).interfaceId
+            || interfaceID == type(PubkeyResolver).interfaceId
             || interfaceID == type(TextResolver).interfaceId;
     }
+
 }

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {RLPReader} from "@eth-optimism/contracts-bedrock/src/libraries/rlp/RLPReader.sol";
+import {RLPReader} from
+    "@eth-optimism/contracts-bedrock/src/libraries/rlp/RLPReader.sol";
 import {Bytes} from "@eth-optimism/contracts-bedrock/src/libraries/Bytes.sol";
 import {SecureMerkleTrie} from "./SecureMerkleTrie.sol";
 
@@ -15,6 +16,7 @@ uint8 constant OP_BACKREF = 0x20;
 uint8 constant FLAG_DYNAMIC = 0x01;
 
 library EVMProofHelper {
+
     using Bytes for bytes;
 
     error AccountNotFound(address);
@@ -28,13 +30,20 @@ library EVMProofHelper {
      * @param witness A witness proving the value of the storage root for `target`.
      * @return The storage root retrieved from the provided state root
      */
-    function getStorageRoot(bytes32 stateRoot, address target, bytes[] memory witness) private pure returns (bytes32) {
+    function getStorageRoot(
+        bytes32 stateRoot,
+        address target,
+        bytes[] memory witness
+    )
+        private
+        pure
+        returns (bytes32)
+    {
         (bool exists, bytes memory encodedResolverAccount) =
             SecureMerkleTrie.get(abi.encodePacked(target), witness, stateRoot);
-        if (!exists) {
-            revert AccountNotFound(target);
-        }
-        RLPReader.RLPItem[] memory accountState = RLPReader.readList(encodedResolverAccount);
+        if (!exists) revert AccountNotFound(target);
+        RLPReader.RLPItem[] memory accountState =
+            RLPReader.readList(encodedResolverAccount);
         return bytes32(RLPReader.readBytes(accountState[2]));
     }
 
@@ -45,12 +54,17 @@ library EVMProofHelper {
      * @param witness the StorageProof struct containing the necessary proof data
      * @return The retrieved storage proof value or 0x if the storage slot is empty
      */
-    function getSingleStorageProof(bytes32 storageRoot, uint256 slot, bytes[] memory witness)
+    function getSingleStorageProof(
+        bytes32 storageRoot,
+        uint256 slot,
+        bytes[] memory witness
+    )
         private
         pure
         returns (bytes memory)
     {
-        (bool exists, bytes memory retrievedValue) = SecureMerkleTrie.get(abi.encodePacked(slot), witness, storageRoot);
+        (bool exists, bytes memory retrievedValue) =
+            SecureMerkleTrie.get(abi.encodePacked(slot), witness, storageRoot);
         if (!exists) {
             // Nonexistent values are treated as zero.
             return "";
@@ -58,7 +72,15 @@ library EVMProofHelper {
         return RLPReader.readBytes(retrievedValue);
     }
 
-    function getFixedValue(bytes32 storageRoot, uint256 slot, bytes[] memory witness) private pure returns (bytes32) {
+    function getFixedValue(
+        bytes32 storageRoot,
+        uint256 slot,
+        bytes[] memory witness
+    )
+        private
+        pure
+        returns (bytes32)
+    {
         bytes memory value = getSingleStorageProof(storageRoot, slot, witness);
         // RLP encoded storage slots are stored without leading 0 bytes.
         // Casting to bytes32 appends trailing 0 bytes, so we have to bit shift to get the
@@ -66,7 +88,11 @@ library EVMProofHelper {
         return bytes32(value) >> (256 - 8 * value.length);
     }
 
-    function executeOperation(bytes1 operation, bytes[] memory constants, bytes[] memory values)
+    function executeOperation(
+        bytes1 operation,
+        bytes[] memory constants,
+        bytes[] memory values
+    )
         private
         pure
         returns (bytes memory)
@@ -74,16 +100,16 @@ library EVMProofHelper {
         uint8 opcode = uint8(operation) & 0xe0;
         uint8 operand = uint8(operation) & 0x1f;
 
-        if (opcode == OP_CONSTANT) {
-            return constants[operand];
-        } else if (opcode == OP_BACKREF) {
-            return values[operand];
-        } else {
-            revert UnknownOpcode(opcode);
-        }
+        if (opcode == OP_CONSTANT) return constants[operand];
+        else if (opcode == OP_BACKREF) return values[operand];
+        else revert UnknownOpcode(opcode);
     }
 
-    function computeFirstSlot(bytes32 command, bytes[] memory constants, bytes[] memory values)
+    function computeFirstSlot(
+        bytes32 command,
+        bytes[] memory constants,
+        bytes[] memory values
+    )
         private
         pure
         returns (bool isDynamic, uint256 slot)
@@ -101,12 +127,19 @@ library EVMProofHelper {
         }
     }
 
-    function getDynamicValue(bytes32 storageRoot, uint256 slot, StateProof memory proof, uint256 proofIdx)
+    function getDynamicValue(
+        bytes32 storageRoot,
+        uint256 slot,
+        StateProof memory proof,
+        uint256 proofIdx
+    )
         private
         pure
         returns (bytes memory value, uint256 newProofIdx)
     {
-        uint256 firstValue = uint256(getFixedValue(storageRoot, slot, proof.storageProofs[proofIdx++]));
+        uint256 firstValue = uint256(
+            getFixedValue(storageRoot, slot, proof.storageProofs[proofIdx++])
+        );
         if (firstValue & 0x01 == 0x01) {
             // Long value: first slot is `length * 2 + 1`, following slots are data.
             uint256 length = (firstValue - 1) / 2;
@@ -118,12 +151,18 @@ library EVMProofHelper {
                 if (length < 32) {
                     value = bytes.concat(
                         value,
-                        getSingleStorageProof(storageRoot, slot++, proof.storageProofs[proofIdx++]).slice(0, length)
+                        getSingleStorageProof(
+                            storageRoot, slot++, proof.storageProofs[proofIdx++]
+                        ).slice(0, length)
                     );
                     length = 0;
                 } else {
-                    value =
-                        bytes.concat(value, getSingleStorageProof(storageRoot, slot++, proof.storageProofs[proofIdx++]));
+                    value = bytes.concat(
+                        value,
+                        getSingleStorageProof(
+                            storageRoot, slot++, proof.storageProofs[proofIdx++]
+                        )
+                    );
                     length -= 32;
                 }
             }
@@ -141,21 +180,33 @@ library EVMProofHelper {
         bytes[] memory constants,
         bytes32 stateRoot,
         StateProof memory proof
-    ) internal pure returns (bytes[] memory values) {
-        bytes32 storageRoot = getStorageRoot(stateRoot, target, proof.stateTrieWitness);
+    )
+        internal
+        pure
+        returns (bytes[] memory values)
+    {
+        bytes32 storageRoot =
+            getStorageRoot(stateRoot, target, proof.stateTrieWitness);
         uint256 proofIdx = 0;
         values = new bytes[](commands.length);
         for (uint256 i = 0; i < commands.length; i++) {
             bytes32 command = commands[i];
-            (bool isDynamic, uint256 slot) = computeFirstSlot(command, constants, values);
+            (bool isDynamic, uint256 slot) =
+                computeFirstSlot(command, constants, values);
             if (!isDynamic) {
-                values[i] = abi.encode(getFixedValue(storageRoot, slot, proof.storageProofs[proofIdx++]));
+                values[i] = abi.encode(
+                    getFixedValue(
+                        storageRoot, slot, proof.storageProofs[proofIdx++]
+                    )
+                );
                 if (values[i].length > 32) {
                     revert InvalidSlotSize(values[i].length);
                 }
             } else {
-                (values[i], proofIdx) = getDynamicValue(storageRoot, slot, proof, proofIdx);
+                (values[i], proofIdx) =
+                    getDynamicValue(storageRoot, slot, proof, proofIdx);
             }
         }
     }
+
 }

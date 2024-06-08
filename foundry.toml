@@ -31,3 +31,10 @@ sepolia = { key = "${ETHERSCAN_KEY}" }
 [rpc_endpoints]
 rpc_url = "${RPC_URL}"
 arbitrum_rpc_url = "${ARBITRUM_RPC_URL}"
+
+
+[fmt]
+line_length = 80
+single_line_statement_blocks = "single"
+multiline_func_header = "all"
+contract_new_lines = true
