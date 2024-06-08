@@ -27,4 +27,4 @@ USER expressjs
 COPY --from=installer /app .
 
 EXPOSE 3000
-CMD node packages/gateway/dist/arbitrum.mjs
+CMD node packages/gateway/dist/arbitrum.js

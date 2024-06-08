@@ -27,4 +27,4 @@ USER expressjs
 COPY --from=installer /app .
 
 EXPOSE 3000
-CMD node packages/gateway/dist/database.mjs
+CMD node packages/gateway/dist/database.js

@@ -9,9 +9,10 @@
     "test:watch": "vitest",
     "start:db": "node ./dist/database.js",
     "start:eth": "node ./dist/ethereum.js",
-    "start:arb": "node ./dist/arbitrum.mjs",
+    "start:arb": "node ./dist/arbitrum.js",
     "dev:db": "ENV_FILE=../../.env ts-node ./cmd/database.ts --watch",
     "dev:eth": "ENV_FILE=../../.env ts-node ./cmd/ethereum.ts --watch",
+    "dev:arb": "ENV_FILE=../../.env ts-node ./cmd/arbitrum.ts --watch",
     "lint": "eslint . --ext .ts --fix",
     "build": "tsup-node"
   },
