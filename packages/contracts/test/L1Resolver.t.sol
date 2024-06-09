@@ -3,8 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import {ENS} from "@ens-contracts/registry/ENS.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {BytesUtils} from "@ens-contracts/dnssec-oracle/BytesUtils.sol";
@@ -18,6 +17,11 @@ import {ITextResolver} from
     "@ens-contracts/resolvers/profiles/ITextResolver.sol";
 import {IContentHashResolver} from
     "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
+import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
+import {IBaseRegistrar} from "@ens-contracts/ethregistrar/IBaseRegistrar.sol";
+import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
+import {ReverseRegistrar} from
+    "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 
 import {L1Resolver} from "../src/L1Resolver.sol";
 import {L1Verifier} from "../src/evmgateway/L1Verifier.sol";
@@ -28,7 +32,7 @@ import {ENSHelper} from "../script/Helper.sol";
 
 contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
-    ENS register;
+    ENSRegistry registry;
     IEVMVerifier verifier;
     L1Resolver l1Resolver;
     uint32 chainId;
@@ -38,19 +42,34 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function setUp() public {
         chainId = 31337;
-        testNode = namehash("test.eth");
-        (dnsName,) = NameEncoder.dnsEncodeName("test.eth");
+        (dnsName, testNode) = NameEncoder.dnsEncodeName("test.eth");
 
-        register = new ENSRegistry();
+        registry = new ENSRegistry();
         string[] memory urls = new string[](1);
         urls[0] = "http://localhost:3000/{sender}/{data}.json";
-        verifier = new L1Verifier(urls);
-        l1Resolver = new L1Resolver(
-            chainId, verifier, register, INameWrapper(msg.sender)
+
+        ReverseRegistrar registrar = new ReverseRegistrar(registry);
+        // // .reverse
+        registry.setSubnodeOwner(
+            rootNode, labelhash("reverse"), address(registrar)
+        );
+        // // addr.reverse
+        vm.prank(address(registrar));
+        registry.setSubnodeOwner(
+            namehash("reverse"), labelhash("addr"), address(registrar)
         );
 
-        register.setSubnodeOwner(rootNode, labelhash("eth"), address(this));
-        register.setSubnodeOwner(
+        NameWrapper nameWrap = new NameWrapper(
+            registry,
+            IBaseRegistrar(address(registrar)),
+            IMetadataService(msg.sender)
+        );
+
+        verifier = new L1Verifier(urls);
+        l1Resolver = new L1Resolver(chainId, verifier, registry, nameWrap);
+
+        registry.setSubnodeOwner(rootNode, labelhash("eth"), address(this));
+        registry.setSubnodeOwner(
             namehash("eth"), labelhash("test"), address(this)
         );
     }

@@ -7,10 +7,7 @@ import {ReverseRegistrar} from
 import {IBaseRegistrar} from "@ens-contracts/ethregistrar/IBaseRegistrar.sol";
 import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 import {NameEncoder} from "@ens-contracts/utils/NameEncoder.sol";
-import {
-    PublicResolver,
-    INameWrapper
-} from "@ens-contracts/resolvers/PublicResolver.sol";
+import {PublicResolver} from "@ens-contracts/resolvers/PublicResolver.sol";
 import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 import {IRollupCore} from "@nitro-contracts/src/rollup/IRollupCore.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";

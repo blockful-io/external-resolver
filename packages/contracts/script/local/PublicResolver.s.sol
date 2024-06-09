@@ -2,13 +2,14 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import "@ens-contracts/registry/ENSRegistry.sol";
-import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
-import "@ens-contracts/utils/UniversalResolver.sol";
-import {
-    PublicResolver,
-    INameWrapper
-} from "@ens-contracts/resolvers/PublicResolver.sol";
+import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
+import {ReverseRegistrar} from
+    "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
+import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
+import {PublicResolver} from "@ens-contracts/resolvers/PublicResolver.sol";
+import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
+import {IBaseRegistrar} from "@ens-contracts/ethregistrar/IBaseRegistrar.sol";
+import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 
 import "../Helper.sol";
 
@@ -32,8 +33,14 @@ contract PublicResolverScript is Script, ENSHelper {
             namehash("reverse"), labelhash("addr"), address(registrar)
         );
 
+        NameWrapper nameWrap = new NameWrapper(
+            registry,
+            IBaseRegistrar(address(registrar)),
+            IMetadataService(publicKey)
+        );
+
         PublicResolver resolver = new PublicResolver(
-            registry, INameWrapper(publicKey), publicKey, address(registrar)
+            registry, nameWrap, publicKey, address(registrar)
         );
         registrar.setDefaultResolver(address(resolver));
 
