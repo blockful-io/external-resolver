@@ -49,7 +49,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
         urls[0] = "http://localhost:3000/{sender}/{data}.json";
 
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
-        // // .reverse
+        // .reverse
         registry.setSubnodeOwner(
             rootNode, labelhash("reverse"), address(registrar)
         );
