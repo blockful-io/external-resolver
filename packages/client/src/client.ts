@@ -4,12 +4,12 @@ import {
   Hex,
   Address,
   Abi,
-  Hash,
   createPublicClient,
   encodeFunctionData,
   PrivateKeyAccount,
   walletActions,
   http,
+  Account,
 } from 'viem'
 import * as chains from 'viem/chains'
 
@@ -56,7 +56,7 @@ export async function handleL2Storage({
   args: {
     abi: Abi | unknown[]
     address: Address
-    account: Hash
+    account: Account
     functionName: string
     args: unknown[]
   }

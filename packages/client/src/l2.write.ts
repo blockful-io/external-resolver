@@ -53,7 +53,7 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const publicAddress = normalize('xx.lucas.floripa.eth')
+  const publicAddress = normalize('blockful.eth')
   const signer = privateKeyToAccount(privateKey)
 
   if (!resolver) {
@@ -100,7 +100,7 @@ const _ = (async () => {
           abi: l2Abi,
           args: [namehash(publicAddress), signer.address],
           address: contractAddress,
-          account: signer.address,
+          account: signer,
         },
       })
     } else if (data) {
@@ -135,7 +135,7 @@ const _ = (async () => {
           abi: l2Abi,
           args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
           address: contractAddress,
-          account: signer.address,
+          account: signer,
         },
       })
     } else if (data) {
