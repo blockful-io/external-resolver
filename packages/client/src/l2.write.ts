@@ -34,7 +34,7 @@ program
   .option(
     '-pk --privateKey <privateKey>',
     'privateKey',
-    '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // anvil PK
+    '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
   )
   .option('-l2r --l2resolver <l2resolver>', 'l2resolver')
 
@@ -53,7 +53,7 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const publicAddress = normalize('blockful.eth')
+  const publicAddress = normalize('xx.lucas.floripa.eth')
   const signer = privateKeyToAccount(privateKey)
 
   if (!resolver) {
@@ -77,7 +77,7 @@ const _ = (async () => {
       abi: l1Abi,
       args: [toHex(packetToBytes(publicAddress)), l2resolver],
       address: resolverAddr,
-      account: signer.address,
+      account: signer,
     })
     await client.writeContract(request)
 
@@ -118,7 +118,7 @@ const _ = (async () => {
       args: [
         toHex(packetToBytes(publicAddress)),
         'com.twitter',
-        '@xxx_blockful.eth',
+        '@blockful.eth',
       ],
       address: resolverAddr,
     })

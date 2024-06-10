@@ -19,12 +19,13 @@ import {ITextResolver} from
 import {IContentHashResolver} from
     "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
+import {BytesUtils as WrapperBytes} from "@ens-contracts/wrapper/BytesUtils.sol";
 
 import {IWriteDeferral} from "./IWriteDeferral.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
-import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
+import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
+import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
@@ -104,12 +105,13 @@ contract L1Resolver is
      * @param resolver Address of resolver that should will store this domain
      */
     function register(bytes calldata name, address resolver) external {
-        (bytes32 node, address target, bool parent) = getTarget(name);
+        bytes32 node = WrapperBytes.namehash(name, 0);
+        (, address target, bool parent) = getTarget(name);
         if (target != address(0) && !parent) {
             revert L1Resolver__UnavailableDomain(node);
         }
 
-        setTarget(name, resolver);
+        setTarget(node, resolver);
     }
 
     /**
@@ -404,12 +406,12 @@ contract L1Resolver is
 
     /**
      * Set target address to verify against
-     * @param name The ENS node to query.
+     * @param node The ENS node to query.
      * @param target The L2 resolver address to verify against.
      */
-    function setTarget(bytes calldata name, address target) public {
-        (bytes32 node, address prevAddr,) = getTarget(name);
+    function setTarget(bytes32 node, address target) public {
         if (!isAuthorised(node)) revert L1Resolver__ForbiddenAction(node);
+        address prevAddr = _targets[node];
         _targets[node] = target;
         emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
     }

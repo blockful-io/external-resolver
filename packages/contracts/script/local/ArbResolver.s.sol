@@ -71,8 +71,9 @@ contract arbResolverScript is Script, ENSHelper {
             100000
         );
 
-        (bytes memory node,) = NameEncoder.dnsEncodeName("blockful.eth");
-        l1resolver.setTarget(node, arbitrumL2ResolverAddress);
+        l1resolver.setTarget(
+            namehash("blockful.eth"), arbitrumL2ResolverAddress
+        );
 
         vm.stopBroadcast();
     }
