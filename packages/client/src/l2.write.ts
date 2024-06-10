@@ -34,7 +34,7 @@ program
   .option(
     '-pk --privateKey <privateKey>',
     'privateKey',
-    '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // anvil PK
+    '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
   )
   .option('-l2r --l2resolver <l2resolver>', 'l2resolver')
 
@@ -77,7 +77,7 @@ const _ = (async () => {
       abi: l1Abi,
       args: [toHex(packetToBytes(publicAddress)), l2resolver],
       address: resolverAddr,
-      account: signer.address,
+      account: signer,
     })
     await client.writeContract(request)
 
@@ -100,7 +100,7 @@ const _ = (async () => {
           abi: l2Abi,
           args: [namehash(publicAddress), signer.address],
           address: contractAddress,
-          account: signer.address,
+          account: signer,
         },
       })
     } else if (data) {
@@ -118,7 +118,7 @@ const _ = (async () => {
       args: [
         toHex(packetToBytes(publicAddress)),
         'com.twitter',
-        '@xxx_blockful.eth',
+        '@blockful.eth',
       ],
       address: resolverAddr,
     })
@@ -135,7 +135,7 @@ const _ = (async () => {
           abi: l2Abi,
           args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
           address: contractAddress,
-          account: signer.address,
+          account: signer,
         },
       })
     } else if (data) {

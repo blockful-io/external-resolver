@@ -86,7 +86,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_OwnerCanSetTarget() public {
         address target = address(0x123);
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
         (, address actual,) = l1Resolver.getTarget(dnsName);
         assertEq(actual, target);
     }
@@ -95,7 +95,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
         address target = address(0x123);
         vm.expectEmit(true, true, true, true);
         emit L2HandlerContractAddressChanged(chainId, address(0), target);
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
     }
 
     function test_RevertWhen_UnauthorizedSetTarget() public {
@@ -106,7 +106,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
                 L1Resolver.L1Resolver__ForbiddenAction.selector, testNode
             )
         );
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
     }
 
     function test_EmitEventOnSetChainId() public {
@@ -120,19 +120,19 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
         address target = address(0x123);
         vm.expectEmit(true, true, true, true);
         emit L2HandlerContractAddressChanged(chainId, address(0), target);
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
     }
 
     function test_RevertWhen_SetTargetUnauthorizedOwner() public {
         address target = address(0x123);
         vm.expectRevert();
         vm.prank(address(0x2024));
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
     }
 
     function test_GetExistingTarget() public {
         address target = address(0x123);
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
         (, address actual,) = l1Resolver.getTarget(dnsName);
         assertEq(actual, target);
     }
@@ -140,20 +140,21 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
     function test_GetExistingTargetSubdomain() public {
         address expected = address(0x123);
 
-        (bytes memory ethNode,) = NameEncoder.dnsEncodeName("eth");
+        bytes32 ethNode = namehash("eth");
         l1Resolver.setTarget(ethNode, address(0x456));
 
-        (bytes memory blockfulNode,) = NameEncoder.dnsEncodeName("blockful.eth");
+        bytes32 blockfulNode = namehash("blockful.eth");
         l1Resolver.setTarget(blockfulNode, expected);
 
-        (, address actual,) = l1Resolver.getTarget(blockfulNode);
+        (bytes memory dnsBlockful,) = NameEncoder.dnsEncodeName("blockful.eth");
+        (, address actual,) = l1Resolver.getTarget(dnsBlockful);
         assertEq(actual, expected);
     }
 
     function test_GetExistingTargetSubdomainFromParent() public {
         address expected = address(0x123);
 
-        (bytes memory ethNode,) = NameEncoder.dnsEncodeName("eth");
+        bytes32 ethNode = namehash("eth");
         l1Resolver.setTarget(ethNode, expected);
 
         (bytes memory blockfulNode,) = NameEncoder.dnsEncodeName("blockful.eth");
@@ -166,7 +167,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
     {
         address expected = address(0x123);
 
-        (bytes memory ethNode,) = NameEncoder.dnsEncodeName("eth");
+        bytes32 ethNode = namehash("eth");
         l1Resolver.setTarget(ethNode, expected);
 
         (bytes memory blockfulNode,) = NameEncoder.dnsEncodeName(
@@ -183,7 +184,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_RevertWhen_SetAddr() public {
         address target = address(0x456);
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IWriteDeferral.StorageHandledByL2.selector, 31337, target
@@ -202,7 +203,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_RevertWhen_SetText() public {
         address target = address(0x456);
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -224,7 +225,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_RevertWhen_SetContentHash() public {
         address target = address(0x456);
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -251,6 +252,36 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
         assertEq(expected, actual);
     }
 
+    function test_registerDomainOwnedOnChainByOwner() public {
+        registry.setSubnodeOwner(
+            namehash("eth"), labelhash("owned"), address(this)
+        );
+
+        (bytes memory owned, bytes32 expectedNode) =
+            NameEncoder.dnsEncodeName("owned.eth");
+        address expected = address(0x281);
+        l1Resolver.register(owned, expected);
+
+        (bytes32 actualNode, address actual,) = l1Resolver.getTarget(owned);
+        assertEq(expected, actual);
+        assertEq(expectedNode, actualNode);
+    }
+
+    function test_registerDomainOwnedOnChainBySomeoneElse() public {
+        registry.setSubnodeOwner(
+            namehash("eth"), labelhash("owned"), address(0x999)
+        );
+
+        (bytes memory owned, bytes32 node) =
+            NameEncoder.dnsEncodeName("owned.eth");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                L1Resolver.L1Resolver__UnavailableDomain.selector, node
+            )
+        );
+        l1Resolver.register(owned, address(0x281));
+    }
+
     function test_registerSubdomain() public {
         address expected = address(0x42);
         l1Resolver.register(dnsName, expected);
@@ -258,8 +289,9 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
             NameEncoder.dnsEncodeName("subdomain.test.eth");
         l1Resolver.register(subdomain, expected);
 
-        (, address actual,) = l1Resolver.getTarget(subdomain);
+        (bytes32 node, address actual,) = l1Resolver.getTarget(subdomain);
         assertEq(expected, actual);
+        assertEq(node, namehash("subdomain.test.eth"));
     }
 
     function test_RevertIf_registerDomainDuplicated() public {
@@ -315,7 +347,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_OwnerCanSetAddr() public {
         address target = address(0x123);
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IWriteDeferral.StorageHandledByL2.selector, 31337, target
@@ -326,7 +358,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 
     function test_RevertWhen_NonOwnerSetAddr() public {
         address target = address(0x123);
-        l1Resolver.setTarget(dnsName, target);
+        l1Resolver.setTarget(testNode, target);
         vm.prank(address(0x2024));
         vm.expectRevert(
             abi.encodeWithSelector(

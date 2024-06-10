@@ -42,8 +42,7 @@ contract ArbitrumResolverScript is Script, ENSHelper {
         L1Resolver l1resolver =
             new L1Resolver(targetChainId, verifier, registry, nameWrapper);
 
-        (bytes memory node,) = NameEncoder.dnsEncodeName("blockful.eth");
-        l1resolver.setTarget(node, l2Resolver);
+        l1resolver.setTarget(namehash("blockful.eth"), l2Resolver);
 
         vm.stopBroadcast();
     }
