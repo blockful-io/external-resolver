@@ -252,6 +252,36 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
         assertEq(expected, actual);
     }
 
+    function test_registerDomainOwnedOnChainByOwner() public {
+        registry.setSubnodeOwner(
+            namehash("eth"), labelhash("owned"), address(this)
+        );
+
+        (bytes memory owned, bytes32 expectedNode) =
+            NameEncoder.dnsEncodeName("owned.eth");
+        address expected = address(0x281);
+        l1Resolver.register(owned, expected);
+
+        (bytes32 actualNode, address actual,) = l1Resolver.getTarget(owned);
+        assertEq(expected, actual);
+        assertEq(expectedNode, actualNode);
+    }
+
+    function test_registerDomainOwnedOnChainBySomeoneElse() public {
+        registry.setSubnodeOwner(
+            namehash("eth"), labelhash("owned"), address(0x999)
+        );
+
+        (bytes memory owned, bytes32 node) =
+            NameEncoder.dnsEncodeName("owned.eth");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                L1Resolver.L1Resolver__UnavailableDomain.selector, node
+            )
+        );
+        l1Resolver.register(owned, address(0x281));
+    }
+
     function test_registerSubdomain() public {
         address expected = address(0x42);
         l1Resolver.register(dnsName, expected);

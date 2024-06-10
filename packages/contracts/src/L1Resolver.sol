@@ -107,10 +107,11 @@ contract L1Resolver is
     function register(bytes calldata name, address resolver) external {
         bytes32 node = WrapperBytes.namehash(name, 0);
         (, address target, bool parent) = getTarget(name);
-        if (ens.owner(node) != msg.sender || (target != address(0) && !parent))
-        {
-            revert L1Resolver__UnavailableDomain(node);
-        }
+        address onchainOwner = ens.owner(node);
+        if (
+            (onchainOwner != address(0) && onchainOwner != msg.sender)
+                || (target != address(0) && !parent)
+        ) revert L1Resolver__UnavailableDomain(node);
 
         setTarget(node, resolver);
     }
