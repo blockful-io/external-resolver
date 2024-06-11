@@ -53,7 +53,7 @@ contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
         registry.setSubnodeOwner(
             rootNode, labelhash("reverse"), address(registrar)
         );
-        // // addr.reverse
+        // addr.reverse
         vm.prank(address(registrar));
         registry.setSubnodeOwner(
             namehash("reverse"), labelhash("addr"), address(registrar)
