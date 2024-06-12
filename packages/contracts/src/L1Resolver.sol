@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@ens-contracts/registry/ENS.sol";
+import {ENS} from "@ens-contracts/registry/ENS.sol";
 import {DummyNameWrapper} from
     "@ens-contracts/resolvers/mocks/DummyNameWrapper.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {BytesUtils} from "@ens-contracts/dnssec-oracle/BytesUtils.sol";
 import {HexUtils} from "@ens-contracts/utils/HexUtils.sol";
@@ -19,12 +19,13 @@ import {ITextResolver} from
 import {IContentHashResolver} from
     "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
+import {BytesUtils as WrapperBytes} from "@ens-contracts/wrapper/BytesUtils.sol";
 
 import {IWriteDeferral} from "./IWriteDeferral.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
-import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
+import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
+import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
@@ -104,10 +105,15 @@ contract L1Resolver is
      * @param resolver Address of resolver that should will store this domain
      */
     function register(bytes calldata name, address resolver) external {
-        (bytes32 node, address target) = getTarget(name);
-        if (target != address(0)) revert L1Resolver__UnavailableDomain(node);
+        bytes32 node = WrapperBytes.namehash(name, 0);
+        (, address target, bool parent) = getTarget(name);
+        address onchainOwner = ens.owner(node);
+        if (
+            (onchainOwner != address(0) && onchainOwner != msg.sender)
+                || (target != address(0) && !parent)
+        ) revert L1Resolver__UnavailableDomain(node);
 
-        setTarget(name, resolver);
+        setTarget(node, resolver);
     }
 
     /**
@@ -134,7 +140,7 @@ contract L1Resolver is
         view
         returns (bytes memory result)
     {
-        (, address target) = getTarget(name);
+        (, address target,) = getTarget(name);
         bytes4 selector = bytes4(data);
 
         if (selector == IAddrResolver.addr.selector) {
@@ -336,7 +342,7 @@ contract L1Resolver is
      * @param name The DNS encoded node to update.
      */
     function _offChainStorage(bytes calldata name) internal view {
-        (bytes32 node, address target) = this.getTarget(name);
+        (bytes32 node, address target,) = this.getTarget(name);
         if (target == address(0)) revert L1Resolver__DomainNotFound(node);
         revert StorageHandledByL2(chainId, target);
     }
@@ -351,10 +357,17 @@ contract L1Resolver is
 
     //////// PUBLIC VIEW FUNCTIONS ////////
 
+    /**
+     * @dev Returns the L2 target address that can answer queries for `name`.
+     * @param name DNS encoded ENS name to query
+     * @return node namehash of resolved domain
+     * @return target The L2 resolver address to verify against.
+     * @return parent boolean flag indicating it got the parent target
+     */
     function getTarget(bytes calldata name)
         public
         view
-        returns (bytes32, address)
+        returns (bytes32, address, bool)
     {
         return getTarget(name, 0);
     }
@@ -365,6 +378,7 @@ contract L1Resolver is
      * @param offset for recursive resolution
      * @return node namehash of resolved domain
      * @return target The L2 resolver address to verify against.
+     * @return parent boolean flag indicating it got the parent target
      */
     function getTarget(
         bytes calldata name,
@@ -372,31 +386,34 @@ contract L1Resolver is
     )
         public
         view
-        returns (bytes32 node, address target)
+        returns (bytes32 node, address target, bool parent)
     {
         uint256 len = name.readUint8(offset);
         node = bytes32(0);
         if (len > 0) {
             bytes32 label = name.keccak(offset + 1, len);
-            (node, target) = getTarget(name, offset + len + 1);
+            (node, target, parent) = getTarget(name, offset + len + 1);
             node = keccak256(abi.encodePacked(node, label));
-            if (_targets[node] != address(0)) return (node, _targets[node]);
+            if (_targets[node] != address(0)) {
+                return (node, _targets[node], false);
+            }
         } else {
-            return (bytes32(0), address(0));
+            return (bytes32(0), address(0), false);
         }
-        return (node, target);
+        if (target != address(0)) parent = true;
+        return (node, target, parent);
     }
 
     //////// PUBLIC WRITE FUNCTIONS ////////
 
     /**
      * Set target address to verify against
-     * @param name The ENS node to query.
+     * @param node The ENS node to query.
      * @param target The L2 resolver address to verify against.
      */
-    function setTarget(bytes calldata name, address target) public {
-        (bytes32 node, address prevAddr) = getTarget(name);
+    function setTarget(bytes32 node, address target) public {
         if (!isAuthorised(node)) revert L1Resolver__ForbiddenAction(node);
+        address prevAddr = _targets[node];
         _targets[node] = target;
         emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
     }

@@ -3,13 +3,17 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 
-import "@ens-contracts/registry/ENSRegistry.sol";
+import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
 import {
     PublicResolver,
     INameWrapper
 } from "@ens-contracts/resolvers/PublicResolver.sol";
-import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
-import "@ens-contracts/utils/UniversalResolver.sol";
+import {ReverseRegistrar} from
+    "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
+import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
+import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
+import {IBaseRegistrar} from "@ens-contracts/ethregistrar/IBaseRegistrar.sol";
+import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 
 import "../script/Helper.sol";
 
@@ -34,9 +38,14 @@ contract PublicResolverTest is Test, ENSHelper {
             namehash("reverse"), labelhash("addr"), address(registrar)
         );
 
-        resolver = new PublicResolver(
-            registry, INameWrapper(owner), owner, address(registrar)
+        NameWrapper nameWrap = new NameWrapper(
+            registry,
+            IBaseRegistrar(address(registrar)),
+            IMetadataService(owner)
         );
+
+        resolver =
+            new PublicResolver(registry, nameWrap, owner, address(registrar));
         registrar.setDefaultResolver(address(resolver));
 
         vm.stopPrank();

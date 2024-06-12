@@ -34,7 +34,7 @@ import {
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
 import * as ccip from '@blockful/ccip-server'
-import { normalize, labelhash, namehash, packetToBytes } from 'viem/ens'
+import { normalize, labelhash, namehash } from 'viem/ens'
 import { ChildProcess, spawn } from 'child_process'
 import { anvil } from 'viem/chains'
 import {
@@ -47,7 +47,6 @@ import {
   getContractAddress,
   http,
   publicActions,
-  toHex,
   walletActions,
   zeroHash,
 } from 'viem'
@@ -217,12 +216,9 @@ describe('L1Resolver', () => {
     })
 
     await client.impersonateAccount({ address: signer })
-    await l1Resolver.write.setTarget(
-      [toHex(packetToBytes(rawNode)), l2ResolverAddr],
-      {
-        account: signer,
-      },
-    )
+    await l1Resolver.write.setTarget([namehash(rawNode), l2ResolverAddr], {
+      account: signer,
+    })
   })
 
   it('should read valid text record', async () => {
