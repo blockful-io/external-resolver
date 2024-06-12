@@ -56,6 +56,26 @@ export type GetAbiProps = {
   node: `0x${string}`
 }
 
+export type SetPubkeyProps = {
+  node: `0x${string}`
+  x: `0x${string}`
+  y: `0x${string}`
+}
+
+export type GetPubkeyProps = {
+  node: `0x${string}`
+}
+
+export type PubKey = {
+  x: string
+  y: string
+}
+
+export type GetPubkeyResponse = {
+  value: PubKey
+  ttl: number
+}
+
 export interface Signer {
   sign: (msg: SignableMessage) => Promise<`0x${string}`>
 }

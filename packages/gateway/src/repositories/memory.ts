@@ -8,6 +8,9 @@ import {
   RegisterDomainProps,
   GetAbiProps,
   SetAbiProps,
+  GetPubkeyProps,
+  GetPubkeyResponse,
+  SetPubkeyProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -107,14 +110,14 @@ export class InMemoryRepository {
   }
 
   async setText({ node, key, value }: SetTextProps): Promise<void> {
+    const domain = this.domains.get(node)
+    if (!domain) {
+      throw new Error('Domain foreign key on address violated')
+    }
     const existingText = this.texts.get(`${node}-${key}`)
     if (existingText) {
       existingText.value = value
       return
-    }
-    const domain = this.domains.get(node)
-    if (!domain) {
-      throw new Error('Domain foreign key on address violated')
     }
     this.texts.set(`${node}-${key}`, { key, value, domain })
   }
@@ -124,5 +127,34 @@ export class InMemoryRepository {
     const domain = this.domains.get(node)
     if (!text || !domain) return
     return { value: text.value, ttl: domain.ttl }
+  }
+
+  async setPubkey({ node, x, y }: SetPubkeyProps) {
+    await this.setText({ node, key: 'pubkey', value: `(${x},${y})` })
+  }
+
+  /**
+   * getPubkey reutilized the getText function with `pubkey` as a reserved key
+   */
+  async getPubkey({
+    node,
+  }: GetPubkeyProps): Promise<GetPubkeyResponse | undefined> {
+    const pubkey = await this.getText({ node, key: 'pubkey' })
+    if (!pubkey) return
+
+    // extracting the X and Y values from a string (e.g (10,20) -> x = 10, y = 20)
+    const [, x, y] = /\((\d+),(\d+)\)/g.exec(pubkey.value) || []
+    return { value: { x, y }, ttl: pubkey.ttl }
+  }
+
+  async setAbi({ node, value }: SetAbiProps) {
+    await this.setText({ node, key: 'ABI', value })
+  }
+
+  /**
+   *  getABI reutilized the getText function with `ABI` as a reserved key
+   */
+  async getABI({ node }: GetAbiProps): Promise<Response | undefined> {
+    return await this.getText({ node, key: 'ABI' })
   }
 }

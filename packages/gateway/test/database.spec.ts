@@ -23,6 +23,8 @@ import {
   withRegisterDomain,
   withSetAbi,
   withGetAbi,
+  withSetPubkey,
+  withGetPubkey,
 } from '../src/handlers'
 import { PostgresRepository } from '../src/repositories'
 import { Address, Text, Domain } from '../src/entities'
@@ -631,4 +633,104 @@ describe('Gateway Database', () => {
     })
   })
 
+  describe('pubkey', () => {
+    let domain: Domain,
+      pvtKey: `0x${string}`,
+      expectedDb: string,
+      expectedX: Hex,
+      expectedY: Hex
+
+    beforeEach(async () => {
+      domain = new Domain()
+      domain.node = namehash('public.eth')
+      domain.ttl = 2000
+      pvtKey = generatePrivateKey()
+      domain.owner = privateKeyToAddress(pvtKey)
+      domain = await datasource.manager.save(domain)
+      expectedX = pad(toHex('10'), { dir: 'right' })
+      expectedY = pad(toHex('20'), { dir: 'right' })
+      expectedDb = `(${expectedX},${expectedY})`
+    })
+
+    it('should set new pubkey', async () => {
+      const server = new ccip.Server()
+      server.add(abi, withSetPubkey(repo, validator))
+      const result = await doCall({
+        server,
+        abi,
+        sender: TEST_ADDRESS,
+        method: 'setPubkey',
+        pvtKey,
+        args: [domain.node, expectedX, expectedY],
+      })
+
+      expect(result.data.length).toEqual(0)
+
+      const [actual, count] = await datasource
+        .getRepository(Text)
+        .createQueryBuilder()
+        .where('key = :key', { key: 'pubkey' })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getManyAndCount()
+      expect(count).toBe(1)
+      expect(actual[0]?.key).toEqual('pubkey')
+      expect(actual[0]?.value).toEqual(expectedDb)
+    })
+
+    it('should read abi', async () => {
+      const server = new ccip.Server()
+      server.add(abi, withGetPubkey(repo))
+      const text = new Text()
+      text.key = 'pubkey'
+      text.value = expectedDb
+      text.domain = domain
+      await datasource.manager.save(text)
+
+      const result = await doCall({
+        server,
+        abi,
+        sender: TEST_ADDRESS,
+        method: 'pubkey',
+        pvtKey,
+        args: [domain.node],
+      })
+
+      const response = result.data[0]! as unknown[]
+      expect(response.length).toEqual(2)
+      const [actualX, actualY] = response
+      expect(actualX).toEqual(expectedX)
+      expect(actualY).toEqual(expectedY)
+    })
+
+    it('should update abi', async () => {
+      const server = new ccip.Server()
+      server.add(abi, withSetPubkey(repo, validator))
+      const text = new Text()
+      text.key = 'pubkey'
+      text.value = '(0x123,0x456)'
+      text.domain = domain
+      await datasource.manager.save(text)
+
+      const result = await doCall({
+        server,
+        abi,
+        sender: TEST_ADDRESS,
+        method: 'setPubkey',
+        pvtKey,
+        args: [domain.node, expectedX, expectedY],
+      })
+
+      expect(result.data.length).toEqual(0)
+
+      const [actual, count] = await datasource
+        .getRepository(Text)
+        .createQueryBuilder()
+        .where('key = :key', { key: 'pubkey' })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getManyAndCount()
+      expect(count).toBe(1)
+      expect(actual[0]?.key).toEqual('pubkey')
+      expect(actual[0]?.value).toEqual(expectedDb)
+    })
+  })
 })
