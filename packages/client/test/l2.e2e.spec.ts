@@ -225,10 +225,7 @@ function getChain(chainId: number): chains.Chain {
 }
 
 function setupGateway() {
-  const rollupAddr = process.env.ROLLUP_ADDRESS
-  if (!rollupAddr) {
-    throw new Error('ROLLUP_ADDRESS is required')
-  }
+  const rollupAddr = '0x5eF0D09d1E6204141B4d37530808eD19f60FBa35'
   console.debug(`rollupAddr:  ${rollupAddr}`)
 
   const chain1 = getChain(1)
