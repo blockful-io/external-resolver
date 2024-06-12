@@ -142,8 +142,8 @@ export class InMemoryRepository {
     const pubkey = await this.getText({ node, key: 'pubkey' })
     if (!pubkey) return
 
-    // extracting the X and Y values from a string (e.g (10,20) -> x = 10, y = 20)
-    const [, x, y] = /\((\d+),(\d+)\)/g.exec(pubkey.value) || []
+    // extracting the X and Y values from a string (e.g (0x10A,0x20D) -> x = 0x10A, y = 0x20D)
+    const [, x, y] = /\((0x\w+),(0x\w+)\)/g.exec(pubkey.value) || []
     return { value: { x, y }, ttl: pubkey.ttl }
   }
 
