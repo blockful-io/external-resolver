@@ -333,12 +333,9 @@ describe('L1Resolver', () => {
     })
 
     await clientL1.impersonateAccount({ address: signer })
-    await l1Resolver.write.setTarget(
-      [toHex(packetToBytes(rawNode)), l2ResolverAddr],
-      {
-        account: signer,
-      },
-    )
+    await l1Resolver.write.setTarget([namehash(rawNode), l2ResolverAddr], {
+      account: signer,
+    })
   })
 
   it('should read valid text record', async () => {
