@@ -300,7 +300,7 @@ describe('L1Resolver', () => {
     // }, 10000)
 
     // eslint-disable-next-line promise/param-names
-    await new Promise((r) => setTimeout(r, 2000))
+    await new Promise((r) => setTimeout(r, 5000))
 
     await deployContracts('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266')
 
