@@ -10,7 +10,10 @@ struct L1WitnessData {
 }
 
 contract L1Verifier is IEVMVerifier {
-    error BlockHeaderHashMismatch(uint256 current, uint256 number, bytes32 expected, bytes32 actual);
+
+    error BlockHeaderHashMismatch(
+        uint256 current, uint256 number, bytes32 expected, bytes32 actual
+    );
 
     string[] _gatewayURLs;
 
@@ -22,12 +25,21 @@ contract L1Verifier is IEVMVerifier {
         return _gatewayURLs;
     }
 
-    function getStorageValues(address target, bytes32[] memory commands, bytes[] memory constants, bytes memory proof)
+    function getStorageValues(
+        address target,
+        bytes32[] memory commands,
+        bytes[] memory constants,
+        bytes memory proof
+    )
         external
         pure
         returns (bytes[] memory values)
     {
-        (bytes32 stateRoot, StateProof memory stateProof) = abi.decode(proof, (bytes32, StateProof));
-        return EVMProofHelper.getStorageValues(target, commands, constants, stateRoot, stateProof);
+        (bytes32 stateRoot, StateProof memory stateProof) =
+            abi.decode(proof, (bytes32, StateProof));
+        return EVMProofHelper.getStorageValues(
+            target, commands, constants, stateRoot, stateProof
+        );
     }
+
 }

@@ -4,7 +4,8 @@ pragma solidity ^0.8.17;
 import {StateProof, EVMProofHelper} from "./evmgateway/EVMProofHelper.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {Node, IRollupCore} from "@nitro-contracts/src/rollup/IRollupCore.sol";
-import {RLPReader} from "@eth-optimism/contracts-bedrock/src/libraries/rlp/RLPReader.sol";
+import {RLPReader} from
+    "@eth-optimism/contracts-bedrock/src/libraries/rlp/RLPReader.sol";
 
 struct ArbWitnessData {
     bytes32 version;
@@ -14,6 +15,7 @@ struct ArbWitnessData {
 }
 
 contract ArbVerifier is IEVMVerifier {
+
     IRollupCore public immutable rollup;
     string[] _gatewayURLs;
 
@@ -38,18 +40,28 @@ contract ArbVerifier is IEVMVerifier {
      * @param {bytes[]} constants - An array of constant values corresponding to the storage keys.
      * @param {bytes} proof - The proof data containing Arbitrum witness data and state proof.
      */
-    function getStorageValues(address target, bytes32[] memory commands, bytes[] memory constants, bytes memory proof)
+    function getStorageValues(
+        address target,
+        bytes32[] memory commands,
+        bytes[] memory constants,
+        bytes memory proof
+    )
         external
         view
         returns (bytes[] memory values)
     {
-        (ArbWitnessData memory arbData, StateProof memory stateProof) = abi.decode(proof, (ArbWitnessData, StateProof));
+        (ArbWitnessData memory arbData, StateProof memory stateProof) =
+            abi.decode(proof, (ArbWitnessData, StateProof));
 
         //Get the node from the rollup contract
         Node memory rblock = rollup.getNode(arbData.nodeIndex);
 
         //The confirm data is the keccak256 hash of the block hash and the send root. It is used to verify that the rblock is a subject of the layer 2 block that is being proven.
-        bytes32 confirmData = keccak256(abi.encodePacked(keccak256(arbData.rlpEncodedBlock), arbData.sendRoot));
+        bytes32 confirmData = keccak256(
+            abi.encodePacked(
+                keccak256(arbData.rlpEncodedBlock), arbData.sendRoot
+            )
+        );
 
         //Verify that the block hash is correct
         require(rblock.confirmData == confirmData, "confirmData mismatch");
@@ -58,7 +70,9 @@ contract ArbVerifier is IEVMVerifier {
         //Now that we know that the block is valid, we can get the state root from the block.
         bytes32 stateRoot = getStateRootFromBlock(arbData.rlpEncodedBlock);
 
-        values = EVMProofHelper.getStorageValues(target, commands, constants, stateRoot, stateProof);
+        values = EVMProofHelper.getStorageValues(
+            target, commands, constants, stateRoot, stateProof
+        );
     }
 
     /*
@@ -67,9 +81,14 @@ contract ArbVerifier is IEVMVerifier {
      * @param {bytes} rlpEncodedBlock - The RLP-encoded block information.
      * @returns {bytes32} The stateRoot extracted from the RLP-encoded block information.
      */
-    function getStateRootFromBlock(bytes memory rlpEncodedBlock) internal pure returns (bytes32) {
+    function getStateRootFromBlock(bytes memory rlpEncodedBlock)
+        internal
+        pure
+        returns (bytes32)
+    {
         RLPReader.RLPItem[] memory i = RLPReader.readList(rlpEncodedBlock);
         //StateRoot is located at idx 3
         return bytes32(RLPReader.readBytes(i[3]));
     }
+
 }

@@ -2,19 +2,26 @@
 pragma solidity ^0.8.4;
 
 interface IWriteDeferral {
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Event raised when the default chainId is changed for the corresponding L2 handler.
-    event L2HandlerDefaultChainIdChanged(uint256 indexed previousChainId, uint256 indexed newChainId);
+    event L2HandlerDefaultChainIdChanged(
+        uint256 indexed previousChainId, uint256 indexed newChainId
+    );
     /// @notice Event raised when the contractAddress is changed for the L2 handler corresponding to chainId.
     event L2HandlerContractAddressChanged(
-        uint256 indexed chainId, address indexed previousContractAddress, address indexed newContractAddress
+        uint256 indexed chainId,
+        address indexed previousContractAddress,
+        address indexed newContractAddress
     );
 
     /// @notice Event raised when the url is changed for the corresponding Off-Chain Database handler.
-    event OffChainDatabaseHandlerURLChanged(string indexed previousUrl, string indexed newUrl);
+    event OffChainDatabaseHandlerURLChanged(
+        string indexed previousUrl, string indexed newUrl
+    );
 
     /*//////////////////////////////////////////////////////////////
                                  STRUCTS
@@ -88,5 +95,8 @@ interface IWriteDeferral {
      *  }
      *
      */
-    error StorageHandledByOffChainDatabase(domainData sender, string url, messageData data);
+    error StorageHandledByOffChainDatabase(
+        domainData sender, string url, messageData data
+    );
+
 }

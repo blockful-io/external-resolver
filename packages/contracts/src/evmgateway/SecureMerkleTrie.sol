@@ -14,6 +14,7 @@ import {MerkleTrie} from "./MerkleTrie.sol";
  *         keys. Ethereum's state trie hashes input keys before storing them.
  */
 library SecureMerkleTrie {
+
     /**
      * @notice Verifies a proof that a given key/value pair is present in the Merkle trie.
      *
@@ -27,7 +28,12 @@ library SecureMerkleTrie {
      *
      * @return Whether or not the proof is valid.
      */
-    function verifyInclusionProof(bytes memory _key, bytes memory _value, bytes[] memory _proof, bytes32 _root)
+    function verifyInclusionProof(
+        bytes memory _key,
+        bytes memory _value,
+        bytes[] memory _proof,
+        bytes32 _root
+    )
         internal
         pure
         returns (bool)
@@ -46,7 +52,15 @@ library SecureMerkleTrie {
      * @return Whether or not the key exists.
      * @return Value of the key if it exists.
      */
-    function get(bytes memory _key, bytes[] memory _proof, bytes32 _root) internal pure returns (bool, bytes memory) {
+    function get(
+        bytes memory _key,
+        bytes[] memory _proof,
+        bytes32 _root
+    )
+        internal
+        pure
+        returns (bool, bytes memory)
+    {
         bytes memory key = _getSecureKey(_key);
         return MerkleTrie.get(key, _proof, _root);
     }
@@ -58,7 +72,12 @@ library SecureMerkleTrie {
      *
      * @return Hashed version of the key.
      */
-    function _getSecureKey(bytes memory _key) private pure returns (bytes memory) {
+    function _getSecureKey(bytes memory _key)
+        private
+        pure
+        returns (bytes memory)
+    {
         return abi.encodePacked(keccak256(_key));
     }
+
 }

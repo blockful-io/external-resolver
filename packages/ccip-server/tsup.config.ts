@@ -7,8 +7,8 @@ export default defineConfig({
   bundle: true,
   outDir: './dist',
   clean: true,
-  minify: true,
-  sourcemap: false,
-  format: ['esm'],
+  minify: false,
+  sourcemap: true,
+  format: ['cjs'],
   target: 'es2022',
 })

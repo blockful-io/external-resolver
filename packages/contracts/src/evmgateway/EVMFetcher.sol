@@ -6,10 +6,16 @@ import {EVMFetchTarget} from "./EVMFetchTarget.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 interface IEVMGateway {
-    function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory constants)
+
+    function getStorageSlots(
+        address addr,
+        bytes32[] memory commands,
+        bytes[] memory constants
+    )
         external
         pure
         returns (bytes memory witness);
+
 }
 
 uint8 constant FLAG_DYNAMIC = 0x01;
@@ -22,6 +28,7 @@ uint8 constant OP_END = 0xff;
  *      See l1-verifier/test/TestL1.sol for example usage.
  */
 library EVMFetcher {
+
     uint256 constant MAX_COMMANDS = 32;
     uint256 constant MAX_CONSTANTS = 32; // Must not be greater than 32
 
@@ -30,7 +37,13 @@ library EVMFetcher {
     error TooManyCommands(uint256 max);
     error CommandTooLong();
     error InvalidReference(uint256 value, uint256 max);
-    error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
+    error OffchainLookup(
+        address sender,
+        string[] urls,
+        bytes callData,
+        bytes4 callbackFunction,
+        bytes extraData
+    );
 
     struct EVMFetchRequest {
         IEVMVerifier verifier;
@@ -47,7 +60,14 @@ library EVMFetcher {
      * @param verifier An instance of a verifier contract that can provide and verify the storage slot information.
      * @param target The address of the contract to fetch storage proofs for.
      */
-    function newFetchRequest(IEVMVerifier verifier, address target) internal pure returns (EVMFetchRequest memory) {
+    function newFetchRequest(
+        IEVMVerifier verifier,
+        address target
+    )
+        internal
+        pure
+        returns (EVMFetchRequest memory)
+    {
         bytes32[] memory commands = new bytes32[](MAX_COMMANDS);
         bytes[] memory constants = new bytes[](MAX_CONSTANTS);
         assembly {
@@ -65,7 +85,10 @@ library EVMFetcher {
      * @param request The request object being operated on.
      * @param baseSlot The base slot ID that forms the root of the path.
      */
-    function getStatic(EVMFetchRequest memory request, uint256 baseSlot)
+    function getStatic(
+        EVMFetchRequest memory request,
+        uint256 baseSlot
+    )
         internal
         pure
         returns (EVMFetchRequest memory)
@@ -96,7 +119,10 @@ library EVMFetcher {
      * @param request The request object being operated on.
      * @param baseSlot The base slot ID that forms the root of the path.
      */
-    function getDynamic(EVMFetchRequest memory request, uint256 baseSlot)
+    function getDynamic(
+        EVMFetchRequest memory request,
+        uint256 baseSlot
+    )
         internal
         pure
         returns (EVMFetchRequest memory)
@@ -124,10 +150,15 @@ library EVMFetcher {
      * @param request The request object being operated on.
      * @param el The element to add.
      */
-    function element(EVMFetchRequest memory request, uint256 el) internal pure returns (EVMFetchRequest memory) {
-        if (request.operationIdx >= 32) {
-            revert CommandTooLong();
-        }
+    function element(
+        EVMFetchRequest memory request,
+        uint256 el
+    )
+        internal
+        pure
+        returns (EVMFetchRequest memory)
+    {
+        if (request.operationIdx >= 32) revert CommandTooLong();
         _addOperation(request, _addConstant(request, abi.encode(el)));
         return request;
     }
@@ -137,10 +168,15 @@ library EVMFetcher {
      * @param request The request object being operated on.
      * @param el The element to add.
      */
-    function element(EVMFetchRequest memory request, bytes32 el) internal pure returns (EVMFetchRequest memory) {
-        if (request.operationIdx >= 32) {
-            revert CommandTooLong();
-        }
+    function element(
+        EVMFetchRequest memory request,
+        bytes32 el
+    )
+        internal
+        pure
+        returns (EVMFetchRequest memory)
+    {
+        if (request.operationIdx >= 32) revert CommandTooLong();
         _addOperation(request, _addConstant(request, abi.encode(el)));
         return request;
     }
@@ -150,10 +186,15 @@ library EVMFetcher {
      * @param request The request object being operated on.
      * @param el The element to add.
      */
-    function element(EVMFetchRequest memory request, address el) internal pure returns (EVMFetchRequest memory) {
-        if (request.operationIdx >= 32) {
-            revert CommandTooLong();
-        }
+    function element(
+        EVMFetchRequest memory request,
+        address el
+    )
+        internal
+        pure
+        returns (EVMFetchRequest memory)
+    {
+        if (request.operationIdx >= 32) revert CommandTooLong();
         _addOperation(request, _addConstant(request, abi.encode(el)));
         return request;
     }
@@ -163,10 +204,15 @@ library EVMFetcher {
      * @param request The request object being operated on.
      * @param el The element to add.
      */
-    function element(EVMFetchRequest memory request, bytes memory el) internal pure returns (EVMFetchRequest memory) {
-        if (request.operationIdx >= 32) {
-            revert CommandTooLong();
-        }
+    function element(
+        EVMFetchRequest memory request,
+        bytes memory el
+    )
+        internal
+        pure
+        returns (EVMFetchRequest memory)
+    {
+        if (request.operationIdx >= 32) revert CommandTooLong();
         _addOperation(request, _addConstant(request, el));
         return request;
     }
@@ -176,10 +222,15 @@ library EVMFetcher {
      * @param request The request object being operated on.
      * @param el The element to add.
      */
-    function element(EVMFetchRequest memory request, string memory el) internal pure returns (EVMFetchRequest memory) {
-        if (request.operationIdx >= 32) {
-            revert CommandTooLong();
-        }
+    function element(
+        EVMFetchRequest memory request,
+        string memory el
+    )
+        internal
+        pure
+        returns (EVMFetchRequest memory)
+    {
+        if (request.operationIdx >= 32) revert CommandTooLong();
         _addOperation(request, _addConstant(request, bytes(el)));
         return request;
     }
@@ -189,10 +240,15 @@ library EVMFetcher {
      * @param request The request object being operated on.
      * @param idx The index of the previous fetch request, starting at 0.
      */
-    function ref(EVMFetchRequest memory request, uint8 idx) internal pure returns (EVMFetchRequest memory) {
-        if (request.operationIdx >= 32) {
-            revert CommandTooLong();
-        }
+    function ref(
+        EVMFetchRequest memory request,
+        uint8 idx
+    )
+        internal
+        pure
+        returns (EVMFetchRequest memory)
+    {
+        if (request.operationIdx >= 32) revert CommandTooLong();
         if (idx > request.commands.length || idx > 31) {
             revert InvalidReference(idx, request.commands.length);
         }
@@ -209,7 +265,14 @@ library EVMFetcher {
      *        this function was invoked. Its return data will be returned as the return value of the entire CCIP-read operation.
      * @param callbackData Extra data to supply to the callback.
      */
-    function fetch(EVMFetchRequest memory request, bytes4 callbackId, bytes memory callbackData) internal view {
+    function fetch(
+        EVMFetchRequest memory request,
+        bytes4 callbackId,
+        bytes memory callbackData
+    )
+        internal
+        view
+    {
         if (request.commands.length > 0 && request.operationIdx < 32) {
             // Terminate last command
             _addOperation(request, OP_END);
@@ -217,13 +280,30 @@ library EVMFetcher {
         revert OffchainLookup(
             address(this),
             request.verifier.gatewayURLs(),
-            abi.encodeCall(IEVMGateway.getStorageSlots, (request.target, request.commands, request.constants)),
+            abi.encodeCall(
+                IEVMGateway.getStorageSlots,
+                (request.target, request.commands, request.constants)
+            ),
             EVMFetchTarget.getStorageSlotsCallback.selector,
-            abi.encode(request.verifier, request.target, request.commands, request.constants, callbackId, callbackData)
+            abi.encode(
+                request.verifier,
+                request.target,
+                request.commands,
+                request.constants,
+                callbackId,
+                callbackData
+            )
         );
     }
 
-    function _addConstant(EVMFetchRequest memory request, bytes memory value) private pure returns (uint8 idx) {
+    function _addConstant(
+        EVMFetchRequest memory request,
+        bytes memory value
+    )
+        private
+        pure
+        returns (uint8 idx)
+    {
         bytes[] memory constants = request.constants;
         idx = uint8(constants.length);
         assembly {
@@ -232,9 +312,16 @@ library EVMFetcher {
         constants[idx] = value;
     }
 
-    function _addOperation(EVMFetchRequest memory request, uint8 op) private pure {
+    function _addOperation(
+        EVMFetchRequest memory request,
+        uint8 op
+    )
+        private
+        pure
+    {
         uint256 commandIdx = request.commands.length - 1;
-        request.commands[commandIdx] =
-            request.commands[commandIdx] | (bytes32(bytes1(op)) >> (8 * request.operationIdx++));
+        request.commands[commandIdx] = request.commands[commandIdx]
+            | (bytes32(bytes1(op)) >> (8 * request.operationIdx++));
     }
+
 }
