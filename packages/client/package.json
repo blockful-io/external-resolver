@@ -3,6 +3,7 @@
   "scripts": {
     "test:e2e": "npm-run-all test:e2e:**",
     "test:e2e:l1": "hardhat test ./test/l1.e2e.spec.ts --network localhost",
+    "test:e2e:l2": "hardhat test ./test/l2.e2e.spec.ts --network localhost",
     "test:e2e:db": "hardhat test ./test/db.e2e.spec.ts --network localhost",
     "start:read": "ts-node src/read.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     "start:write": "ts-node src/write.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
