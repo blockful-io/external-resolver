@@ -9,6 +9,7 @@ import { DataSource } from 'typeorm'
 import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest'
 import { hash as namehash } from 'eth-ens-namehash'
 import * as ccip from '@blockful/ccip-server'
+import { Hex, pad, toHex } from 'viem'
 
 import { doCall } from './helper'
 import { abi } from '../src/abi'
@@ -16,10 +17,12 @@ import {
   withGetAddr,
   withGetText,
   withSetAddr,
+  withSetText,
   withSetContentHash,
   withGetContentHash,
-  withSetText,
   withRegisterDomain,
+  withSetAbi,
+  withGetAbi,
 } from '../src/handlers'
 import { PostgresRepository } from '../src/repositories'
 import { Address, Text, Domain } from '../src/entities'
@@ -335,6 +338,54 @@ describe('Gateway Database', () => {
       expect(avatar).toEqual('blockful.png')
       expect(result.ttl).toEqual(domain.ttl)
     })
+
+    it('should deny setting ABI key', async () => {
+      const server = new ccip.Server()
+      server.add(abi, withSetText(repo, validator))
+      const result = await doCall({
+        server,
+        abi,
+        sender: TEST_ADDRESS,
+        method: 'setText',
+        pvtKey,
+        args: [domain.node, 'ABI', 'ABI'],
+      })
+
+      expect(result.data.length).toEqual(0)
+      expect(result.error).toEqual('Reserved key')
+
+      const exists = await datasource
+        .getRepository(Text)
+        .createQueryBuilder()
+        .where('key = :key', { key: 'ABI' })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getExists()
+      expect(exists).toBe(false)
+    })
+
+    it('should deny setting ABI key', async () => {
+      const server = new ccip.Server()
+      server.add(abi, withSetText(repo, validator))
+      const result = await doCall({
+        server,
+        abi,
+        sender: TEST_ADDRESS,
+        method: 'setText',
+        pvtKey,
+        args: [domain.node, 'pubkey', 'pubkey'],
+      })
+
+      expect(result.data.length).toEqual(0)
+      expect(result.error).toEqual('Reserved key')
+
+      const exists = await datasource
+        .getRepository(Text)
+        .createQueryBuilder()
+        .where('key = :key', { key: 'pubkey' })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getExists()
+      expect(exists).toBe(false)
+    })
   })
 
   describe('Address', () => {
@@ -468,4 +519,116 @@ describe('Gateway Database', () => {
       expect(result.ttl).toEqual(domain.ttl)
     })
   })
+
+  describe('ABI', () => {
+    let domain: Domain, pvtKey: `0x${string}`, expectedAbi: string
+
+    beforeEach(async () => {
+      domain = new Domain()
+      domain.node = namehash('public.eth')
+      domain.ttl = 2000
+      pvtKey = generatePrivateKey()
+      domain.owner = privateKeyToAddress(pvtKey)
+      domain = await datasource.manager.save(domain)
+
+      expectedAbi = toHex(
+        JSON.stringify([
+          {
+            type: 'function',
+            name: 'hello',
+            inputs: [],
+            outputs: [
+              {
+                name: 'hello',
+                type: 'string',
+                internalType: 'string',
+              },
+            ],
+          },
+        ]),
+      )
+    })
+
+    it('should set new abi', async () => {
+      const server = new ccip.Server()
+      server.add(abi, withSetAbi(repo, validator))
+      const result = await doCall({
+        server,
+        abi,
+        sender: TEST_ADDRESS,
+        method: 'setABI',
+        pvtKey,
+        args: [domain.node, 0, expectedAbi],
+      })
+
+      expect(result.data.length).toEqual(0)
+
+      const [actual, count] = await datasource
+        .getRepository(Text)
+        .createQueryBuilder()
+        .where('key = :key', { key: 'ABI' })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getManyAndCount()
+      expect(count).toBe(1)
+      expect(actual[0]?.key).toEqual('ABI')
+      expect(actual[0]?.value).toEqual(expectedAbi)
+    })
+
+    it('should read abi', async () => {
+      const server = new ccip.Server()
+      server.add(abi, withGetAbi(repo))
+      const text = new Text()
+      text.key = 'ABI'
+      text.value = expectedAbi
+      text.domain = domain
+      await datasource.manager.save(text)
+
+      const result = await doCall({
+        server,
+        abi,
+        sender: TEST_ADDRESS,
+        method: 'ABI',
+        pvtKey,
+        args: [domain.node, 0],
+      })
+
+      const response = result.data[0]! as unknown[]
+      expect(response.length).toEqual(2)
+      const [contentType, actual] = response
+      expect(contentType).toEqual(0n)
+      expect(actual).toEqual(expectedAbi)
+    })
+
+    it('should update abi', async () => {
+      const server = new ccip.Server()
+      server.add(abi, withSetAbi(repo, validator))
+      const text = new Text()
+      text.key = 'ABI'
+      text.value = toHex('[{}]')
+      text.domain = domain
+      await datasource.manager.save(text)
+
+      const result = await doCall({
+        server,
+        abi,
+        sender: TEST_ADDRESS,
+        method: 'setABI',
+        pvtKey,
+        args: [domain.node, 0, expectedAbi],
+      })
+
+      expect(result.data.length).toEqual(0)
+
+      const [actual, count] = await datasource
+        .getRepository(Text)
+        .createQueryBuilder()
+        .where('key = :key', { key: 'ABI' })
+        .andWhere('domain = :domain', { domain: domain.node })
+        .getManyAndCount()
+      expect(count).toBe(1)
+      expect(actual[0]?.key).toEqual('ABI')
+      expect(actual[0]?.value).toEqual(expectedAbi)
+    })
+  })
+
 })

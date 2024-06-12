@@ -7,6 +7,8 @@ export const abi: string[] = [
   'function addr(bytes32 node) view returns (address)',
   'function setAddr(bytes32 node, uint coinType, bytes calldata addr)',
   'function addr(bytes32 node, uint coinType) view returns (bytes)',
+  'function ABI(bytes32 node, uint256 contentType) returns (uint256, bytes)',
+  'function setABI(bytes32 node, uint256 contentType, bytes calldata data)',
   'function contenthash(bytes32 node) view returns (bytes memory)',
   'function setContenthash(bytes32 node, bytes calldata contenthash)',
   'function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory constants) external view returns(bytes memory witness)',

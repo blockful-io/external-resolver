@@ -8,6 +8,8 @@ import {
   GetAddressProps,
   SetContentHashProps,
   Response,
+  SetAbiProps,
+  GetAbiProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -126,5 +128,24 @@ export class PostgresRepository {
 
     if (!text) return
     return { value: text.value, ttl: text.domain.ttl }
+  }
+  async setAbi({ node, value }: SetAbiProps) {
+    await this.client.getRepository(Text).upsert(
+      {
+        key: 'ABI',
+        value,
+        domain: {
+          node,
+        },
+      },
+      { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
+    )
+  }
+
+  /**
+   *  getABI reutilized the getText function with `ABI` as a reserved key
+   */
+  async getABI({ node }: GetAbiProps): Promise<Response | undefined> {
+    return await this.getText({ node, key: 'ABI' })
   }
 }

@@ -6,6 +6,8 @@ import {
   SetContentHashProps,
   Response,
   RegisterDomainProps,
+  GetAbiProps,
+  SetAbiProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 

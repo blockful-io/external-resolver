@@ -47,6 +47,15 @@ export type GetTextProps = {
   key: string
 }
 
+export type SetAbiProps = {
+  node: `0x${string}`
+  value: string
+}
+
+export type GetAbiProps = {
+  node: `0x${string}`
+}
+
 export interface Signer {
   sign: (msg: SignableMessage) => Promise<`0x${string}`>
 }

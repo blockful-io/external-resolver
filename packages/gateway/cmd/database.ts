@@ -9,6 +9,8 @@ import { NewDataSource } from '../src/datasources/postgres'
 import {
   withGetText,
   withSetText,
+  withGetAbi,
+  withSetAbi,
   withGetAddr,
   withSetAddr,
   withGetAddrByCoin,
@@ -52,6 +54,8 @@ const _ = (async () => {
     withQuery(), // required for Universal Resolver integration
     withGetText(repo),
     withSetText(repo, validator),
+    withGetAbi(repo),
+    withSetAbi(repo, validator),
     withGetAddr(repo),
     withGetAddrByCoin(repo),
     withSetAddr(repo, validator),
