@@ -5,7 +5,6 @@
   "main": "src/database.ts",
   "types": "src/database.ts",
   "scripts": {
-    "test": "vitest run",
     "test:watch": "vitest",
     "start:db": "node ./dist/database.js",
     "start:eth": "node ./dist/ethereum.js",
