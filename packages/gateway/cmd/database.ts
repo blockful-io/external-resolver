@@ -34,9 +34,9 @@ const _ = (async () => {
   if (!dbUrl) {
     throw new Error('DATABASE_URL is required')
   }
-  const privateKey = process.env.PRIVATE_KEY
+  const privateKey = process.env.GATEWAY_PRIVATE_KEY
   if (!privateKey) {
-    throw new Error('PRIVATE_KEY is required')
+    throw new Error('GATEWAY_PRIVATE_KEY is required')
   }
 
   const dbclient = await NewDataSource(dbUrl).initialize()
