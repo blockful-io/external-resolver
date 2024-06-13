@@ -16,7 +16,7 @@ import { Hex } from 'viem'
  */
 export function withQuery(): ccip.HandlerDescription {
   return {
-    type: 'query',
+    type: 'query((address sender, string[] urls,bytes callData)[] memory data) external returns (bool[] memory failures, bytes[] memory responses)',
     func: async (args) => {
       const failures: boolean[] = []
       const responses: Hex[] = []

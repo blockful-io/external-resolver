@@ -68,7 +68,7 @@ const _ = (async () => {
     await client.simulateContract({
       functionName: 'register',
       abi: dbAbi,
-      args: [namehash(publicAddress), 999999999n],
+      args: [namehash(publicAddress), 300],
       account: signer.address,
       address: resolverAddr,
     })
@@ -92,6 +92,59 @@ const _ = (async () => {
       functionName: 'setText',
       abi: dbAbi,
       args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
+      address: resolverAddr,
+      account: signer.address,
+    })
+  } catch (err) {
+    const data = getRevertErrorData(err)
+    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
+      const [domain, url, message] = data?.args as [
+        DomainData,
+        string,
+        MessageData,
+      ]
+      await handleDBStorage({ domain, url, message, signer })
+    } else {
+      console.error('writing failed: ', { err })
+    }
+  }
+
+  // SET ADDR
+  try {
+    await client.simulateContract({
+      functionName: 'setAddr',
+      abi: dbAbi,
+      args: [
+        namehash(publicAddress),
+        '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0',
+      ],
+      address: resolverAddr,
+      account: signer.address,
+    })
+  } catch (err) {
+    const data = getRevertErrorData(err)
+    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
+      const [domain, url, message] = data?.args as [
+        DomainData,
+        string,
+        MessageData,
+      ]
+      await handleDBStorage({ domain, url, message, signer })
+    } else {
+      console.error('writing failed: ', { err })
+    }
+  }
+
+  // SET ADDR BY COIN
+  try {
+    await client.simulateContract({
+      functionName: 'setAddr',
+      abi: dbAbi,
+      args: [
+        namehash(publicAddress),
+        1n,
+        '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0',
+      ],
       address: resolverAddr,
       account: signer.address,
     })
