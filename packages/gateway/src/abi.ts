@@ -13,6 +13,6 @@ export const abi: string[] = [
   'function setContenthash(bytes32 node, bytes calldata contenthash)',
   'function setPubkey(bytes32 node,bytes32 x, bytes32 y)',
   'function pubkey(bytes32 node) external view returns (bytes32 x, bytes32 y)',
-  'function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory constants) external view returns(bytes memory witness)',
+  'function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory) external view returns(bytes memory witness)',
   'function register(bytes32 node, uint32 ttl)',
 ]

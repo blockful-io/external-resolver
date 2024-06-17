@@ -28,7 +28,7 @@ import {
 } from '../src/handlers'
 import { PostgresRepository } from '../src/repositories'
 import { Address, Text, Domain } from '../src/entities'
-import { OwnershipValidator } from '../src/services'
+import { OwnershipValidator, formatTTL } from '../src/services'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
@@ -68,7 +68,7 @@ describe('Gateway Database', () => {
         sender: TEST_ADDRESS,
         method: 'register',
         pvtKey,
-        args: [node, 2000],
+        args: [node, 300],
       })
 
       const d = await datasource.getRepository(Domain).findOneBy({
@@ -76,7 +76,7 @@ describe('Gateway Database', () => {
         owner,
       })
       expect(d).not.toBeNull()
-      expect(d?.ttl).toEqual(2000)
+      expect(d?.ttl).toEqual(300)
     })
 
     // Register a domain 'public.eth' with a given TTL, then attempt to register the same domain with a different TTL
@@ -85,7 +85,7 @@ describe('Gateway Database', () => {
       const owner = privateKeyToAddress(pvtKey)
       const domain = new Domain()
       domain.node = namehash('public.eth')
-      domain.ttl = 2000
+      domain.ttl = 300
       domain.owner = owner
       await datasource.manager.save(domain)
 
@@ -97,7 +97,7 @@ describe('Gateway Database', () => {
         sender: TEST_ADDRESS,
         method: 'register',
         pvtKey,
-        args: [domain.node, 3000],
+        args: [domain.node, 400],
       })
 
       expect(result.data.length).toEqual(0)
@@ -115,7 +115,7 @@ describe('Gateway Database', () => {
       const pvtKey = generatePrivateKey()
       const domain = new Domain()
       domain.node = namehash('public.eth')
-      domain.ttl = 2000
+      domain.ttl = 300
       domain.owner = privateKeyToAddress(pvtKey)
       await datasource.manager.save(domain)
 
@@ -147,7 +147,7 @@ describe('Gateway Database', () => {
     it('should query contenthash', async () => {
       const domain = new Domain()
       domain.node = namehash('public.eth')
-      domain.ttl = 2000
+      domain.ttl = 300
       domain.owner = privateKeyToAddress(generatePrivateKey())
       await datasource.manager.save(domain)
       const content =
@@ -168,7 +168,7 @@ describe('Gateway Database', () => {
       expect(result.data.length).toEqual(1)
       const [value] = result.data
       expect(value).toEqual(content)
-      expect(result.ttl).toEqual(domain.ttl)
+      expect(parseInt(result.ttl!)).toBeCloseTo(parseInt(formatTTL(domain.ttl)))
     })
 
     // Attempt to set a content hash for an invalid domain
@@ -195,7 +195,7 @@ describe('Gateway Database', () => {
     beforeEach(async () => {
       domain = new Domain()
       domain.node = namehash('public.eth')
-      domain.ttl = 2000
+      domain.ttl = 300
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
       domain = await datasource.manager.save(domain)
@@ -338,7 +338,10 @@ describe('Gateway Database', () => {
       expect(result.data.length).toEqual(1)
       const [avatar] = result.data
       expect(avatar).toEqual('blockful.png')
-      expect(result.ttl).toEqual(domain.ttl)
+      expect(parseInt(result.ttl!)).toBeCloseTo(
+        parseInt(formatTTL(domain.ttl)),
+        2,
+      )
     })
 
     it('should deny setting ABI key', async () => {
@@ -396,7 +399,7 @@ describe('Gateway Database', () => {
     beforeEach(async () => {
       domain = new Domain()
       domain.node = namehash('public.eth')
-      domain.ttl = 2000
+      domain.ttl = 300
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
       await datasource.manager.save(domain)
@@ -429,10 +432,8 @@ describe('Gateway Database', () => {
       expect(actual[0]?.address).toEqual(
         '0x1234567890123456789012345678901234567890',
       )
-      expect(actual[0]?.coin).toEqual(60)
+      expect(actual[0]?.coin).toEqual('60')
     })
-
-    // TODO: test multicoin read/write when issue is solved: https://github.com/smartcontractkit/ccip-read/issues/32
 
     // Register a domain, then set an Ethereum address for it
     it('should allow multiple addresses for same owner and different coins', async () => {
@@ -440,7 +441,7 @@ describe('Gateway Database', () => {
       server.add(abi, withSetAddr(repo, validator))
       const addr = new Address()
       addr.address = TEST_ADDRESS
-      addr.coin = 1
+      addr.coin = '1'
       addr.domain = domain
       await datasource.manager.save(addr)
 
@@ -464,11 +465,11 @@ describe('Gateway Database', () => {
       expect(actual[0]?.address).toEqual(
         '0x1234567890123456789012345678901234567890',
       )
-      expect(actual[0]?.coin).toEqual(1)
+      expect(actual[0]?.coin).toEqual('1')
       expect(actual[1]?.address).toEqual(
         '0x1234567890123456789012345678901234567999',
       )
-      expect(actual[1]?.coin).toEqual(60)
+      expect(actual[1]?.coin).toEqual('60')
     })
 
     // Attempt to set an Ethereum address using an unauthorized private key
@@ -500,7 +501,7 @@ describe('Gateway Database', () => {
     // Register a domain with an Ethereum address, then query for it
     it('should query ethereum address', async () => {
       const addr = new Address()
-      addr.coin = 60
+      addr.coin = '60'
       addr.address = '0x1234567890123456789012345678901234567890'
       addr.domain = domain
       await datasource.manager.save(addr)
@@ -518,7 +519,7 @@ describe('Gateway Database', () => {
       expect(result.data.length).toEqual(1)
       const [value] = result.data
       expect(value).toEqual('0x1234567890123456789012345678901234567890')
-      expect(result.ttl).toEqual(domain.ttl)
+      expect(parseInt(result.ttl!)).toBeCloseTo(parseInt(formatTTL(domain.ttl)))
     })
   })
 

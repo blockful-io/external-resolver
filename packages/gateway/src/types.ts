@@ -28,12 +28,12 @@ export type SetContentHashProps = {
 export type SetAddressProps = {
   node: `0x${string}`
   addr: string
-  coin?: number
+  coin?: string
 }
 
 export type GetAddressProps = {
   node: `0x${string}`
-  coin?: number
+  coin?: string
 }
 
 export type SetTextProps = {

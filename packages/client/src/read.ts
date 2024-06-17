@@ -52,6 +52,12 @@ const _ = (async () => {
     universalResolverAddress: resolver,
     gatewayUrls: [gateway],
   })
+  const addressBtc = await client.getEnsAddress({
+    name: publicAddress,
+    coinType: 1,
+    universalResolverAddress: resolver,
+    gatewayUrls: [gateway],
+  })
   const name = await client.getEnsName({
     address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
     universalResolverAddress: resolver,
@@ -62,6 +68,7 @@ const _ = (async () => {
     twitter,
     avatar,
     address,
+    addressBtc,
     name,
   })
 })()

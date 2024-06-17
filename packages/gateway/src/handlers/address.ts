@@ -7,6 +7,7 @@ import {
   OwnershipValidator,
   TypedSignature,
 } from '../types'
+import { formatTTL } from '../services'
 
 interface WriteRepository {
   setAddr(params: SetAddressProps): Promise<void>
@@ -27,7 +28,7 @@ export function withSetAddr(
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
         }
-        await repo.setAddr({ node, addr, coin: 60 }) // default ether
+        await repo.setAddr({ node, addr, coin: '60' }) // default ether
       } catch (err) {
         return { error: { message: 'Unable to save address', status: 400 } }
       }
@@ -41,7 +42,7 @@ export function withSetAddrByCoin(
 ): ccip.HandlerDescription {
   return {
     type: 'setAddr(bytes32 node, uint256 coinType, bytes memory addr)',
-    func: async ({ node, coin, addr }, { signature }) => {
+    func: async ({ node, coinType: coin, addr }, { signature }) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
@@ -50,7 +51,7 @@ export function withSetAddrByCoin(
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
         }
-        await repo.setAddr({ node, coin, addr })
+        await repo.setAddr({ node, coin: coin.toString(), addr })
       } catch (err) {
         return { error: { message: 'Unable to save address', status: 400 } }
       }
@@ -65,9 +66,13 @@ interface ReadRepository {
 export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
   return {
     type: 'addr(bytes32 node)',
-    func: async ({ node, coin = 60 }) => {
-      const addr = await repo.getAddr({ node, coin })
-      if (addr) return { data: [addr.value], extraData: addr.ttl }
+    func: async ({ node, coin = '60' }) => {
+      const addr = await repo.getAddr({ node, coin: coin.toString() })
+      if (addr)
+        return {
+          data: [addr.value],
+          extraData: formatTTL(addr.ttl),
+        }
     },
   }
 }
@@ -77,9 +82,9 @@ export function withGetAddrByCoin(
 ): ccip.HandlerDescription {
   return {
     type: 'addr(bytes32 node, uint256 coinType)',
-    func: async ({ node, coin }) => {
-      const addr = await repo.getAddr({ node, coin })
-      if (addr) return { data: [addr.value], extraData: addr.ttl }
+    func: async ({ node, coinType: coin }) => {
+      const addr = await repo.getAddr({ node, coin: coin.toString() })
+      if (addr) return { data: [addr.value], extraData: formatTTL(addr.ttl) }
     },
   }
 }
