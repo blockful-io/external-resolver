@@ -6,6 +6,7 @@ import {
   SetContentHashProps,
   Response,
   RegisterDomainProps,
+  DomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -56,6 +57,10 @@ export class InMemoryRepository {
 
   async register({ node, ttl, owner }: RegisterDomainProps): Promise<void> {
     this.domains.set(node, { node, addresses: [], texts: [], ttl, owner })
+  }
+
+  async getDomain({ node }: DomainProps): Promise<Domain | null> {
+    return this.domains.get(node) || null
   }
 
   async setContentHash({

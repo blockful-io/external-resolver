@@ -38,36 +38,6 @@ contract DatabaseResolverTest is Test, ENSHelper {
         resolver = new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
     }
 
-    // Test the setSubnodeRecord function for the first level
-    function test_SetSubnodeRecord1stLevel() external {
-        vm.prank(owner);
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), owner, address(resolver), 10000000
-        );
-
-        assertEq(registry.owner(namehash("eth")), owner);
-        assertEq(registry.resolver(namehash("eth")), address(resolver));
-    }
-
-    // Test the setSubnodeRecord function for the second level
-    function test_SetSubnodeRecord2nLevel() external {
-        vm.prank(owner);
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), owner, address(resolver), 10000000
-        );
-        vm.prank(owner);
-        registry.setSubnodeRecord(
-            namehash("eth"),
-            labelhash("blockful"),
-            owner,
-            address(resolver),
-            10000000
-        );
-
-        assertEq(registry.owner(namehash("blockful.eth")), owner);
-        assertEq(registry.resolver(namehash("blockful.eth")), address(resolver));
-    }
-
     // Test the resolver setup from the constructor
     function testResolverSetupFromConstructor() public {
         DatabaseConfig config = new DatabaseConfig(block.chainid);

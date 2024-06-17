@@ -246,7 +246,7 @@ export class Server {
     if (result?.error) {
       return {
         status: result.error.status,
-        body: { data: result.error.message },
+        body: { error: result.error.message },
       }
     }
     // Encode return data

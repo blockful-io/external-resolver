@@ -118,7 +118,7 @@ export async function doCall({
   const result = await server.call({ to: sender, data: calldata, signature })
 
   // Check if the server response has a non-200 status
-  if (result.status !== 200) return { data: [], error: result.body.data }
+  if (result.status !== 200) return { data: [], error: result.body.error }
 
   // Returns an empty array if the function has no outputs
   if (!handler.type.outputs) return { data: [] }

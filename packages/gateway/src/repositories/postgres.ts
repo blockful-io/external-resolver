@@ -8,6 +8,7 @@ import {
   GetAddressProps,
   SetContentHashProps,
   Response,
+  DomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -40,6 +41,12 @@ export class PostgresRepository {
       addresses: [],
       texts: [],
       owner,
+    })
+  }
+
+  async getDomain({ node }: DomainProps): Promise<Domain | null> {
+    return await this.client.getRepository(Domain).findOneBy({
+      node,
     })
   }
 

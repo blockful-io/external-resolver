@@ -96,13 +96,13 @@ describe('Gateway Database', () => {
       })
 
       expect(result.data.length).toEqual(0)
-      expect(result.error).toEqual('Unable to register new domain')
+      expect(result.error).toEqual('Domain already exists')
 
-      const d = await datasource.getRepository(Domain).countBy({
+      const d = await datasource.getRepository(Domain).findOneBy({
         node: domain.node,
         owner,
       })
-      expect(d).toEqual(1)
+      expect(d).toEqual(domain)
     })
 
     // Register a domain 'public.eth', then set a content hash for it

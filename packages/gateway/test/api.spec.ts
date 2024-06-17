@@ -33,7 +33,7 @@ import {
   withSetText,
 } from '../src/handlers'
 import { InMemoryRepository } from '../src/repositories'
-import { withSigner, makeMessageHash, withLogger } from '../src/middlewares'
+import { withSigner, makeMessageHash } from '../src/middlewares'
 import { Domain } from '../src/entities'
 import { OwnershipValidator, formatTTL } from '../src/services'
 
@@ -301,7 +301,6 @@ describe('Gateway API', () => {
     it('should handle GET request for not existing text', async () => {
       const server = new ccip.Server()
       server.app.use(withSigner(privateKey))
-      server.app.use(withLogger({ abi: serverAbi }))
       server.add(serverAbi, withGetText(repo))
       const app = server.makeApp('/')
 

@@ -83,12 +83,13 @@ contract DatabaseConfig is Script, ENSHelper {
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
         new UniversalResolver(address(registry), urls);
-        vm.stopBroadcast();
 
         // .reverse
         registry.setSubnodeOwner(
             rootNode, labelhash("reverse"), address(registrar)
         );
+
+        vm.stopBroadcast();
         // addr.reverse
         vm.prank(address(registrar));
         registry.setSubnodeOwner(
