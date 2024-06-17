@@ -11,4 +11,5 @@ export const abi: string[] = [
   'function setContenthash(bytes32 node, bytes calldata contenthash)',
   'function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory) external view returns(bytes memory witness)',
   'function register(bytes32 node, uint32 ttl)',
+  'function transfer(bytes32 node, address owner)',
 ]
