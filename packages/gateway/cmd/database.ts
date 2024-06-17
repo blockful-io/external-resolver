@@ -17,6 +17,7 @@ import {
   withSetContentHash,
   withQuery,
   withRegisterDomain,
+  withTransferDomain,
 } from '../src/handlers'
 import { abi } from '../src/abi'
 import { PostgresRepository } from '../src/repositories/postgres'
@@ -59,6 +60,7 @@ const _ = (async () => {
     withGetContentHash(repo),
     withSetContentHash(repo, validator),
     withRegisterDomain(repo, validator),
+    withTransferDomain(repo, validator),
   )
 
   const port = process.env.PORT || 3000

@@ -5,6 +5,7 @@ import {
   GetAddressProps,
   SetContentHashProps,
   Response,
+  DomainProps,
   RegisterDomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
@@ -58,6 +59,27 @@ export class InMemoryRepository {
     this.domains.set(node, { node, addresses: [], texts: [], ttl, owner })
   }
 
+  async transfer({
+    node,
+    owner,
+  }: {
+    node: `0x${string}`
+    owner: `0x${string}`
+  }) {
+    const existingNode = this.domains.get(node)
+    if (!existingNode) {
+      throw Error('Node not found')
+    }
+    await this.domains.set(node, {
+      ...existingNode,
+      owner,
+    })
+  }
+
+  async getDomain({ node }: DomainProps): Promise<Domain | null> {
+    return this.domains.get(node) || null
+  }
+
   async setContentHash({
     node,
     contenthash,
@@ -77,11 +99,7 @@ export class InMemoryRepository {
     return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
-  async setAddr({
-    node,
-    addr: address,
-    coin = 60, // ETH
-  }: SetAddressProps): Promise<void> {
+  async setAddr({ node, addr: address, coin }: SetAddressProps): Promise<void> {
     const existingAddress = this.addresses.get(`${node}-${coin}`)
     if (existingAddress) {
       existingAddress.address = address
@@ -96,7 +114,7 @@ export class InMemoryRepository {
 
   async getAddr({
     node,
-    coin = 60,
+    coin,
   }: GetAddressProps): Promise<Response | undefined> {
     const address = this.addresses.get(`${node}-${coin}`)
     const domain = this.domains.get(node)

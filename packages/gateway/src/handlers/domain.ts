@@ -7,8 +7,10 @@ import {
   RegisterDomainProps,
   OwnershipValidator,
   TypedSignature,
+  TransferDomainProps,
 } from '../types'
 import { formatTTL } from '../services'
+import { Domain } from '../entities'
 
 interface SignatureRecover {
   recoverMessageSigner(TypedSignature): Promise<`0x${string}`>
@@ -16,6 +18,8 @@ interface SignatureRecover {
 
 interface WriteRepository {
   register(params: RegisterDomainProps)
+  getDomain(params: DomainProps): Promise<Domain | null>
+  transfer(params: TransferDomainProps)
   setContentHash(params: SetContentHashProps)
 }
 
@@ -30,10 +34,44 @@ export function withRegisterDomain(
         const signer = await recover.recoverMessageSigner(
           signature as TypedSignature,
         )
+
+        const existingDomain = await repo.getDomain({ node })
+        if (existingDomain) {
+          if (existingDomain.owner !== signer) {
+            return { error: { message: 'Forbidden action', status: 401 } }
+          }
+          return { error: { message: 'Domain already exists', status: 400 } }
+        }
+
         await repo.register({ node, ttl, owner: signer })
       } catch (err) {
         return {
           error: { message: 'Unable to register new domain', status: 400 },
+        }
+      }
+    },
+  }
+}
+
+export function withTransferDomain(
+  repo: WriteRepository,
+  validator: OwnershipValidator,
+): ccip.HandlerDescription {
+  return {
+    type: 'transfer(bytes32 node, address owner)',
+    func: async ({ node, owner }, { signature }) => {
+      try {
+        const isOwner = await validator.verifyOwnership({
+          node,
+          signature: signature! as TypedSignature,
+        })
+        if (!isOwner) {
+          return { error: { message: 'Unauthorized', status: 401 } }
+        }
+        await repo.transfer({ node, owner })
+      } catch (err) {
+        return {
+          error: { message: 'Unable to transfer domain', status: 400 },
         }
       }
     },

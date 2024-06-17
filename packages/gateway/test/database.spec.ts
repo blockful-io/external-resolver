@@ -20,6 +20,7 @@ import {
   withGetContentHash,
   withSetText,
   withRegisterDomain,
+  withTransferDomain,
 } from '../src/handlers'
 import { PostgresRepository } from '../src/repositories'
 import { Address, Text, Domain } from '../src/entities'
@@ -51,136 +52,204 @@ describe('Gateway Database', () => {
   })
 
   describe('Domain', () => {
-    it('should create new domain', async () => {
-      const pvtKey = generatePrivateKey()
-      const owner = privateKeyToAddress(pvtKey)
-      const node = namehash('blockful.eth')
-      const server = new ccip.Server()
-      server.add(abi, withRegisterDomain(repo, validator))
-      await doCall({
-        server,
-        abi,
-        sender: TEST_ADDRESS,
-        method: 'register',
-        pvtKey,
-        args: [node, 300],
+    describe('Register Domain', () => {
+      it('should create new domain', async () => {
+        const pvtKey = generatePrivateKey()
+        const owner = privateKeyToAddress(pvtKey)
+        const node = namehash('blockful.eth')
+        const server = new ccip.Server()
+        server.add(abi, withRegisterDomain(repo, validator))
+        await doCall({
+          server,
+          abi,
+          sender: TEST_ADDRESS,
+          method: 'register',
+          pvtKey,
+          args: [node, 300],
+        })
+
+        const d = await datasource.getRepository(Domain).findOneBy({
+          node,
+          owner,
+        })
+        expect(d).not.toBeNull()
+        expect(d?.ttl).toEqual(300)
       })
 
-      const d = await datasource.getRepository(Domain).findOneBy({
-        node,
-        owner,
+      // Register a domain 'public.eth' with a given TTL, then attempt to register the same domain with a different TTL
+      it('should block duplicated domains', async () => {
+        const pvtKey = generatePrivateKey()
+        const owner = privateKeyToAddress(pvtKey)
+        const domain = new Domain()
+        domain.node = namehash('public.eth')
+        domain.ttl = 300
+        domain.owner = owner
+        await datasource.manager.save(domain)
+
+        const server = new ccip.Server()
+        server.add(abi, withRegisterDomain(repo, validator))
+        const result = await doCall({
+          server,
+          abi,
+          sender: TEST_ADDRESS,
+          method: 'register',
+          pvtKey,
+          args: [domain.node, 400],
+        })
+
+        expect(result.data.length).toEqual(0)
+        expect(result.error).toEqual('Domain already exists')
+
+        const d = await datasource.getRepository(Domain).countBy({
+          node: domain.node,
+          owner,
+        })
+        expect(d).toEqual(1)
       })
-      expect(d).not.toBeNull()
-      expect(d?.ttl).toEqual(300)
     })
 
-    // Register a domain 'public.eth' with a given TTL, then attempt to register the same domain with a different TTL
-    it('should block duplicated domains', async () => {
-      const pvtKey = generatePrivateKey()
-      const owner = privateKeyToAddress(pvtKey)
-      const domain = new Domain()
-      domain.node = namehash('public.eth')
-      domain.ttl = 300
-      domain.owner = owner
-      await datasource.manager.save(domain)
+    describe('Transfer Domain', () => {
+      it('should transfer existing domain', async () => {
+        const pvtKey = generatePrivateKey()
+        const node = namehash('blockful.eth')
+        const domain = new Domain()
+        domain.node = node
+        domain.ttl = 300
+        domain.owner = privateKeyToAddress(pvtKey)
+        await datasource.manager.save(domain)
 
-      const server = new ccip.Server()
-      server.add(abi, withRegisterDomain(repo, validator))
-      const result = await doCall({
-        server,
-        abi,
-        sender: TEST_ADDRESS,
-        method: 'register',
-        pvtKey,
-        args: [domain.node, 400],
+        const expectedOwner = privateKeyToAddress(generatePrivateKey())
+
+        const server = new ccip.Server()
+        server.add(abi, withTransferDomain(repo, validator))
+        await doCall({
+          server,
+          abi,
+          sender: TEST_ADDRESS,
+          method: 'transfer',
+          pvtKey,
+          args: [node, expectedOwner],
+        })
+
+        const changedDomain = await datasource.getRepository(Domain).existsBy({
+          node,
+          owner: expectedOwner,
+        })
+        expect(changedDomain).toBe(true)
+
+        const prevDomain = await datasource.getRepository(Domain).existsBy({
+          node,
+          owner: domain.owner,
+        })
+        expect(prevDomain).toBe(false)
       })
 
-      expect(result.data.length).toEqual(0)
-      expect(result.error).toEqual('Unable to register new domain')
+      it('should handle transferring domain not found', async () => {
+        const pvtKey = generatePrivateKey()
+        const owner = privateKeyToAddress(pvtKey)
+        const node = namehash('blockful.eth')
 
-      const d = await datasource.getRepository(Domain).countBy({
-        node: domain.node,
-        owner,
+        const server = new ccip.Server()
+        server.add(abi, withTransferDomain(repo, validator))
+        const result = await doCall({
+          server,
+          abi,
+          sender: TEST_ADDRESS,
+          method: 'transfer',
+          pvtKey,
+          args: [node, owner],
+        })
+
+        expect(result.error).toEqual('Unauthorized')
+
+        const changedDomain = await datasource.getRepository(Domain).existsBy({
+          node,
+          owner,
+        })
+        expect(changedDomain).toBe(false)
       })
-      expect(d).toEqual(1)
     })
 
-    // Register a domain 'public.eth', then set a content hash for it
-    it('should set new contenthash', async () => {
-      const pvtKey = generatePrivateKey()
-      const domain = new Domain()
-      domain.node = namehash('public.eth')
-      domain.ttl = 300
-      domain.owner = privateKeyToAddress(pvtKey)
-      await datasource.manager.save(domain)
+    describe('Content hash', () => {
+      // Register a domain 'public.eth', then set a content hash for it
+      it('should set new contenthash', async () => {
+        const pvtKey = generatePrivateKey()
+        const domain = new Domain()
+        domain.node = namehash('public.eth')
+        domain.ttl = 300
+        domain.owner = privateKeyToAddress(pvtKey)
+        await datasource.manager.save(domain)
 
-      const contenthash =
-        '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
-      const server = new ccip.Server()
-      server.add(abi, withSetContentHash(repo, validator))
-      const result = await doCall({
-        server,
-        abi,
-        sender: TEST_ADDRESS,
-        method: 'setContenthash',
-        pvtKey,
-        args: [domain.node, contenthash],
+        const contenthash =
+          '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
+        const server = new ccip.Server()
+        server.add(abi, withSetContentHash(repo, validator))
+        const result = await doCall({
+          server,
+          abi,
+          sender: TEST_ADDRESS,
+          method: 'setContenthash',
+          pvtKey,
+          args: [domain.node, contenthash],
+        })
+
+        expect(result.data.length).toEqual(0)
+
+        const d = await datasource.getRepository(Domain).findOneBy({
+          node: domain.node,
+          contenthash,
+        })
+        expect(d).not.toBeNull()
+        expect(d?.node).toEqual(domain.node)
+        expect(d?.contenthash).toEqual(contenthash)
       })
 
-      expect(result.data.length).toEqual(0)
+      // Register a domain 'public.eth' with a content hash, then query for it
+      it('should query contenthash', async () => {
+        const domain = new Domain()
+        domain.node = namehash('public.eth')
+        domain.ttl = 300
+        domain.owner = privateKeyToAddress(generatePrivateKey())
+        await datasource.manager.save(domain)
+        const content =
+          '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909'
+        domain.contenthash = content
+        await datasource.manager.save(domain)
 
-      const d = await datasource.getRepository(Domain).findOneBy({
-        node: domain.node,
-        contenthash,
-      })
-      expect(d).not.toBeNull()
-      expect(d?.node).toEqual(domain.node)
-      expect(d?.contenthash).toEqual(contenthash)
-    })
+        const server = new ccip.Server()
+        server.add(abi, withGetContentHash(repo))
+        const result = await doCall({
+          server,
+          abi,
+          sender: TEST_ADDRESS,
+          method: 'contenthash',
+          args: [domain.node],
+        })
 
-    // Register a domain 'public.eth' with a content hash, then query for it
-    it('should query contenthash', async () => {
-      const domain = new Domain()
-      domain.node = namehash('public.eth')
-      domain.ttl = 300
-      domain.owner = privateKeyToAddress(generatePrivateKey())
-      await datasource.manager.save(domain)
-      const content =
-        '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909'
-      domain.contenthash = content
-      await datasource.manager.save(domain)
-
-      const server = new ccip.Server()
-      server.add(abi, withGetContentHash(repo))
-      const result = await doCall({
-        server,
-        abi,
-        sender: TEST_ADDRESS,
-        method: 'contenthash',
-        args: [domain.node],
+        expect(result.data.length).toEqual(1)
+        const [value] = result.data
+        expect(value).toEqual(content)
+        expect(parseInt(result.ttl!)).toBeCloseTo(
+          parseInt(formatTTL(domain.ttl)),
+        )
       })
 
-      expect(result.data.length).toEqual(1)
-      const [value] = result.data
-      expect(value).toEqual(content)
-      expect(parseInt(result.ttl!)).toBeCloseTo(parseInt(formatTTL(domain.ttl)))
-    })
+      // Attempt to set a content hash for an invalid domain
+      it('should set new contenthash on invalid domain', async () => {
+        const contenthash =
+          '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
+        const server = new ccip.Server()
+        server.add(abi, withSetContentHash(repo, validator))
+        const result = await doCall({
+          server,
+          abi,
+          sender: TEST_ADDRESS,
+          method: 'setContenthash',
+          args: [namehash('0xiiiiii'), contenthash],
+        })
 
-    // Attempt to set a content hash for an invalid domain
-    it('should set new contenthash on invalid domain', async () => {
-      const contenthash =
-        '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
-      const server = new ccip.Server()
-      server.add(abi, withSetContentHash(repo, validator))
-      const result = await doCall({
-        server,
-        abi,
-        sender: TEST_ADDRESS,
-        method: 'setContenthash',
-        args: [namehash('0xiiiiii'), contenthash],
+        expect(result.data.length).toEqual(0)
       })
-
-      expect(result.data.length).toEqual(0)
     })
   })
 
