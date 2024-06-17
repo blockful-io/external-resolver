@@ -11,12 +11,18 @@
     "test": {},
     "@blockful/client#test": {
       "dependsOn": [
-        "@blockful/contracts#build"
+        "@blockful/contracts#build",
+        "@blockful/gateway#build"
       ]
     },
     "test:watch": {},
     "lint": {},
     "@blockful/gateway#build": {
+      "dependsOn": [
+        "@blockful/ccip-server#build"
+      ]
+    },
+    "@blockful/gateway#test": {
       "dependsOn": [
         "@blockful/ccip-server#build"
       ]

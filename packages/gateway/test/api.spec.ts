@@ -28,9 +28,11 @@ import {
   withGetAddr,
   withGetContentHash,
   withGetText,
+  withRegisterDomain,
   withSetAddr,
   withSetContentHash,
   withSetText,
+  withTransferDomain,
 } from '../src/handlers'
 import { InMemoryRepository } from '../src/repositories'
 import { withSigner, makeMessageHash } from '../src/middlewares'
@@ -56,7 +58,7 @@ describe('Gateway API', () => {
     domain = {
       node,
       owner: privateKeyToAddress(privateKey),
-      ttl: 2000,
+      ttl: 300,
       contenthash:
         '0x4d1ae8fa44de34a527a9c6973d37dfda8befc18ca6ec73fd97535b4cf02189c6', // public goods
       addresses: [],
@@ -71,89 +73,264 @@ describe('Gateway API', () => {
   afterEach(async () => await repo.clear())
 
   describe('API Domain', () => {
-    it('should handle set contenthash', async () => {
-      const contenthash =
-        '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
+    describe('Register domain', () => {
+      it('should register new domain', async () => {
+        const server = new ccip.Server()
+        server.add(serverAbi, withRegisterDomain(repo, validator))
+        const app = server.makeApp('/')
 
-      const server = new ccip.Server()
-      server.add(serverAbi, withSetContentHash(repo, validator))
-      const app = server.makeApp('/')
+        const domain: Domain = {
+          node: namehash('newdomain.eth'),
+          owner: privateKeyToAddress(privateKey),
+          ttl: 300,
+          addresses: [],
+          texts: [],
+        }
 
-      const args = [domain.node, contenthash]
-      const data = encodeFunctionData({
-        abi,
-        functionName: 'setContenthash',
-        args,
-      })
-
-      const signature = await signData({
-        pvtKey: privateKey,
-        args,
-        sender: TEST_ADDRESS,
-        func: getAbiItem({
+        const args = [domain.node, domain.ttl]
+        const data = encodeFunctionData({
           abi,
-          name: 'setContenthash',
-        }) as AbiFunction,
-      })
-      await request(app)
-        .post('/')
-        .set('Content-Type', 'application/json')
-        .set('Accept', 'application/json')
-        .send({
-          data,
-          signature: serializeTypedSignature(signature),
-          sender: TEST_ADDRESS,
+          functionName: 'register',
+          args,
         })
 
-      const response = await repo.getContentHash({
-        node: domain.node as `0x${string}`,
+        const signature = await signData({
+          pvtKey: privateKey,
+          args,
+          sender: TEST_ADDRESS,
+          func: getAbiItem({
+            abi,
+            name: 'register',
+          }) as AbiFunction,
+        })
+        await request(app)
+          .post('/')
+          .set('Content-Type', 'application/json')
+          .set('Accept', 'application/json')
+          .send({
+            data,
+            signature: serializeTypedSignature(signature),
+            sender: TEST_ADDRESS,
+          })
+
+        const response = await repo.getDomain({
+          node: domain.node as `0x${string}`,
+          coin: '60',
+        })
+        expect(response).toEqual(domain)
       })
-      expect(response?.value).toEqual(contenthash)
-      expect(response?.ttl).toEqual(domain.ttl)
+
+      it('should handle registering existing domain', async () => {
+        const server = new ccip.Server()
+        server.add(serverAbi, withRegisterDomain(repo, validator))
+        const app = server.makeApp('/')
+
+        const args = [domain.node, domain.ttl]
+        const data = encodeFunctionData({
+          abi,
+          functionName: 'register',
+          args,
+        })
+
+        const signature = await signData({
+          pvtKey: privateKey,
+          args,
+          sender: TEST_ADDRESS,
+          func: getAbiItem({
+            abi,
+            name: 'register',
+          }) as AbiFunction,
+        })
+        const r = await request(app)
+          .post('/')
+          .set('Content-Type', 'application/json')
+          .set('Accept', 'application/json')
+          .send({
+            data,
+            signature: serializeTypedSignature(signature),
+            sender: TEST_ADDRESS,
+          })
+
+        expect(r.body.error).toEqual('Domain already exists')
+        expect(r.status).toEqual(400)
+
+        const response = await repo.getDomain({
+          node: domain.node as `0x${string}`,
+          coin: '60',
+        })
+        expect(response).toEqual(domain)
+      })
     })
 
-    it('should handle GET contenthash', async () => {
-      const server = new ccip.Server()
-      server.app.use(withSigner(privateKey))
-      server.add(serverAbi, withGetContentHash(repo))
-      const app = server.makeApp('/')
+    describe('Transfer domain', () => {
+      it('should transfer existing domain', async () => {
+        const server = new ccip.Server()
+        server.add(serverAbi, withTransferDomain(repo, validator))
+        const app = server.makeApp('/')
 
-      const calldata = encodeFunctionData({
-        abi,
-        functionName: 'contenthash',
-        args: [domain.node],
+        const expectedOwner = privateKeyToAddress(generatePrivateKey())
+        const args = [domain.node, expectedOwner]
+        const data = encodeFunctionData({
+          abi,
+          functionName: 'transfer',
+          args,
+        })
+
+        const signature = await signData({
+          pvtKey: privateKey,
+          args,
+          sender: TEST_ADDRESS,
+          func: getAbiItem({
+            abi,
+            name: 'transfer',
+          }) as AbiFunction,
+        })
+        await request(app)
+          .post('/')
+          .set('Content-Type', 'application/json')
+          .set('Accept', 'application/json')
+          .send({
+            data,
+            signature: serializeTypedSignature(signature),
+            sender: TEST_ADDRESS,
+          })
+
+        const response = await repo.getDomain({
+          node: domain.node as `0x${string}`,
+          coin: '60',
+        })
+        expect(response).toEqual({ ...domain, owner: expectedOwner })
       })
 
-      const response = await request(app).get(
-        `/${TEST_ADDRESS}/${calldata}.json`,
-      )
+      it('should handle transfer non existing domain', async () => {
+        const server = new ccip.Server()
+        server.add(serverAbi, withTransferDomain(repo, validator))
+        const app = server.makeApp('/')
 
-      expect(response.text).not.toBeNull()
+        const node = namehash('notfound.eth') as `0x${string}`
+        const args = [node, privateKeyToAddress(generatePrivateKey())]
+        const data = encodeFunctionData({
+          abi,
+          functionName: 'transfer',
+          args,
+        })
 
-      const [data, ttl, sig] = decodeAbiParameters(
-        parseAbiParameters('bytes,uint64,bytes'),
-        response.text as Hex,
-      )
+        const signature = await signData({
+          pvtKey: privateKey,
+          args,
+          sender: TEST_ADDRESS,
+          func: getAbiItem({
+            abi,
+            name: 'transfer',
+          }) as AbiFunction,
+        })
+        const r = await request(app)
+          .post('/')
+          .set('Content-Type', 'application/json')
+          .set('Accept', 'application/json')
+          .send({
+            data,
+            signature: serializeTypedSignature(signature),
+            sender: TEST_ADDRESS,
+          })
 
-      const mshHash = makeMessageHash(TEST_ADDRESS, ttl, calldata, data)
-      expect(
-        await verifyMessage({
-          address: privateKeyToAddress(privateKey),
-          message: { raw: mshHash },
-          signature: sig,
-        }),
-      ).toBeTruthy()
+        expect(r.body.error).toEqual('Unauthorized')
+        expect(r.status).toEqual(401)
 
-      expect(
-        decodeFunctionResult({
+        const response = await repo.getDomain({
+          node,
+          coin: '60',
+        })
+        expect(response).toBeNull()
+      })
+    })
+
+    describe('Contenthash', () => {
+      it('should handle set contenthash', async () => {
+        const contenthash =
+          '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
+
+        const server = new ccip.Server()
+        server.add(serverAbi, withSetContentHash(repo, validator))
+        const app = server.makeApp('/')
+
+        const args = [domain.node, contenthash]
+        const data = encodeFunctionData({
+          abi,
+          functionName: 'setContenthash',
+          args,
+        })
+
+        const signature = await signData({
+          pvtKey: privateKey,
+          args,
+          sender: TEST_ADDRESS,
+          func: getAbiItem({
+            abi,
+            name: 'setContenthash',
+          }) as AbiFunction,
+        })
+        await request(app)
+          .post('/')
+          .set('Content-Type', 'application/json')
+          .set('Accept', 'application/json')
+          .send({
+            data,
+            signature: serializeTypedSignature(signature),
+            sender: TEST_ADDRESS,
+          })
+
+        const response = await repo.getContentHash({
+          node: domain.node as `0x${string}`,
+          coin: '60',
+        })
+        expect(response?.value).toEqual(contenthash)
+        expect(response?.ttl).toEqual(domain.ttl)
+      })
+
+      it('should handle GET contenthash', async () => {
+        const server = new ccip.Server()
+        server.app.use(withSigner(privateKey))
+        server.add(serverAbi, withGetContentHash(repo))
+        const app = server.makeApp('/')
+
+        const calldata = encodeFunctionData({
           abi,
           functionName: 'contenthash',
-          data,
-        }),
-      ).toEqual(domain.contenthash)
-      expect(parseInt(ttl.toString())).toBeCloseTo(
-        parseInt(formatTTL(domain.ttl)),
-      )
+          args: [domain.node],
+        })
+
+        const response = await request(app).get(
+          `/${TEST_ADDRESS}/${calldata}.json`,
+        )
+
+        expect(response.text).not.toBeNull()
+
+        const [data, ttl, sig] = decodeAbiParameters(
+          parseAbiParameters('bytes,uint64,bytes'),
+          response.text as Hex,
+        )
+
+        const mshHash = makeMessageHash(TEST_ADDRESS, ttl, calldata, data)
+        expect(
+          await verifyMessage({
+            address: privateKeyToAddress(privateKey),
+            message: { raw: mshHash },
+            signature: sig,
+          }),
+        ).toBeTruthy()
+
+        expect(
+          decodeFunctionResult({
+            abi,
+            functionName: 'contenthash',
+            data,
+          }),
+        ).toEqual(domain.contenthash)
+        expect(parseInt(ttl.toString())).toBeCloseTo(
+          parseInt(formatTTL(domain.ttl)),
+        )
+      })
     })
   })
 
@@ -356,6 +533,7 @@ describe('Gateway API', () => {
 
       const response = await repo.getAddr({
         node: domain.node as `0x${string}`,
+        coin: '60',
       })
       expect(response?.value).toEqual(address)
       expect(response?.ttl).toEqual(domain.ttl)
@@ -403,6 +581,7 @@ describe('Gateway API', () => {
 
       const response = await repo.getAddr({
         node: domain.node as `0x${string}`,
+        coin: '60',
       })
       expect(response?.value).toEqual(address)
       expect(response?.ttl).toEqual(domain.ttl)

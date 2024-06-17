@@ -7,6 +7,7 @@ import {
   Response,
   RegisterDomainProps,
   DomainProps,
+  TransferDomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -55,18 +56,26 @@ export class InMemoryRepository {
     return this.domains.get(node)?.owner === address
   }
 
-  async register({ node, ttl, owner }: RegisterDomainProps): Promise<void> {
+  async register({ node, ttl, owner }: RegisterDomainProps) {
     this.domains.set(node, { node, addresses: [], texts: [], ttl, owner })
+  }
+
+  async transfer({ node, owner }: TransferDomainProps) {
+    const existingNode = this.domains.get(node)
+    if (!existingNode) {
+      throw Error('Node not found')
+    }
+    await this.domains.set(node, {
+      ...existingNode,
+      owner,
+    })
   }
 
   async getDomain({ node }: DomainProps): Promise<Domain | null> {
     return this.domains.get(node) || null
   }
 
-  async setContentHash({
-    node,
-    contenthash,
-  }: SetContentHashProps): Promise<void> {
+  async setContentHash({ node, contenthash }: SetContentHashProps) {
     const domain = this.domains.get(node)
     if (!domain) {
       throw new Error('Domain not found')
@@ -82,11 +91,7 @@ export class InMemoryRepository {
     return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
-  async setAddr({
-    node,
-    addr: address,
-    coin = 60, // ETH
-  }: SetAddressProps): Promise<void> {
+  async setAddr({ node, addr: address, coin }: SetAddressProps) {
     const existingAddress = this.addresses.get(`${node}-${coin}`)
     if (existingAddress) {
       existingAddress.address = address
@@ -101,7 +106,7 @@ export class InMemoryRepository {
 
   async getAddr({
     node,
-    coin = 60,
+    coin,
   }: GetAddressProps): Promise<Response | undefined> {
     const address = this.addresses.get(`${node}-${coin}`)
     const domain = this.domains.get(node)
@@ -109,7 +114,7 @@ export class InMemoryRepository {
     return { value: address.address, ttl: domain.ttl }
   }
 
-  async setText({ node, key, value }: SetTextProps): Promise<void> {
+  async setText({ node, key, value }: SetTextProps) {
     const existingText = this.texts.get(`${node}-${key}`)
     if (existingText) {
       existingText.value = value
