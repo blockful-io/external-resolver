@@ -7,6 +7,7 @@ import {
   OwnershipValidator,
   TypedSignature,
 } from '../types'
+import { formatTTL } from '../services'
 
 interface WriteRepository {
   setText(params: SetTextProps)
@@ -17,7 +18,7 @@ export function withSetText(
   validator: OwnershipValidator,
 ): ccip.HandlerDescription {
   return {
-    type: 'setText',
+    type: 'setText(bytes32 node, string calldata key, string calldata value)',
     func: async ({ node, key, value }, { signature }) => {
       try {
         const isOwner = await validator.verifyOwnership({
@@ -42,10 +43,10 @@ interface ReadRepository {
 
 export function withGetText(repo: ReadRepository): ccip.HandlerDescription {
   return {
-    type: 'text',
+    type: 'text(bytes32 node, string key) view returns (string)',
     func: async ({ node, key }) => {
       const text = await repo.getText({ node, key })
-      if (text) return { data: [text.value], extraData: text.ttl }
+      if (text) return { data: [text.value], extraData: formatTTL(text.ttl) }
     },
   }
 }

@@ -16,7 +16,7 @@ import { Domain } from './domain'
 @Entity()
 export class Address {
   @PrimaryColumn({ unique: true })
-  coin: number
+  coin: string
 
   @Column()
   address: string

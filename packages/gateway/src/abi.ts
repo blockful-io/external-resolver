@@ -9,6 +9,6 @@ export const abi: string[] = [
   'function addr(bytes32 node, uint coinType) view returns (bytes)',
   'function contenthash(bytes32 node) view returns (bytes memory)',
   'function setContenthash(bytes32 node, bytes calldata contenthash)',
-  'function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory constants) external view returns(bytes memory witness)',
+  'function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory) external view returns(bytes memory witness)',
   'function register(bytes32 node, uint32 ttl)',
 ]

@@ -16,6 +16,11 @@
     },
     "test:watch": {},
     "lint": {},
+    "@blockful/gateway#build": {
+      "dependsOn": [
+        "@blockful/ccip-server#build"
+      ]
+    },
     "build": {
       "dependsOn": [
         "^build"
