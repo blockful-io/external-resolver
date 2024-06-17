@@ -1,12 +1,9 @@
 import { SignableMessage } from 'viem'
+import { Domain } from './entities'
 
 export type Response = {
   value: string
   ttl: number
-}
-
-export type DomainProps = {
-  node: `0x${string}`
 }
 
 export type WritingProps = {
@@ -14,26 +11,20 @@ export type WritingProps = {
   signature: `0x${string}`
 }
 
-export type RegisterDomainProps = {
-  owner: `0x${string}`
-  node: `0x${string}`
-  ttl: number
-}
-
-export type SetContentHashProps = {
-  node: `0x${string}`
-  contenthash: `0x${string}`
-}
+export type DomainProps = Pick<Domain, 'node'>
+export type RegisterDomainProps = Pick<Domain, 'node' | 'owner' | 'ttl'>
+export type TransferDomainProps = Pick<Domain, 'node' | 'owner'>
+export type SetContentHashProps = Pick<Domain, 'node' | 'contenthash'>
 
 export type SetAddressProps = {
   node: `0x${string}`
   addr: string
-  coin?: string
+  coin: string
 }
 
 export type GetAddressProps = {
   node: `0x${string}`
-  coin?: string
+  coin: string
 }
 
 export type SetTextProps = {

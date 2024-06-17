@@ -112,6 +112,26 @@ contract DatabaseResolver is
         _offChainStorage(params);
     }
 
+    //////// OFFCHAIN STORAGE TRANSFER DOMAIN ////////
+
+    /**
+     * Transfer a domain to a new owner
+     * @param node The DNS-encoded name to resolve.
+     * @param owner The address of the new owner
+     */
+    function transfer(bytes32 node, address owner) external view {
+        IWriteDeferral.parameter[] memory params =
+            new IWriteDeferral.parameter[](2);
+
+        params[0].name = "node";
+        params[0].value = TypeToString.bytes32ToString(node);
+
+        params[1].name = "owner";
+        params[1].value = TypeToString.addressToString(owner);
+
+        _offChainStorage(params);
+    }
+
     //////// ENSIP 10 ////////
 
     /**

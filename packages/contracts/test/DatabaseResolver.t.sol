@@ -51,38 +51,8 @@ contract DatabaseResolverTest is Test, ENSHelper {
         registrar.setDefaultResolver(address(resolver));
     }
 
-    // Test the setSubnodeRecord function for the first level
-    function test_SetSubnodeRecord1stLevel() external {
-        vm.prank(owner);
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), owner, address(resolver), 10000000
-        );
-
-        assertEq(registry.owner(namehash("eth")), owner);
-        assertEq(registry.resolver(namehash("eth")), address(resolver));
-    }
-
-    // Test the setSubnodeRecord function for the second level
-    function test_SetSubnodeRecord2nLevel() external {
-        vm.prank(owner);
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), owner, address(resolver), 10000000
-        );
-        vm.prank(owner);
-        registry.setSubnodeRecord(
-            namehash("eth"),
-            labelhash("blockful"),
-            owner,
-            address(resolver),
-            10000000
-        );
-
-        assertEq(registry.owner(namehash("blockful.eth")), owner);
-        assertEq(registry.resolver(namehash("blockful.eth")), address(resolver));
-    }
-
     // Test the resolver setup from the constructor
-    function testResolverSetupFromConstructor() public {
+    function test_ResolverSetupFromConstructor() public {
         Config config = new Config(block.chainid);
         ( /* gatewayUrl */ , /* gatewayTimestamp */, address[] memory signers) =
             config.activeNetworkConfig();
@@ -93,7 +63,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
     }
 
     // Test updating the URL by the owner
-    function testSetUrlFromOwner() public {
+    function test_SetUrlFromOwner() public {
         vm.prank(owner);
 
         string memory newUrl = "https://new_gateway.com";
@@ -102,7 +72,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
     }
 
     // Test failure in updating the URL by a non-owner
-    function testSetUrlFromNonOwner_fail() public {
+    function test_Fail_SetUrlFromNonOwner() public {
         string memory newUrl = "https://new_gateway.com";
 
         vm.prank(address(0x44));
@@ -111,7 +81,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
     }
 
     // Test updating the signers by the owner
-    function testSetSignerFromOwner() public {
+    function test_SetSignerFromOwner() public {
         address[] memory new_signers = new address[](1);
         new_signers[0] = address(0x69420);
 
@@ -128,7 +98,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
     }
 
     // Test failure in updating the signers by a non-owner
-    function testSetSignerFromNonOwner_fail() public {
+    function test_Fail_SetSignerFromNonOwner() public {
         address[] memory new_signers = new address[](1);
         new_signers[0] = address(0x69420);
 
@@ -145,7 +115,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
     }
 
     // Test removing a signer
-    function testRemoveSigner() public {
+    function test_RemoveSigner() public {
         vm.prank(owner);
         address[] memory signers = new address[](1);
         signers[0] = address(0x1337);

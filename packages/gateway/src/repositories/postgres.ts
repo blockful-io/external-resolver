@@ -13,6 +13,9 @@ import {
   GetPubkeyResponse,
   SetAbiProps,
   GetAbiProps,
+  DomainProps,
+  TransferDomainProps,
+  RegisterDomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -34,11 +37,7 @@ export class PostgresRepository {
       .existsBy({ node, owner: address })
   }
 
-  async register({
-    node,
-    ttl,
-    owner,
-  }: Pick<Domain, 'node' | 'ttl'> & { owner: `0x${string}` }) {
+  async register({ node, ttl, owner }: RegisterDomainProps) {
     await this.client.getRepository(Domain).insert({
       node,
       ttl,
@@ -48,10 +47,19 @@ export class PostgresRepository {
     })
   }
 
-  async setContentHash({
-    node,
-    contenthash,
-  }: SetContentHashProps): Promise<void> {
+  async transfer({ node, owner }: TransferDomainProps) {
+    await this.client.getRepository(Domain).update(node, {
+      owner,
+    })
+  }
+
+  async getDomain({ node }: DomainProps): Promise<Domain | null> {
+    return await this.client.getRepository(Domain).findOneBy({
+      node,
+    })
+  }
+
+  async setContentHash({ node, contenthash }: SetContentHashProps) {
     await this.client.getRepository(Domain).update(node, {
       contenthash,
     })
@@ -67,8 +75,7 @@ export class PostgresRepository {
       .select(['domain.contenthash', 'domain.ttl'])
       .getOne()
 
-    if (!domain) return
-    return { value: domain.contenthash as string, ttl: domain.ttl }
+    if (domain) return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
   async setAddr({ node, addr: address, coin }: SetAddressProps) {
@@ -102,8 +109,7 @@ export class PostgresRepository {
       .select(['addr.address', 'domain.ttl'])
       .getOne()
 
-    if (!addr) return
-    return { value: addr.address, ttl: addr.domain.ttl }
+    if (addr) return { value: addr.address, ttl: addr.domain.ttl }
   }
 
   async setText({ node, key, value }: SetTextProps) {
@@ -129,8 +135,7 @@ export class PostgresRepository {
       .select(['text.value', 'domain.ttl'])
       .getOne()
 
-    if (!text) return
-    return { value: text.value, ttl: text.domain.ttl }
+    if (text) return { value: text.value, ttl: text.domain.ttl }
   }
 
   async setPubkey({ node, x, y }: SetPubkeyProps) {

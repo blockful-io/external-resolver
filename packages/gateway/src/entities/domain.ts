@@ -17,7 +17,7 @@ import { Text } from './text'
 @Entity()
 export class Domain {
   @PrimaryColumn({ unique: true })
-  node: string
+  node: `0x${string}`
 
   @Column({ nullable: true, length: 32 })
   contenthash?: `0x${string}`
