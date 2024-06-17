@@ -35,7 +35,7 @@ import {
 import { InMemoryRepository } from '../src/repositories'
 import { withSigner, makeMessageHash, withLogger } from '../src/middlewares'
 import { Domain } from '../src/entities'
-import { OwnershipValidator } from '../src/services'
+import { OwnershipValidator, formatTTL } from '../src/services'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 const abi = parseAbi(serverAbi)
@@ -151,7 +151,9 @@ describe('Gateway API', () => {
           data,
         }),
       ).toEqual(domain.contenthash)
-      expect(ttl).toEqual(BigInt(domain.ttl))
+      expect(parseInt(ttl.toString())).toBeCloseTo(
+        parseInt(formatTTL(domain.ttl)),
+      )
     })
   })
 
@@ -364,7 +366,7 @@ describe('Gateway API', () => {
       repo.setAddresses([
         {
           domain,
-          coin: 60,
+          coin: '60',
           address: '0x',
         },
       ])
@@ -412,7 +414,7 @@ describe('Gateway API', () => {
       repo.setAddresses([
         {
           domain,
-          coin: 60,
+          coin: '60',
           address,
         },
       ])

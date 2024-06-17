@@ -8,6 +8,7 @@ import {
   OwnershipValidator,
   TypedSignature,
 } from '../types'
+import { formatTTL } from '../services'
 
 interface SignatureRecover {
   recoverMessageSigner(TypedSignature): Promise<`0x${string}`>
@@ -23,7 +24,7 @@ export function withRegisterDomain(
   recover: SignatureRecover,
 ): ccip.HandlerDescription {
   return {
-    type: 'register',
+    type: 'register(bytes32 node, uint32 ttl)',
     func: async ({ node, ttl }, { signature }) => {
       try {
         const signer = await recover.recoverMessageSigner(
@@ -44,7 +45,7 @@ export function withSetContentHash(
   validator: OwnershipValidator,
 ): ccip.HandlerDescription {
   return {
-    type: 'setContenthash',
+    type: 'setContenthash(bytes32 node, bytes calldata contenthash)',
     func: async ({ node, contenthash }, { signature }) => {
       try {
         const isOwner = await validator.verifyOwnership({
@@ -76,7 +77,8 @@ export function withGetContentHash(
     type: 'contenthash',
     func: async ({ node }) => {
       const content = await repo.getContentHash({ node })
-      if (content) return { data: [content.value], extraData: content.ttl }
+      if (content)
+        return { data: [content.value], extraData: formatTTL(content.ttl) }
     },
   }
 }

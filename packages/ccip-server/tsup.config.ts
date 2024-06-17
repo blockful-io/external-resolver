@@ -8,7 +8,7 @@ export default defineConfig({
   outDir: './dist',
   clean: true,
   minify: false,
-  sourcemap: true,
+  sourcemap: false,
   format: ['cjs'],
   target: 'es2022',
 })

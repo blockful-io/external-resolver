@@ -91,7 +91,7 @@ export async function doCall({
   method: string
   pvtKey?: `0x${string}`
   args: unknown[]
-}): Promise<{ data: Array<unknown>; ttl?: bigint; error?: Error }> {
+}): Promise<{ data: Array<unknown>; ttl?: string; error?: Error }> {
   const iface = parseAbi(abi)
   const func = getAbiItem({ abi: iface, name: method }) as AbiFunction
   if (!func) {

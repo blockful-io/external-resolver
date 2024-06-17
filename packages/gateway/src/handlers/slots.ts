@@ -34,7 +34,7 @@ export function withGetStorageSlot<T extends ProvableBlock>(
   proofService: IProofService<T>,
 ): ccip.HandlerDescription {
   return {
-    type: 'getStorageSlots',
+    type: 'getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory) external view returns (bytes memory witness)',
     func: async ([addr, commands, constants]) => {
       if (addr === zeroAddress) {
         return { error: { message: 'Invalid address', status: 400 } }
