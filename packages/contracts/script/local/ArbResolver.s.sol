@@ -24,9 +24,6 @@ import {ArbitrumConfig} from "../config/ArbitrumConfig.s.sol";
 contract arbResolverScript is Script, ENSHelper {
 
     function run() external {
-        uint256 privateKey =
-            0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659;
-
         ArbitrumConfig config = new ArbitrumConfig(block.chainid);
         (
             ENSRegistry registry,
@@ -34,8 +31,11 @@ contract arbResolverScript is Script, ENSHelper {
             , /* UniversalResolver */
             IRollupCore rollup,
             NameWrapper nameWrapper,
-            uint256 targetChainId
+            uint256 targetChainId,
+            uint256 privateKey
         ) = config.activeNetworkConfig();
+
+        address sender = vm.addr(privateKey);
 
         string[] memory urls = new string[](1);
         urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
@@ -48,19 +48,19 @@ contract arbResolverScript is Script, ENSHelper {
 
         // .eth
         registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), msg.sender, address(l1resolver), 100000
+            rootNode, labelhash("eth"), sender, address(l1resolver), 100000
         );
         // blockful.eth
         registry.setSubnodeRecord(
             namehash("eth"),
             labelhash("blockful"),
-            msg.sender,
+            sender,
             address(l1resolver),
             100000
         );
 
         l1resolver.setTarget(
-            namehash("blockful.eth"), vm.envAddress("L2_RESOLVER_ADDRESS")
+            namehash("blockful.eth"), 0xE78b46AE59984D11A215B6F84C7de4CB111eF63C
         );
 
         vm.stopBroadcast();

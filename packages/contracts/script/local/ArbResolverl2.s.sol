@@ -21,19 +21,20 @@ contract arbResolverL2Script is Script, ENSHelper {
     function run() external {
         uint256 privateKey =
             0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659;
+        address sender = vm.addr(privateKey);
 
         vm.startBroadcast(privateKey);
 
         L2Resolver arbResolver = new L2Resolver();
         bytes32 node = namehash("blockful.eth");
 
-        arbResolver.setOwner(node, msg.sender);
-        arbResolver.setAddr(node, msg.sender);
+        arbResolver.setOwner(node, sender);
+        arbResolver.setAddr(node, sender);
         arbResolver.setText(
             node,
             "avatar",
-            "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ"
-        ); // blockful.jpeg
+            "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ" // blockful.jpeg
+        );
         arbResolver.setText(node, "com.twitter", "@blockful");
 
         vm.stopBroadcast();

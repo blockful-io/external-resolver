@@ -29,7 +29,8 @@ contract ArbitrumResolverScript is Script, ENSHelper {
             , /* UniversalResolver */
             IRollupCore rollup,
             NameWrapper nameWrapper,
-            uint256 targetChainId
+            uint256 targetChainId,
+            uint256 privateKey
         ) = config.activeNetworkConfig();
 
         string[] memory urls = new string[](1);
@@ -37,7 +38,7 @@ contract ArbitrumResolverScript is Script, ENSHelper {
 
         address l2Resolver = vm.envAddress("L2_RESOLVER_ADDRESS");
 
-        vm.startBroadcast();
+        vm.startBroadcast(privateKey);
         ArbVerifier verifier = new ArbVerifier(urls, rollup);
         L1Resolver l1resolver =
             new L1Resolver(targetChainId, verifier, registry, nameWrapper);

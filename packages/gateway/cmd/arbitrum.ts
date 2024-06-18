@@ -36,11 +36,11 @@ const _ = (async () => {
 
   const provider = createPublicClient({
     chain: chain1,
-    transport: http(process.env.RPC_URL),
+    transport: http(process.env.RPC_URL || 'http://127.0.0.1:8545'),
   })
   const providerL2 = createPublicClient({
     chain: chain2,
-    transport: http(process.env.LAYER2_RPC),
+    transport: http(process.env.LAYER2_RPC || 'http://127.0.0.1:8547'),
   })
 
   const proofService = new ArbProofService(

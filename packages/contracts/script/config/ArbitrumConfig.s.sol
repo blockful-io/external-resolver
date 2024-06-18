@@ -25,6 +25,7 @@ contract ArbitrumConfig is Script, ENSHelper {
         IRollupCore rollup;
         NameWrapper nameWrapper;
         uint256 targetChainId;
+        uint256 privateKey;
     }
 
     constructor(uint256 chainId) {
@@ -33,7 +34,7 @@ contract ArbitrumConfig is Script, ENSHelper {
         else activeNetworkConfig = _getAnvilConfig();
     }
 
-    function _getMainnetConfig() private pure returns (NetworkConfig memory) {
+    function _getMainnetConfig() private view returns (NetworkConfig memory) {
         return NetworkConfig({
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e),
             registrar: ReverseRegistrar(0xa58E81fe9b61B5c3fE2AFD33CF304c454AbFc7Cb),
@@ -42,11 +43,12 @@ contract ArbitrumConfig is Script, ENSHelper {
             ),
             rollup: IRollupCore(0x5eF0D09d1E6204141B4d37530808eD19f60FBa35),
             nameWrapper: NameWrapper(0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401),
-            targetChainId: 42161
+            targetChainId: 42161,
+            privateKey: vm.envUint("PRIVATE_KEY")
         });
     }
 
-    function _getSepoliaConfig() private pure returns (NetworkConfig memory) {
+    function _getSepoliaConfig() private view returns (NetworkConfig memory) {
         return NetworkConfig({
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e),
             registrar: ReverseRegistrar(0xA0a1AbcDAe1a2a4A2EF8e9113Ff0e02DD81DC0C6),
@@ -55,7 +57,8 @@ contract ArbitrumConfig is Script, ENSHelper {
             ),
             rollup: IRollupCore(0xd80810638dbDF9081b72C1B33c65375e807281C8),
             nameWrapper: NameWrapper(0x0635513f179D50A207757E05759CbD106d7dFcE8),
-            targetChainId: 421614
+            targetChainId: 421614,
+            privateKey: vm.envUint("PRIVATE_KEY")
         });
     }
 
@@ -64,10 +67,13 @@ contract ArbitrumConfig is Script, ENSHelper {
             return activeNetworkConfig;
         }
 
+        uint256 privateKey =
+            0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659;
+
         string[] memory urls = new string[](1);
         urls[0] = "https://127.0.0.1:3000/{sender}/{data}.json";
 
-        vm.startBroadcast();
+        vm.startBroadcast(privateKey);
         ENSRegistry registry = new ENSRegistry();
         UniversalResolver universalResolver =
             new UniversalResolver(address(registry), urls);
@@ -98,7 +104,8 @@ contract ArbitrumConfig is Script, ENSHelper {
             universalResolver: universalResolver,
             rollup: IRollupCore(0x3fC2B5464aD073036fEA6e396eC2Ac0406A3b058),
             nameWrapper: nameWrap,
-            targetChainId: 31337
+            targetChainId: 31337,
+            privateKey: privateKey
         });
     }
 

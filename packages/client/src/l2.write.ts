@@ -167,7 +167,10 @@ const _ = (async () => {
         args: {
           functionName: 'setAddr',
           abi: l2Abi,
-          args: [namehash(publicAddress), '0x04270c4366010A52192bC8D3E29d9f0E21bBe969'],
+          args: [
+            namehash(publicAddress),
+            '0x04270c4366010A52192bC8D3E29d9f0E21bBe969',
+          ],
           address: contractAddress,
           account: signer,
         },

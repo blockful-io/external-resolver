@@ -28,11 +28,12 @@ contract L1ResolverScript is Script, ENSHelper {
         ArbitrumConfig config = new ArbitrumConfig(block.chainid);
         (
             ENSRegistry registry,
-            , // ReverseRegistrar registrar
-            , // UniversalResolver universalResolver
-            , // IRollupCore rollup,
+            , // ReverseRegistrar
+            , // UniversalResolver
+            , // IRollupCore,
             NameWrapper nameWrapper,
-            uint256 targetChainId
+            uint256 targetChainId,
+            /* uint256 privateKey */
         ) = config.activeNetworkConfig();
 
         vm.startBroadcast();
