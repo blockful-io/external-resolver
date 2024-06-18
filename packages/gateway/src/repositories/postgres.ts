@@ -8,6 +8,11 @@ import {
   GetAddressProps,
   SetContentHashProps,
   Response,
+  SetPubkeyProps,
+  GetPubkeyProps,
+  GetPubkeyResponse,
+  SetAbiProps,
+  GetAbiProps,
   DomainProps,
   TransferDomainProps,
   RegisterDomainProps,
@@ -131,5 +136,52 @@ export class PostgresRepository {
       .getOne()
 
     if (text) return { value: text.value, ttl: text.domain.ttl }
+  }
+
+  async setPubkey({ node, x, y }: SetPubkeyProps) {
+    await this.client.getRepository(Text).upsert(
+      {
+        key: 'pubkey',
+        value: `(${x},${y})`,
+        domain: {
+          node,
+        },
+      },
+      { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
+    )
+  }
+
+  /**
+   * getPubkey reutilized the getText function with `pubkey` as a reserved key
+   */
+  async getPubkey({
+    node,
+  }: GetPubkeyProps): Promise<GetPubkeyResponse | undefined> {
+    const pubkey = await this.getText({ node, key: 'pubkey' })
+    if (!pubkey) return
+
+    // extracting the X and Y values from a string (e.g (10,20) -> x = 10, y = 20)
+    const [, x, y] = /\((0x\w+),(0x\w+)\)/g.exec(pubkey.value) || []
+    return { value: { x, y }, ttl: pubkey.ttl }
+  }
+
+  async setAbi({ node, value }: SetAbiProps) {
+    await this.client.getRepository(Text).upsert(
+      {
+        key: 'ABI',
+        value,
+        domain: {
+          node,
+        },
+      },
+      { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
+    )
+  }
+
+  /**
+   *  getABI reutilized the getText function with `ABI` as a reserved key
+   */
+  async getABI({ node }: GetAbiProps): Promise<Response | undefined> {
+    return await this.getText({ node, key: 'ABI' })
   }
 }

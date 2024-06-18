@@ -6,8 +6,13 @@ import {
   SetContentHashProps,
   Response,
   RegisterDomainProps,
-  DomainProps,
   TransferDomainProps,
+  DomainProps,
+  GetAbiProps,
+  SetAbiProps,
+  GetPubkeyProps,
+  GetPubkeyResponse,
+  SetPubkeyProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -114,15 +119,15 @@ export class InMemoryRepository {
     return { value: address.address, ttl: domain.ttl }
   }
 
-  async setText({ node, key, value }: SetTextProps) {
+  async setText({ node, key, value }: SetTextProps): Promise<void> {
+    const domain = this.domains.get(node)
+    if (!domain) {
+      throw new Error('Domain foreign key on address violated')
+    }
     const existingText = this.texts.get(`${node}-${key}`)
     if (existingText) {
       existingText.value = value
       return
-    }
-    const domain = this.domains.get(node)
-    if (!domain) {
-      throw new Error('Domain foreign key on address violated')
     }
     this.texts.set(`${node}-${key}`, { key, value, domain })
   }
@@ -132,5 +137,34 @@ export class InMemoryRepository {
     const domain = this.domains.get(node)
     if (!text || !domain) return
     return { value: text.value, ttl: domain.ttl }
+  }
+
+  async setPubkey({ node, x, y }: SetPubkeyProps) {
+    await this.setText({ node, key: 'pubkey', value: `(${x},${y})` })
+  }
+
+  /**
+   * getPubkey reutilized the getText function with `pubkey` as a reserved key
+   */
+  async getPubkey({
+    node,
+  }: GetPubkeyProps): Promise<GetPubkeyResponse | undefined> {
+    const pubkey = await this.getText({ node, key: 'pubkey' })
+    if (!pubkey) return
+
+    // extracting the X and Y values from a string (e.g (0x10A,0x20D) -> x = 0x10A, y = 0x20D)
+    const [, x, y] = /\((0x\w+),(0x\w+)\)/g.exec(pubkey.value) || []
+    return { value: { x, y }, ttl: pubkey.ttl }
+  }
+
+  async setAbi({ node, value }: SetAbiProps) {
+    await this.setText({ node, key: 'ABI', value })
+  }
+
+  /**
+   *  getABI reutilized the getText function with `ABI` as a reserved key
+   */
+  async getABI({ node }: GetAbiProps): Promise<Response | undefined> {
+    return await this.getText({ node, key: 'ABI' })
   }
 }
