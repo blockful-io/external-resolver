@@ -118,7 +118,7 @@ const _ = (async () => {
       args: [
         toHex(packetToBytes(publicAddress)),
         'com.twitter',
-        '@blockful.eth',
+        '@public_goods',
       ],
       address: resolverAddr,
     })
@@ -133,7 +133,7 @@ const _ = (async () => {
         args: {
           functionName: 'setText',
           abi: l2Abi,
-          args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
+          args: [namehash(publicAddress), 'com.twitter', '@public_goods'],
           address: contractAddress,
           account: signer,
         },
@@ -142,6 +142,40 @@ const _ = (async () => {
       console.error('error setting text: ', data.errorName)
     } else {
       console.error('error setting text: ', { err })
+    }
+  }
+
+  // SET ADDRESS
+  try {
+    await client.simulateContract({
+      functionName: 'setAddr',
+      abi: l1Abi,
+      args: [
+        toHex(packetToBytes(publicAddress)),
+        '0x04270c4366010A52192bC8D3E29d9f0E21bBe969',
+      ],
+      address: resolverAddr,
+    })
+  } catch (err) {
+    const data = getRevertErrorData(err)
+    if (data?.errorName === 'StorageHandledByL2') {
+      const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
+
+      await handleL2Storage({
+        chainId,
+        l2Url: providerL2,
+        args: {
+          functionName: 'setAddr',
+          abi: l2Abi,
+          args: [namehash(publicAddress), '0x04270c4366010A52192bC8D3E29d9f0E21bBe969'],
+          address: contractAddress,
+          account: signer,
+        },
+      })
+    } else if (data) {
+      console.error('error setting addr: ', data.errorName)
+    } else {
+      console.error('error setting addr: ', { err })
     }
   }
 })()

@@ -80,9 +80,9 @@ contract DatabaseConfig is Script, ENSHelper {
 
         vm.startBroadcast();
         ENSRegistry registry = new ENSRegistry();
-        ReverseRegistrar registrar = new ReverseRegistrar(registry);
-
         new UniversalResolver(address(registry), urls);
+
+        ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
         // .reverse
         registry.setSubnodeOwner(
@@ -90,6 +90,7 @@ contract DatabaseConfig is Script, ENSHelper {
         );
 
         vm.stopBroadcast();
+
         // addr.reverse
         vm.prank(address(registrar));
         registry.setSubnodeOwner(

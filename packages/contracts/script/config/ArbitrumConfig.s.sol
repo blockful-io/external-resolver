@@ -69,20 +69,18 @@ contract ArbitrumConfig is Script, ENSHelper {
 
         vm.startBroadcast();
         ENSRegistry registry = new ENSRegistry();
-        ReverseRegistrar registrar = new ReverseRegistrar(registry);
+        UniversalResolver universalResolver =
+            new UniversalResolver(address(registry), urls);
 
+        ReverseRegistrar registrar = new ReverseRegistrar(registry);
         // .reverse
         registry.setSubnodeOwner(
             rootNode, labelhash("reverse"), address(registrar)
         );
-
-        UniversalResolver universalResolver =
-            new UniversalResolver(address(registry), urls);
-
         vm.stopBroadcast();
 
+        vm.startPrank(address(registrar));
         // addr.reverse
-        vm.startBroadcast(address(registrar));
         registry.setSubnodeOwner(
             namehash("reverse"), labelhash("addr"), address(registrar)
         );
@@ -92,7 +90,7 @@ contract ArbitrumConfig is Script, ENSHelper {
             IBaseRegistrar(address(registrar)),
             IMetadataService(msg.sender)
         );
-        vm.stopBroadcast();
+        vm.stopPrank();
 
         return NetworkConfig({
             registry: registry,
