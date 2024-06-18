@@ -34,8 +34,8 @@ import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 contract DatabaseResolver is
     IAddrResolver,
     INameResolver,
-    // IABIResolver,
-    // IPubkeyResolver, TODO this should be supported in the future
+    IABIResolver,
+    IPubkeyResolver,
     ITextResolver,
     IContentHashResolver,
     IAddressResolver,
@@ -136,13 +136,13 @@ contract DatabaseResolver is
 
     /**
      * Resolves a name, as specified by ENSIP 10 (wildcard).
-     * @param name The DNS-encoded name to resolve.
+     * @param - name The DNS-encoded name to resolve.
      * @param data The ABI encoded data for the underlying resolution function
      * (Eg, addr(bytes32), text(bytes32,string), etc).
      * @return The return data, ABI encoded identically to the underlying function.
      */
     function resolve(
-        bytes calldata name,
+        bytes calldata, /* name */
         bytes calldata data
     )
         external
@@ -216,13 +216,13 @@ contract DatabaseResolver is
 
     /**
      * Returns the address associated with an ENS node for the corresponding coinType.
-     * @param node The ENS node to query.
-     * @param coinType The coin type of the corresponding address.
+     * @param - node The ENS node to query.
+     * @param - coinType The coin type of the corresponding address.
      * @return Always reverts with an OffchainLookup error.
      */
     function addr(
-        bytes32 node,
-        uint256 coinType
+        bytes32, /* node */
+        uint256 /* coinType */
     )
         public
         view
@@ -255,10 +255,10 @@ contract DatabaseResolver is
     /**
      * Returns the name associated with an ENS node, for reverse records.
      * Defined in EIP181.
-     * @param node The ENS node to query.
+     * @param - node The ENS node to query.
      * @return Always reverts with an OffchainLookup error.
      */
-    function name(bytes32 node)
+    function name(bytes32 /* node */ )
         external
         view
         override
@@ -300,13 +300,13 @@ contract DatabaseResolver is
 
     /**
      * Returns the text data associated with an ENS node and key.
-     * @param node The ENS node to query.
-     * @param key The text data key to query.
+     * @param = node The ENS node to query.
+     * @param = key The text data key to query.
      * @return Always reverts with an OffchainLookup error.
      */
     function text(
-        bytes32 node,
-        string calldata key
+        bytes32, /* node */
+        string calldata /* key */
     )
         external
         view
@@ -339,16 +339,85 @@ contract DatabaseResolver is
 
     /**
      * Returns the contenthash associated with an ENS node.
-     * @param node The ENS node to query.
+     * @param - node The ENS node to query.
      * @return Always reverts with an OffchainLookup error.
      */
-    function contenthash(bytes32 node)
+    function contenthash(bytes32 /* node */ )
         external
         view
         override
         returns (bytes memory)
     {
         _offChainLookup(msg.data);
+    }
+
+    //////// ENS ERC-205 LOGIC ////////
+
+    /**
+     * Returns the contenthash associated with an ENS node.
+     * @param - node The ENS node to query.
+     * @param - contentType encoding of the returned ABI
+     * @return Always reverts with an OffchainLookup error.
+     */
+    function ABI(
+        bytes32, /* node */
+        uint256 /* contentTypes */
+    )
+        external
+        view
+        override
+        returns (uint256, bytes memory)
+    {
+        _offChainLookup(msg.data);
+    }
+
+    function setABI(
+        bytes32 node,
+        uint256 contentType,
+        bytes calldata data
+    )
+        external
+    {
+        IWriteDeferral.parameter[] memory params =
+            new IWriteDeferral.parameter[](3);
+
+        params[0].name = "node";
+        params[0].value = TypeToString.bytes32ToString(node);
+
+        params[1].name = "contentType";
+        params[1].value = Strings.toString(contentType);
+
+        params[1].name = "data";
+        params[1].value = TypeToString.bytesToString(data);
+
+        _offChainStorage(params);
+    }
+
+    //////// ENS ERC-619 LOGIC ////////
+
+    function pubkey(bytes32 /* node */ )
+        external
+        view
+        override
+        returns (bytes32, /* x */ bytes32 /* y */ )
+    {
+        _offChainLookup(msg.data);
+    }
+
+    function setPubkey(bytes32 node, bytes32 x, bytes32 y) external {
+        IWriteDeferral.parameter[] memory params =
+            new IWriteDeferral.parameter[](3);
+
+        params[0].name = "node";
+        params[0].value = TypeToString.bytes32ToString(node);
+
+        params[1].name = "x";
+        params[1].value = TypeToString.bytes32ToString(x);
+
+        params[1].name = "y";
+        params[1].value = TypeToString.bytes32ToString(y);
+
+        _offChainStorage(params);
     }
 
     //////// CCIP READ (EIP-3668) ////////
