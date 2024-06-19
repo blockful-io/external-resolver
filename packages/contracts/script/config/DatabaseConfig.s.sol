@@ -89,17 +89,17 @@ contract DatabaseConfig is Script, ENSHelper {
             rootNode, labelhash("reverse"), address(registrar)
         );
 
+        // .eth
+        registry.setSubnodeRecord(
+            rootNode, labelhash("eth"), msg.sender, address(0x123), 9999999999
+        );
+
         vm.stopBroadcast();
 
         // addr.reverse
         vm.prank(address(registrar));
         registry.setSubnodeOwner(
             namehash("reverse"), labelhash("addr"), address(registrar)
-        );
-
-        // .eth
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), msg.sender, address(0x123), 9999999999
         );
 
         return NetworkConfig({
