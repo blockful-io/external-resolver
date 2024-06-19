@@ -81,11 +81,13 @@ export async function handleDBStorage({
   url,
   message,
   signer,
+  multicall,
 }: {
   domain: DomainData
   url: string
   message: MessageData
   signer: PrivateKeyAccount
+  multicall?: boolean
 }) {
   const signature = await signer.signTypedData({
     domain,
@@ -105,12 +107,17 @@ export async function handleDBStorage({
     primaryType: 'Message',
   })
 
-  const callData = encodeFunctionData({
-    abi: dbABI,
-    functionName: message.functionSelector,
-    args: message.parameters.map((arg) => arg.value),
-  })
-  await ccipRequest({
+  let callData
+  if (multicall) {
+    callData = message.parameters[0].value as `0x${string}`
+  } else {
+    callData = encodeFunctionData({
+      abi: dbABI,
+      functionName: message.functionSelector,
+      args: message.parameters.map((arg) => arg.value),
+    })
+  }
+  return await ccipRequest({
     body: {
       data: callData,
       signature: { message, domain, signature },

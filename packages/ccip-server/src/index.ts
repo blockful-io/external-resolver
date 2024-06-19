@@ -254,7 +254,7 @@ export class Server {
       status: 200,
       body: {
         data:
-          handler.type.outputs && result && result.data?.length
+          handler.type.outputs && result?.data?.length
             ? hexlify(
               ethers.utils.defaultAbiCoder.encode(
                 handler.type.outputs,
