@@ -359,7 +359,7 @@ describe('DatabaseResolver', () => {
     repo.setAddresses([
       {
         domain,
-        coin: 60,
+        coin: '60',
         address: '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5',
       },
     ])
@@ -428,5 +428,89 @@ describe('DatabaseResolver', () => {
     })
 
     expect(twitter).not.eq('0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5')
+  })
+
+  it('should handle multicall valid write calls', async () => {
+    const node = namehash(rawNode)
+
+    const [resolverAddr] = (await client.readContract({
+      address: universalResolverAddress,
+      functionName: 'findResolver',
+      abi: abiUniversalResolver,
+      args: [toHex(packetToBytes(rawNode))],
+    })) as Hash[]
+
+    const calls = [
+      encodeFunctionData({
+        abi: abiDBResolver,
+        functionName: 'setText',
+        args: [node, 'com.twitter', '@multicall'],
+      }),
+      encodeFunctionData({
+        abi: abiDBResolver,
+        functionName: 'setAddr',
+        args: [node, '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
+      }),
+    ]
+
+    try {
+      await client.simulateContract({
+        address: resolverAddr,
+        abi: abiDBResolver,
+        functionName: 'multicall',
+        args: [calls],
+      })
+    } catch (err) {
+      const data = getRevertErrorData(err)
+      if (data?.errorName === 'StorageHandledByOffChainDatabase') {
+        const [domain, url, message] = data.args as [
+          DomainData,
+          string,
+          MessageData,
+        ]
+
+        const signature = await owner.signTypedData({
+          domain,
+          message,
+          types: {
+            Message: [
+              { name: 'functionSelector', type: 'bytes4' },
+              { name: 'sender', type: 'address' },
+              { name: 'parameters', type: 'Parameter[]' },
+              { name: 'expirationTimestamp', type: 'uint256' },
+            ],
+            Parameter: [
+              { name: 'name', type: 'string' },
+              { name: 'value', type: 'string' },
+            ],
+          },
+          primaryType: 'Message',
+        })
+
+        const response = await ccipRequest({
+          body: {
+            data: message.parameters[0].value as `0x${string}`,
+            signature: { message, domain, signature },
+            sender: owner.address,
+          },
+          url,
+        })
+
+        expect(response?.status).eq(200)
+
+        const text = await client.getEnsText({
+          name: normalize(rawNode),
+          universalResolverAddress,
+          key: 'com.twitter',
+        })
+        expect(text).eq('@multicall')
+
+        const address = await client.getEnsAddress({
+          name: normalize(rawNode),
+          universalResolverAddress,
+        })
+        expect(address).match(/0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5/i)
+      }
+    }
   })
 })

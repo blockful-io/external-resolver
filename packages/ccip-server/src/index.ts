@@ -114,14 +114,14 @@ export class Server {
       ],
       {
         type: 'multicall',
-        func: async (args: ethers.utils.Result, { to }: RPCCall) => {
+        func: async (args: ethers.utils.Result, { to, signature }: RPCCall) => {
           return {
             data: [
               await Promise.all(
                 args[0].map(async (data: any) => {
                   let error
                   try {
-                    const { status, body } = await this.call({ to, data })
+                    const { status, body } = await this.call({ to, data, signature })
                     if (status === 200) return body.data // Q: should this be 2XX?
                     error = body.message || 'unknown error'
                   } catch (err) {
@@ -256,11 +256,11 @@ export class Server {
         data:
           handler.type.outputs && result && result.data?.length
             ? hexlify(
-                ethers.utils.defaultAbiCoder.encode(
-                  handler.type.outputs,
-                  result.data,
-                ),
-              )
+              ethers.utils.defaultAbiCoder.encode(
+                handler.type.outputs,
+                result.data,
+              ),
+            )
             : '0x',
         ttl: result?.extraData,
       },
