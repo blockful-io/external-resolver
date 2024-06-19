@@ -97,6 +97,11 @@ contract DatabaseConfig is Script, ENSHelper {
             namehash("reverse"), labelhash("addr"), address(registrar)
         );
 
+        // .eth
+        registry.setSubnodeRecord(
+            rootNode, labelhash("eth"), msg.sender, address(0x123), 9999999999
+        );
+
         return NetworkConfig({
             gatewayUrl: urls[0],
             gatewayTimestamp: 600,

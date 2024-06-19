@@ -22,29 +22,21 @@ contract DatabaseResolverScript is Script, ENSHelper {
             ENSRegistry registry
         ) = config.activeNetworkConfig();
 
-        vm.startBroadcast();
-
+        vm.broadcast();
         DatabaseResolver resolver =
             new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
 
-        // .eth
-        registry.setSubnodeRecord(
-            rootNode,
-            labelhash("eth"),
-            msg.sender,
-            address(resolver),
-            9999999999
-        );
+        address owner = registry.owner(namehash("eth"));
+
+        vm.broadcast(owner);
         // blockful.eth
         registry.setSubnodeRecord(
             namehash("eth"),
             labelhash("blockful"),
-            msg.sender,
+            0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
             address(resolver),
             9999999999
         );
-
-        vm.stopBroadcast();
     }
 
 }
