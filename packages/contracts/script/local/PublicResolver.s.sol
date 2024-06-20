@@ -11,7 +11,7 @@ import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 import {IBaseRegistrar} from "@ens-contracts/ethregistrar/IBaseRegistrar.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 
-import "../Helper.sol";
+import {ENSHelper} from "../Helper.sol";
 
 contract PublicResolverScript is Script, ENSHelper {
 
@@ -27,8 +27,11 @@ contract PublicResolverScript is Script, ENSHelper {
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
         // .reverse
-        registry.setSubnodeOwner(rootNode, labelhash("reverse"), publicKey);
+        registry.setSubnodeOwner(
+            rootNode, labelhash("reverse"), address(registrar)
+        );
         // addr.reverse
+        vm.prank(address(registrar));
         registry.setSubnodeOwner(
             namehash("reverse"), labelhash("addr"), address(registrar)
         );

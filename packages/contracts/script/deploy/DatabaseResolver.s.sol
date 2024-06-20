@@ -4,17 +4,18 @@ pragma solidity ^0.8.13;
 import {Script} from "forge-std/Script.sol";
 
 import {ENSHelper} from "../Helper.sol";
-import {Config} from "../Config.s.sol";
+import {DatabaseConfig} from "../config/DatabaseConfig.s.sol";
 import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 
 contract DatabaseResolverScript is Script, ENSHelper {
 
     function run() external returns (DatabaseResolver) {
-        Config config = new Config(block.chainid);
+        DatabaseConfig config = new DatabaseConfig(block.chainid);
         (
             string memory gatewayUrl,
             uint32 gatewayTimestamp,
-            address[] memory signers
+            address[] memory signers,
+            /* ENSRegistry */
         ) = config.activeNetworkConfig();
 
         vm.startBroadcast();

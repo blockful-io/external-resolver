@@ -8,53 +8,35 @@ import {ReverseRegistrar} from
 import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 
 import {ENSHelper} from "../Helper.sol";
-import {Config} from "../Config.s.sol";
+import {DatabaseConfig} from "../config/DatabaseConfig.s.sol";
 import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 
 contract DatabaseResolverScript is Script, ENSHelper {
 
     function run() external {
-        Config config = new Config(block.chainid);
+        DatabaseConfig config = new DatabaseConfig(block.chainid);
         (
             string memory gatewayUrl,
             uint32 gatewayTimestamp,
-            address[] memory signers
+            address[] memory signers,
+            ENSRegistry registry
         ) = config.activeNetworkConfig();
-        string[] memory urls = new string[](1);
-        urls[0] = gatewayUrl;
 
-        uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        address publicKey = vm.addr(privateKey);
-        vm.startBroadcast(privateKey);
-
-        ENSRegistry registry = new ENSRegistry();
-        new UniversalResolver(address(registry), urls);
-        ReverseRegistrar registrar = new ReverseRegistrar(registry);
-
-        // .reverse
-        registry.setSubnodeOwner(rootNode, labelhash("reverse"), publicKey);
-        // addr.reverse
-        registry.setSubnodeOwner(
-            namehash("reverse"), labelhash("addr"), address(registrar)
-        );
-
+        vm.broadcast();
         DatabaseResolver resolver =
             new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
 
-        // .eth
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), publicKey, address(resolver), 100000
-        );
+        address owner = registry.owner(namehash("eth"));
+
+        vm.broadcast(owner);
         // blockful.eth
         registry.setSubnodeRecord(
             namehash("eth"),
             labelhash("blockful"),
-            publicKey,
+            0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
             address(resolver),
-            100000
+            9999999999
         );
-
-        vm.stopBroadcast();
     }
 
 }

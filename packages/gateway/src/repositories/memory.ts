@@ -5,8 +5,9 @@ import {
   GetAddressProps,
   SetContentHashProps,
   Response,
-  DomainProps,
   RegisterDomainProps,
+  TransferDomainProps,
+  DomainProps,
   GetAbiProps,
   SetAbiProps,
   GetPubkeyProps,
@@ -64,13 +65,7 @@ export class InMemoryRepository {
     this.domains.set(node, { node, addresses: [], texts: [], ttl, owner })
   }
 
-  async transfer({
-    node,
-    owner,
-  }: {
-    node: `0x${string}`
-    owner: `0x${string}`
-  }) {
+  async transfer({ node, owner }: TransferDomainProps) {
     const existingNode = this.domains.get(node)
     if (!existingNode) {
       throw Error('Node not found')

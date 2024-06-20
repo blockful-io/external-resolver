@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "forge-std/console.sol";
 import {Test} from "forge-std/Test.sol";
-import "@ens-contracts/registry/ENSRegistry.sol";
+import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
 import {
     PublicResolver,
     INameWrapper
@@ -11,51 +10,40 @@ import {
 import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import "@ens-contracts/utils/UniversalResolver.sol";
 
-import "../script/Helper.sol";
-import {Config} from "../script/Config.s.sol";
+import {ENSHelper} from "../script/Helper.sol";
+import {DatabaseConfig} from "../script/config/DatabaseConfig.s.sol";
 import {DatabaseResolver} from "../src/DatabaseResolver.sol";
 import {DatabaseResolverScript} from "../script/deploy/DatabaseResolver.s.sol";
 
 contract DatabaseResolverTest is Test, ENSHelper {
 
     DatabaseResolver public resolver;
-    ENSRegistry public registry;
+    ENSRegistry registry;
     address owner;
 
     // Initial setup before each test
     function setUp() public {
         owner = address(this);
-        Config config = new Config(block.chainid);
+        DatabaseConfig config = new DatabaseConfig(block.chainid);
         (
             string memory gatewayUrl,
             uint256 gatewayTimestamp,
-            address[] memory signers
+            address[] memory signers,
+            ENSRegistry _registry
         ) = config.activeNetworkConfig();
+        registry = _registry;
         string[] memory urls = new string[](1);
         urls[0] = gatewayUrl;
 
-        registry = new ENSRegistry();
-
-        new UniversalResolver(address(registry), urls);
-        ReverseRegistrar registrar = new ReverseRegistrar(registry);
-
-        // .reverse
-        registry.setSubnodeOwner(rootNode, labelhash("reverse"), owner);
-        // addr.reverse
-        registry.setSubnodeOwner(
-            namehash("reverse"), labelhash("addr"), address(registrar)
-        );
-
         resolver = new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
-
-        registrar.setDefaultResolver(address(resolver));
     }
 
     // Test the resolver setup from the constructor
-    function test_ResolverSetupFromConstructor() public {
-        Config config = new Config(block.chainid);
-        ( /* gatewayUrl */ , /* gatewayTimestamp */, address[] memory signers) =
-            config.activeNetworkConfig();
+    function testResolverSetupFromConstructor() public {
+        DatabaseConfig config = new DatabaseConfig(block.chainid);
+        ( /* gatewayUrl */
+            , /* gatewayTimestamp */, address[] memory signers, /* registry */
+        ) = config.activeNetworkConfig();
         assertTrue(resolver.isSigner(signers[0]));
         assertEq(
             resolver.gatewayUrl(), "http://127.0.0.1:3000/{sender}/{data}.json"
@@ -88,9 +76,10 @@ contract DatabaseResolverTest is Test, ENSHelper {
         vm.prank(owner);
         resolver.addSigners(new_signers);
 
-        Config config = new Config(block.chainid);
-        ( /* gatewayUrl */ , /* gatewayTimestamp */, address[] memory signers) =
-            config.activeNetworkConfig();
+        DatabaseConfig config = new DatabaseConfig(block.chainid);
+        ( /* gatewayUrl */
+            , /* gatewayTimestamp */, address[] memory signers, /* registry */
+        ) = config.activeNetworkConfig();
 
         assertTrue(resolver.isSigner(signers[0]));
         assertTrue(resolver.isSigner(new_signers[0]));
@@ -106,9 +95,10 @@ contract DatabaseResolverTest is Test, ENSHelper {
         vm.prank(address(0x44));
         resolver.addSigners(new_signers);
 
-        Config config = new Config(block.chainid);
-        ( /* gatewayUrl */ , /* gatewayTimestamp */, address[] memory signers) =
-            config.activeNetworkConfig();
+        DatabaseConfig config = new DatabaseConfig(block.chainid);
+        ( /* gatewayUrl */
+            , /* gatewayTimestamp */, address[] memory signers, /* registry */
+        ) = config.activeNetworkConfig();
 
         assertTrue(resolver.isSigner(signers[0]));
         assertFalse(resolver.isSigner(new_signers[0]));
