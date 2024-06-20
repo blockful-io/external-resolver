@@ -25,15 +25,14 @@ contract L1ResolverScript is Script, ENSHelper {
         string[] memory urls = new string[](1);
         urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
 
-        ArbitrumConfig config = new ArbitrumConfig(block.chainid);
+        ArbitrumConfig config = new ArbitrumConfig(block.chainid, msg.sender);
         (
             ENSRegistry registry,
             , // ReverseRegistrar
             , // UniversalResolver
             , // IRollupCore,
             NameWrapper nameWrapper,
-            uint256 targetChainId,
-            /* uint256 privateKey */
+            uint256 targetChainId
         ) = config.activeNetworkConfig();
 
         vm.startBroadcast();
@@ -42,10 +41,6 @@ contract L1ResolverScript is Script, ENSHelper {
         L1Resolver l1resolver =
             new L1Resolver(targetChainId, verifier, registry, nameWrapper);
 
-        // .eth
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), msg.sender, address(l1resolver), 99999
-        );
         // blockful.eth
         registry.setSubnodeRecord(
             namehash("eth"),

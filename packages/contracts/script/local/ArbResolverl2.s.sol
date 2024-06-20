@@ -19,17 +19,13 @@ import {L1Resolver} from "../../src/L1Resolver.sol";
 contract arbResolverL2Script is Script, ENSHelper {
 
     function run() external {
-        uint256 privateKey =
-            0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659;
-        address sender = vm.addr(privateKey);
-
-        vm.startBroadcast(privateKey);
+        vm.startBroadcast();
 
         L2Resolver arbResolver = new L2Resolver();
         bytes32 node = namehash("blockful.eth");
 
-        arbResolver.setOwner(node, sender);
-        arbResolver.setAddr(node, sender);
+        arbResolver.setOwner(node, msg.sender);
+        arbResolver.setAddr(node, msg.sender);
         arbResolver.setText(
             node,
             "avatar",

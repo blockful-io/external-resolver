@@ -22,15 +22,14 @@ import {L1Resolver} from "../../src/L1Resolver.sol";
 contract ArbitrumResolverScript is Script, ENSHelper {
 
     function run() external {
-        ArbitrumConfig config = new ArbitrumConfig(block.chainid);
+        ArbitrumConfig config = new ArbitrumConfig(block.chainid, msg.sender);
         (
             ENSRegistry registry,
             , /* ReverseRegistrar */
             , /* UniversalResolver */
             IRollupCore rollup,
             NameWrapper nameWrapper,
-            uint256 targetChainId,
-            uint256 privateKey
+            uint256 targetChainId
         ) = config.activeNetworkConfig();
 
         string[] memory urls = new string[](1);
@@ -38,7 +37,7 @@ contract ArbitrumResolverScript is Script, ENSHelper {
 
         address l2Resolver = vm.envAddress("L2_RESOLVER_ADDRESS");
 
-        vm.startBroadcast(privateKey);
+        vm.startBroadcast();
         ArbVerifier verifier = new ArbVerifier(urls, rollup);
         L1Resolver l1resolver =
             new L1Resolver(targetChainId, verifier, registry, nameWrapper);
