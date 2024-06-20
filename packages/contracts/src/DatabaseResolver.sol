@@ -54,6 +54,9 @@ contract DatabaseResolver is
     uint256 public gatewayDatabaseTimeoutDuration;
     EnumerableSetUpgradeable.AddressSet private _signers;
 
+    /// The chainId that this contract lives on
+    uint64 private immutable _CHAIN_ID;
+
     //////// EVENTS ////////
 
     event SignerAdded(address indexed addedSigner);
@@ -71,8 +74,6 @@ contract DatabaseResolver is
     string private constant _WRITE_DEFERRAL_DOMAIN_NAME = "DatabaseResolver";
     /// Constant specifing the version of the domain definition.
     string private constant _WRITE_DEFERRAL_DOMAIN_VERSION = "1";
-    /// Constant specifing the chainId that this contract lives on
-    uint64 private constant _CHAIN_ID = 1;
 
     //////// INITIALIZER ////////
 
@@ -87,6 +88,8 @@ contract DatabaseResolver is
         uint256 newOffChainDatabaseTimeoutDuration,
         address[] memory newSigners
     ) {
+        _CHAIN_ID = uint64(block.chainid);
+
         _addSigners(newSigners);
         _setGatewayUrl(newGatewayUrl);
         _setOffChainDatabaseTimeoutDuration(newOffChainDatabaseTimeoutDuration);
