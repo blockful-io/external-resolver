@@ -34,9 +34,9 @@ export class Domain {
   @Column({ type: 'varchar' })
   owner: string
 
-  @CreateDateColumn({ default: 'now' })
+  @CreateDateColumn()
   createdAt?: Date
 
-  @UpdateDateColumn({ default: 'now' })
+  @UpdateDateColumn()
   updatedAt?: Date
 }

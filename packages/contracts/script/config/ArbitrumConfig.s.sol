@@ -76,17 +76,9 @@ contract ArbitrumConfig is Script, ENSHelper {
             new UniversalResolver(address(registry), urls);
 
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
-        // .reverse
-        registry.setSubnodeOwner(
-            rootNode, labelhash("reverse"), address(registrar)
-        );
-        // .eth
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), sender, address(0x123), 99999
-        );
-        vm.stopBroadcast();
 
-        vm.startPrank(address(registrar));
+        // .reverse
+        registry.setSubnodeOwner(rootNode, labelhash("reverse"), msg.sender);
         // addr.reverse
         registry.setSubnodeOwner(
             namehash("reverse"), labelhash("addr"), address(registrar)
@@ -97,7 +89,8 @@ contract ArbitrumConfig is Script, ENSHelper {
             IBaseRegistrar(address(registrar)),
             IMetadataService(msg.sender)
         );
-        vm.stopPrank();
+
+        vm.stopBroadcast();
 
         return NetworkConfig({
             registry: registry,

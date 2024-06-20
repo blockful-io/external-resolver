@@ -24,7 +24,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
     // Initial setup before each test
     function setUp() public {
         owner = address(this);
-        DatabaseConfig config = new DatabaseConfig(block.chainid);
+        DatabaseConfig config = new DatabaseConfig(block.chainid, owner);
         (
             string memory gatewayUrl,
             uint256 gatewayTimestamp,
@@ -40,7 +40,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
 
     // Test the resolver setup from the constructor
     function testResolverSetupFromConstructor() public {
-        DatabaseConfig config = new DatabaseConfig(block.chainid);
+        DatabaseConfig config = new DatabaseConfig(block.chainid, owner);
         ( /* gatewayUrl */
             , /* gatewayTimestamp */, address[] memory signers, /* registry */
         ) = config.activeNetworkConfig();
@@ -76,7 +76,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
         vm.prank(owner);
         resolver.addSigners(new_signers);
 
-        DatabaseConfig config = new DatabaseConfig(block.chainid);
+        DatabaseConfig config = new DatabaseConfig(block.chainid, owner);
         ( /* gatewayUrl */
             , /* gatewayTimestamp */, address[] memory signers, /* registry */
         ) = config.activeNetworkConfig();
@@ -95,7 +95,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
         vm.prank(address(0x44));
         resolver.addSigners(new_signers);
 
-        DatabaseConfig config = new DatabaseConfig(block.chainid);
+        DatabaseConfig config = new DatabaseConfig(block.chainid, owner);
         ( /* gatewayUrl */
             , /* gatewayTimestamp */, address[] memory signers, /* registry */
         ) = config.activeNetworkConfig();

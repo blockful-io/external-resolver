@@ -29,9 +29,9 @@ export class Address {
   })
   domain: Domain
 
-  @CreateDateColumn({ default: 'now' })
+  @CreateDateColumn()
   createdAt?: Date
 
-  @UpdateDateColumn({ default: 'now' })
+  @UpdateDateColumn()
   updatedAt?: Date
 }

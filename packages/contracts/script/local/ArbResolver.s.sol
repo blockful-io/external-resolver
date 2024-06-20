@@ -43,6 +43,11 @@ contract arbResolverScript is Script, ENSHelper {
         L1Resolver l1resolver =
             new L1Resolver(targetChainId, verifier, registry, nameWrapper);
 
+        // .eth
+        registry.setSubnodeRecord(
+            rootNode, labelhash("eth"), msg.sender, address(0x123), 99999
+        );
+
         // blockful.eth
         registry.setSubnodeRecord(
             namehash("eth"),

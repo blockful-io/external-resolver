@@ -10,7 +10,7 @@ import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 contract DatabaseResolverScript is Script, ENSHelper {
 
     function run() external returns (DatabaseResolver) {
-        DatabaseConfig config = new DatabaseConfig(block.chainid);
+        DatabaseConfig config = new DatabaseConfig(block.chainid, msg.sender);
         (
             string memory gatewayUrl,
             uint32 gatewayTimestamp,
