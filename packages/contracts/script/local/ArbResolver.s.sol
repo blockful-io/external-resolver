@@ -24,37 +24,30 @@ import {ArbitrumConfig} from "../config/ArbitrumConfig.s.sol";
 contract arbResolverScript is Script, ENSHelper {
 
     function run() external {
-        ArbitrumConfig config = new ArbitrumConfig(block.chainid);
+        ArbitrumConfig config = new ArbitrumConfig(block.chainid, msg.sender);
         (
             ENSRegistry registry,
             , /* ReverseRegistrar */
             , /* UniversalResolver */
             IRollupCore rollup,
             NameWrapper nameWrapper,
-            uint256 targetChainId,
-            uint256 privateKey
+            uint256 targetChainId
         ) = config.activeNetworkConfig();
-
-        address sender = vm.addr(privateKey);
 
         string[] memory urls = new string[](1);
         urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
 
-        vm.startBroadcast(privateKey);
+        vm.startBroadcast();
 
         ArbVerifier verifier = new ArbVerifier(urls, rollup);
         L1Resolver l1resolver =
             new L1Resolver(targetChainId, verifier, registry, nameWrapper);
 
-        // .eth
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), sender, address(l1resolver), 100000
-        );
         // blockful.eth
         registry.setSubnodeRecord(
             namehash("eth"),
             labelhash("blockful"),
-            sender,
+            msg.sender,
             address(l1resolver),
             100000
         );

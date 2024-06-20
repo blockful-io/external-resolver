@@ -115,11 +115,7 @@ const _ = (async () => {
     await client.simulateContract({
       functionName: 'setText',
       abi: l1Abi,
-      args: [
-        toHex(packetToBytes(publicAddress)),
-        'com.twitter',
-        '@public_goods',
-      ],
+      args: [toHex(packetToBytes(publicAddress)), 'com.twitter', '@blockful'],
       address: resolverAddr,
     })
   } catch (err) {
@@ -133,7 +129,7 @@ const _ = (async () => {
         args: {
           functionName: 'setText',
           abi: l2Abi,
-          args: [namehash(publicAddress), 'com.twitter', '@public_goods'],
+          args: [namehash(publicAddress), 'com.twitter', '@blockful'],
           address: contractAddress,
           account: signer,
         },
