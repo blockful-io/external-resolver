@@ -24,10 +24,10 @@ contract DatabaseConfig is Script, ENSHelper {
         ENSRegistry registry;
     }
 
-    constructor(uint256 chainId) {
+    constructor(uint256 chainId, address sender) {
         if (chainId == 11155111) _activeNetworkConfig = _getSepoliaConfig();
         else if (chainId == 1) _activeNetworkConfig = _getMainnetConfig();
-        else _activeNetworkConfig = _getAnvilConfig();
+        else _activeNetworkConfig = _getAnvilConfig(sender);
     }
 
     function activeNetworkConfig()
@@ -68,39 +68,34 @@ contract DatabaseConfig is Script, ENSHelper {
         });
     }
 
-    function _getAnvilConfig() private returns (NetworkConfig memory) {
+    function _getAnvilConfig(address sender)
+        private
+        returns (NetworkConfig memory)
+    {
         if (address(_activeNetworkConfig.registry) != address(0)) {
             return _activeNetworkConfig;
         }
 
         address[] memory signers = new address[](1);
-        signers[0] = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+        signers[0] = sender;
         string[] memory urls = new string[](1);
         urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
 
-        vm.startBroadcast();
+        vm.startBroadcast(sender);
         ENSRegistry registry = new ENSRegistry();
         new UniversalResolver(address(registry), urls);
 
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
         // .reverse
-        registry.setSubnodeOwner(
-            rootNode, labelhash("reverse"), address(registrar)
-        );
-
-        // .eth
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), msg.sender, address(0x123), 9999999999
-        );
-
-        vm.stopBroadcast();
+        registry.setSubnodeOwner(rootNode, labelhash("reverse"), sender);
 
         // addr.reverse
-        vm.prank(address(registrar));
         registry.setSubnodeOwner(
             namehash("reverse"), labelhash("addr"), address(registrar)
         );
+
+        vm.stopBroadcast();
 
         return NetworkConfig({
             gatewayUrl: urls[0],

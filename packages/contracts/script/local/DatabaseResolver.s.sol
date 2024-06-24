@@ -14,7 +14,7 @@ import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 contract DatabaseResolverScript is Script, ENSHelper {
 
     function run() external {
-        DatabaseConfig config = new DatabaseConfig(block.chainid);
+        DatabaseConfig config = new DatabaseConfig(block.chainid, msg.sender);
         (
             string memory gatewayUrl,
             uint32 gatewayTimestamp,
@@ -26,17 +26,26 @@ contract DatabaseResolverScript is Script, ENSHelper {
         DatabaseResolver resolver =
             new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
 
-        address owner = registry.owner(namehash("eth"));
+        vm.startBroadcast();
 
-        vm.broadcast(owner);
+        // .eth
+        registry.setSubnodeRecord(
+            rootNode,
+            labelhash("eth"),
+            msg.sender,
+            address(resolver),
+            9999999999
+        );
+
         // blockful.eth
         registry.setSubnodeRecord(
             namehash("eth"),
             labelhash("blockful"),
-            0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+            msg.sender,
             address(resolver),
             9999999999
         );
+        vm.stopBroadcast();
     }
 
 }
