@@ -135,6 +135,19 @@ contract DatabaseResolver is
         _offChainStorage(params);
     }
 
+    function multicall(bytes[] calldata datas)
+        external
+        returns (bytes[] memory /* results */ )
+    {
+        IWriteDeferral.parameter[] memory params =
+            new IWriteDeferral.parameter[](1);
+
+        params[0].name = "data";
+        params[0].value = TypeToString.bytesToString(msg.data);
+
+        _offChainStorage(params);
+    }
+
     //////// ENSIP 10 ////////
 
     /**

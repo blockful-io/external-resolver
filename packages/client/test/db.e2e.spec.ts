@@ -56,7 +56,7 @@ import { InMemoryRepository } from '@blockful/gateway/src/repositories'
 import { withSigner } from '@blockful/gateway/src/middlewares'
 import { OwnershipValidator } from '@blockful/gateway/src/services'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
-import { getRevertErrorData, ccipRequest } from '../src/client'
+import { getRevertErrorData, handleDBStorage } from '../src/client'
 
 const GATEWAY_URL = 'http://127.0.0.1:3000/{sender}/{data}.json'
 
@@ -158,25 +158,27 @@ function setupGateway(
 }
 
 async function offchainWriting({
-  node,
+  name,
   functionName,
   args,
   signer,
   abi,
   universalResolverAddress,
+  multicall,
 }: {
-  node: string
+  name: string
   functionName: string
   signer: PrivateKeyAccount
   abi: unknown[]
   args: unknown[]
   universalResolverAddress: Hex
+  multicall?: boolean
 }): Promise<Response | void> {
   const [resolverAddr] = (await client.readContract({
     address: universalResolverAddress,
     functionName: 'findResolver',
     abi: abiUniversalResolver,
-    args: [toHex(packetToBytes(node))],
+    args: [toHex(packetToBytes(name))],
   })) as Hash[]
 
   try {
@@ -189,57 +191,26 @@ async function offchainWriting({
   } catch (err) {
     const data = getRevertErrorData(err)
     if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [domain, url, message] = data.args as [
+      const [domain, url, message] = data?.args as [
         DomainData,
         string,
         MessageData,
       ]
-
-      const signature = await signer.signTypedData({
-        domain,
-        message,
-        types: {
-          Message: [
-            { name: 'functionSelector', type: 'bytes4' },
-            { name: 'sender', type: 'address' },
-            { name: 'parameters', type: 'Parameter[]' },
-            { name: 'expirationTimestamp', type: 'uint256' },
-          ],
-          Parameter: [
-            { name: 'name', type: 'string' },
-            { name: 'value', type: 'string' },
-          ],
-        },
-        primaryType: 'Message',
-      })
-
-      const callData = encodeFunctionData({
-        abi,
-        functionName: message.functionSelector,
-        args: message.parameters.map((arg) => arg.value),
-      })
-      return await ccipRequest({
-        body: {
-          data: callData,
-          signature: { message, domain, signature },
-          sender: signer.address,
-        },
-        url,
-      })
+      return await handleDBStorage({ domain, url, message, signer, multicall })
     }
   }
 }
 
 describe('DatabaseResolver', () => {
   let repo: InMemoryRepository
-  const rawNode = 'database.eth'
-  const node = namehash(rawNode)
+  const name = normalize('database.eth')
+  const node = namehash(name)
   const domains = new Map()
   const owner = privateKeyToAccount(generatePrivateKey())
   const domain = {
     node,
     owner: owner.address,
-    ttl: 99712622115,
+    ttl: 300,
     addresses: [],
     texts: [],
   }
@@ -278,7 +249,7 @@ describe('DatabaseResolver', () => {
       },
     ])
     const avatar = await client.getEnsAvatar({
-      name: normalize(rawNode),
+      name,
       universalResolverAddress,
     })
     expect(avatar).equal(
@@ -295,7 +266,7 @@ describe('DatabaseResolver', () => {
       },
     ])
     const twitter = await client.getEnsText({
-      name: normalize(rawNode),
+      name,
       key: 'com.twitter',
       universalResolverAddress,
     })
@@ -305,10 +276,10 @@ describe('DatabaseResolver', () => {
 
   it('should write valid text record onto the database', async () => {
     const response = await offchainWriting({
-      node: normalize(rawNode),
+      name,
       functionName: 'setText',
       abi: abiDBResolver,
-      args: [namehash(rawNode), 'com.twitter', '@blockful'],
+      args: [node, 'com.twitter', '@blockful'],
       universalResolverAddress,
       signer: owner,
     })
@@ -316,7 +287,7 @@ describe('DatabaseResolver', () => {
     expect(response?.status).equal(200)
 
     const twitter = await client.getEnsText({
-      name: normalize(rawNode),
+      name,
       key: 'com.twitter',
       universalResolverAddress,
     })
@@ -326,10 +297,10 @@ describe('DatabaseResolver', () => {
 
   it('should block unauthorized text change', async () => {
     const response = await offchainWriting({
-      node: normalize(rawNode),
+      name,
       functionName: 'setText',
       abi: abiDBResolver,
-      args: [namehash(rawNode), 'com.twitter', '@unauthorized'],
+      args: [node, 'com.twitter', '@unauthorized'],
       universalResolverAddress,
       signer: privateKeyToAccount(generatePrivateKey()),
     })
@@ -337,7 +308,7 @@ describe('DatabaseResolver', () => {
     expect(response?.status).equal(401)
 
     const twitter = await client.getEnsText({
-      name: normalize(rawNode),
+      name,
       key: 'com.twitter',
       universalResolverAddress,
     })
@@ -347,7 +318,7 @@ describe('DatabaseResolver', () => {
 
   it('should read invalid text record from database', async () => {
     const twitter = await client.getEnsText({
-      name: normalize(rawNode),
+      name,
       key: 'com.twitter',
       universalResolverAddress,
     })
@@ -359,12 +330,12 @@ describe('DatabaseResolver', () => {
     repo.setAddresses([
       {
         domain,
-        coin: 60,
+        coin: '60',
         address: '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5',
       },
     ])
     const addr = await client.getEnsAddress({
-      name: normalize(rawNode),
+      name,
       universalResolverAddress,
     })
 
@@ -373,7 +344,7 @@ describe('DatabaseResolver', () => {
 
   it('should read invalid address from database', async () => {
     const addr = await client.getEnsAddress({
-      name: normalize(rawNode),
+      name,
       universalResolverAddress,
     })
 
@@ -382,7 +353,7 @@ describe('DatabaseResolver', () => {
 
   it('should handle unsupported method', async () => {
     const addr = await client.getEnsAddress({
-      name: normalize(rawNode),
+      name,
       coinType: 1,
       universalResolverAddress,
     })
@@ -392,10 +363,10 @@ describe('DatabaseResolver', () => {
 
   it('should write valid address record onto the database', async () => {
     const response = await offchainWriting({
-      node: normalize(rawNode),
+      name,
       functionName: 'setAddr',
       abi: abiDBResolver,
-      args: [namehash(rawNode), '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
+      args: [node, '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
       universalResolverAddress,
       signer: owner,
     })
@@ -403,7 +374,7 @@ describe('DatabaseResolver', () => {
     expect(response?.status).equal(200)
 
     const address = await client.getEnsAddress({
-      name: normalize(rawNode),
+      name,
       universalResolverAddress,
     })
 
@@ -412,10 +383,10 @@ describe('DatabaseResolver', () => {
 
   it('should block unauthorized text change', async () => {
     const response = await offchainWriting({
-      node: normalize(rawNode),
+      name,
       functionName: 'setAddr',
       abi: abiDBResolver,
-      args: [namehash(rawNode), '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
+      args: [node, '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
       universalResolverAddress,
       signer: privateKeyToAccount(generatePrivateKey()),
     })
@@ -423,10 +394,93 @@ describe('DatabaseResolver', () => {
     expect(response?.status).equal(401)
 
     const twitter = await client.getEnsAddress({
-      name: normalize(rawNode),
+      name,
       universalResolverAddress,
     })
 
     expect(twitter).not.eq('0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5')
+  })
+
+  it('should handle multicall valid write calls', async () => {
+    const calls = [
+      encodeFunctionData({
+        abi: abiDBResolver,
+        functionName: 'setText',
+        args: [node, 'com.twitter', '@multicall'],
+      }),
+      encodeFunctionData({
+        abi: abiDBResolver,
+        functionName: 'setAddr',
+        args: [node, '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
+      }),
+    ]
+
+    const response = await offchainWriting({
+      name,
+      functionName: 'multicall',
+      abi: abiDBResolver,
+      args: [calls],
+      universalResolverAddress,
+      signer: owner,
+      multicall: true,
+    })
+
+    expect(response?.status).eq(200)
+
+    const text = await client.getEnsText({
+      name,
+      universalResolverAddress,
+      key: 'com.twitter',
+    })
+    expect(text).eq('@multicall')
+
+    const address = await client.getEnsAddress({
+      name,
+      universalResolverAddress,
+    })
+    expect(address).match(/0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5/i)
+  })
+
+  it('should handle multicall invalid write calls', async () => {
+    const calls = [
+      encodeFunctionData({
+        abi: abiDBResolver,
+        functionName: 'setText',
+        args: [node, 'com.twitter', '@multicall'],
+      }),
+      encodeFunctionData({
+        abi: abiDBResolver,
+        functionName: 'setAddr',
+        args: [
+          namehash('nonexisting.eth'),
+          '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5',
+        ],
+      }),
+    ]
+
+    const response = await offchainWriting({
+      name,
+      functionName: 'multicall',
+      abi: abiDBResolver,
+      args: [calls],
+      universalResolverAddress,
+      signer: owner,
+      multicall: true,
+    })
+
+    expect(response?.status).eq(200)
+
+    const text = await client.getEnsText({
+      name,
+      universalResolverAddress,
+      key: 'com.twitter',
+    })
+    expect(text).eq('@multicall')
+
+    const address = await client.getEnsAddress({
+      name,
+      universalResolverAddress,
+    })
+    expect(address).eq(null)
   })
 })
