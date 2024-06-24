@@ -111,7 +111,7 @@ const _ = (async () => {
         1n,
         '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0',
       ],
-    })
+    }),
   ]
 
   try {
