@@ -2,7 +2,15 @@
 
 ## Overview
 
-The External Resolver project aims to scale the Ethereum Name Service (ENS) by reducing costs for users and increasing its usage. By combining existing patterns such as [ERC-3668](https://eips.ethereum.org/EIPS/eip-3668), [EIP-5559](https://eips.ethereum.org/EIPS/eip-5559), [ENSIP-10](https://docs.ens.domains/ensip/10), and [ENSIP-16](https://docs.ens.domains/ensip/16), this project provides a comprehensive reference codebase for the industry.
+"
+The Ethereum Name Service (ENS) has revolutionized the way we interact with the blockchain by replacing complex addresses with human-readable domain names like "myname.eth". However, ENS faces scalability and cost challenges that hinder its widespread adoption. The External Resolver project offers an innovative solution to overcome these obstacles by combining established patterns such as ERC-3668, EIP-5559, ENSIP-10, and ENSIP-16.
+
+At its core, a "resolver" is a crucial component of ENS that translates human-readable domain names into relevant blockchain information, such as wallet addresses, public keys, and custom records. The "resolution" process is fundamental for making domain names usable in decentralized applications (dApps) and wallets.
+
+The External Resolver takes the concept of resolution further by allowing ENS data to be stored and managed off-chain. This drastically reduces transaction costs, improves network scalability, and enables more advanced features like larger and more complex data records.
+
+This project not only makes ENS more efficient and cost-effective but also opens up a world of possibilities for developers and users, expanding the potential of ENS as a foundational infrastructure for Web3. By providing a comprehensive reference implementation for off-chain storage and management, the External Resolver empowers the community to innovate and build upon the ENS ecosystem.
+"
 
 ## Objectives
 
