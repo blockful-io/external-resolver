@@ -39,7 +39,7 @@ A client implementation that mimics calls made from a frontend app using [Viem](
 
 ## Usage
 
-To run this application locally, follow these steps:
+To run the External Resolver project in its entirety, you'll need to complete the installation process. Since we provide an off-chain resolver solution, it's essential to set up both the database and the Arbitrum Layer 2 environment. This will enable you to run comprehensive end-to-end tests and verify the functionality of the entire project.
 
 ### Setup
 
