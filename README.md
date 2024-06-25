@@ -21,21 +21,89 @@ This project not only makes ENS more efficient and cost-effective but also opens
 
 ## Components
 
-### L1 Resolver
-
-A smart contract that redirects requests to specified external sources, such as a resolver deployed to an L2.
-
-### L2 Resolver Contract
-
-An L2 contract capable of resolving ENS domains to corresponding addresses and fetching additional information. It can be deployed to any EVM compatible protocol.
+The External Resolver consists of three main components, each of them is a self-contained project with its own set of files and logic, ensuring seamless integration and collaboration between them. This modular architecture allows for flexibility and customization, making the External Resolver a versatile solution for various use cases.
 
 ### Gateway
 
-An API that handles reading data from external sources, following the flow specified by [EIP-3668](https://eips.ethereum.org/EIPS/eip-3668).
+The Gateway serves as the bridge between the blockchain and external data sources. It follows the EIP-3668 specification to fetch data from off-chain storage and relays it back to the client. The Gateway ensures secure and efficient communication between the different components of the system.
+
+### Contracts
+
+The smart contracts are the backbone of the External Resolver. They include the L1 Resolver, which redirects requests to external resolvers, the L2 Resolver Contract, which handles the actual resolution of domain names on Layer 2 networks and more. These contracts are designed to be modular and adaptable, allowing for deployment on various EVM-compatible chains.
+
+#### Database Resolver
+
+#### L1 Resolver
+
+A smart contract that redirects requests to specified external contract deployed to any EVM compatible protocol.
+
+#### L2 Resolver
+
+An L2 contract capable of resolving ENS domains to corresponding addresses and fetching additional information fully compatible with the [ENS' Public Resolver](https://docs.ens.domains/resolvers/public) but responsible for authentication.
 
 ### Client
 
-A client implementation that mimics calls made from a frontend app using [Viem](viem.sh).
+The client acts as the interface between the user and the Blockchain. It handles requests for domain resolution and interacts with the Gateway to retrieve the necessary information.
+
+Sample interaction with the Database Resolver:
+
+```ts
+try {
+    await client.simulateContract({
+      functionName: 'register',
+      abi: dbAbi,
+      args: [namehash(publicAddress), 300],
+      account: signer.address,
+      address: resolverAddr,
+    })
+  } catch (err) {
+    const data = getRevertErrorData(err)
+    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
+      const [domain, url, message] = data.args as [
+        DomainData,
+        string,
+        MessageData,
+      ]
+      await handleDBStorage({ domain, url, message, signer })
+    } else {
+      console.error('writing failed: ', { err })
+    }
+}
+```
+
+Sample interaction with the Layer 1 Resolver:
+
+```ts
+try {
+    await client.simulateContract({
+      functionName: 'setText',
+      abi: l1Abi,
+      args: [toHex(packetToBytes(publicAddress)), 'com.twitter', '@blockful'],
+      address: resolverAddr,
+    })
+  } catch (err) {
+    const data = getRevertErrorData(err)
+    if (data?.errorName === 'StorageHandledByL2') {
+      const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
+
+      await handleL2Storage({
+        chainId,
+        l2Url: providerL2,
+        args: {
+          functionName: 'setText',
+          abi: l2Abi,
+          args: [namehash(publicAddress), 'com.twitter', '@blockful'],
+          address: contractAddress,
+          account: signer,
+        },
+      })
+    } else if (data) {
+      console.error('error setting text: ', data.errorName)
+    } else {
+      console.error('error setting text: ', { err })
+    }
+}
+```
 
 ## Usage
 
@@ -151,15 +219,39 @@ Ensure you have the [Railway CLI](https://docs.railway.app/guides/cli) installed
 
 #### Database
 
-Domain Register and data writing
+Domain Register and data writing:
+
+1. Find the resolver associated with the given domain through the Universal Resolver
+2. Call the `register` function on the resolver
+3. Client receive a `StorageHandledByDB` revert with the arguments required to call the gateway
+4. Sign the request with the given arguments using the EIP-712
+5. Call the gateway on endpoint `/{sender}/{data}.json` as specified by the EIP-3668
+6. Gateway validates the signer and create a new entry on the database for this domain
+
 ![domain register and data writing](https://github.com/blockful-io/external-resolver/assets/29408363/3264acdd-1d0b-4ad0-ad60-f6d910480534)
 
-Reading domain properties
+Reading domain properties:
+
+1. Call the `resolver` function on the Universal Resolver passing the reading method in an encoded format as argument
+2. Client receive the `OffchainLookup` revert with the required arguments to call the gateway
+3. Client calls the gateway on endpoint `/{sender}/{data}.json` as specified by the EIP-3668
+4. Gateway reads the data and sign it using it's own private key which as previously marked as authorized on the Database Resolver
+5. Client calls the callback function with the gateway signed response and extra data from the Database Resolver
+6. The Database Resolver contract validates the signature came from an authorized source and decode de data
+7. Data is returned to the client
+
 ![reading domain properties](https://github.com/blockful-io/external-resolver/assets/29408363/4e7f7b6e-dbcb-489c-9468-1a107b735f8d)
 
 #### Layer 2
 
-Domain Register
+Domain Register:
+
+1. Find the resolver associated with the given domain through the Universal Resolver
+2. Call the `register` function on the resolver passing the address of the Layer 2 resolver that will be managing the properties of a given domain
+3. Client calls `setOwner` on the L1 Resolver
+4. Client receive a `StorageHandledByL2` revert with the arguments required to call the gateway
+5. Client calls the L2 Resolver with the returned arguments
+
 ![domain register](https://github.com/blockful-io/external-resolver/assets/29408363/1ef65db2-a979-4e2f-bb9f-7dde0769fae4)
 
 ## Conclusion
