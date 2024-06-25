@@ -254,6 +254,37 @@ Domain Register:
 
 ![domain register](https://github.com/blockful-io/external-resolver/assets/29408363/1ef65db2-a979-4e2f-bb9f-7dde0769fae4)
 
+
+Writing flow:
+
+1. Find Resolver: The process begins by finding the resolver associated with the given domain through the Universal Resolver.
+2. SetText (L1 Resolver): The client calls the setText function on the Layer 1 (L1) resolver.
+3. StorageHandledByL2 Revert: The L1 resolver detects that the storage for this domain is handled by a Layer 2 (L2) resolver and reverts the transaction with a StorageHandledByL2 error.
+4. Client Error Handling: The client checks if the received error is the expected StorageHandledByL2 revert.
+5. SetText (L2 Resolver): If the error is the expected revert, the client proceeds to call the setText function on the L2 resolver, using the arguments provided in the revert message.
+6. L2 Resolver Processing: The L2 resolver processes the setText request.
+7. Success/Error: The L2 resolver returns a success or error message to the client.
+   
+![writing flow](https://github.com/blockful-io/external-resolver/assets/69486932/0352b904-9be2-4df4-9739-5a34b8b63036)
+
+Reading flow:
+
+1. Find Resolver: The process starts by identifying the resolver contract associated with the specific domain using the Universal Resolver.
+2. Call Resolve (L1 Resolver): A request is made to the Layer 1 (L1) resolver contract by calling its resolve function.
+3. OffchainLookup Revert: The L1 resolver reverts with an OffchainLookup error. This error signals that the requested data is not available on-chain and needs to be fetched from an off-chain source.
+4. Client Gateway Interaction: The client receives the OffchainLookup revert and extracts the necessary arguments to construct a request to the gateway.
+5. Gateway Processing: The client sends the request to the gateway, which executes a function called withStorageSlot. Inside this function, the gateway performs:
+- getProofs: Fetches the proofs required to validate the authenticity and integrity of the off-chain data.
+- Returns Data: The gateway returns the fetched data along with the proofs to the client.
+6. L1 Verifier Validation: The client receives the data and proofs from the gateway and passes them to the getStorageValues function in the L1 verifier contract.
+7. Result: After successful verification, the L1 verifier returns the resolved domain data to the client.
+
+![reading flow](https://github.com/blockful-io/external-resolver/assets/69486932/29b48cfc-ff4a-44ac-8e29-7bb8b745d383)
+
+
+
+
+
 ## Conclusion
 
 This project aims to significantly enhance the scalability and usability of the Ethereum Name Service through the development of a comprehensive reference codebase. By combining existing patterns and best practices, we aim to lower costs for users and drive increased adoption within the industry. We welcome collaboration and feedback from the community as we progress towards our goals.
