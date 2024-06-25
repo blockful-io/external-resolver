@@ -7,6 +7,7 @@ import { Command } from 'commander'
 import {
   Hash,
   createPublicClient,
+  encodeFunctionData,
   getChainContractAddress,
   http,
   namehash,
@@ -86,58 +87,23 @@ const _ = (async () => {
     }
   }
 
-  // SET TEXT
-  try {
-    await client.simulateContract({
+  // WRITING CALLS IN BATCH
+
+  const calls: Hash[] = [
+    encodeFunctionData({
       functionName: 'setText',
       abi: dbAbi,
       args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
-      address: resolverAddr,
-      account: signer.address,
-    })
-  } catch (err) {
-    const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [domain, url, message] = data?.args as [
-        DomainData,
-        string,
-        MessageData,
-      ]
-      await handleDBStorage({ domain, url, message, signer })
-    } else {
-      console.error('writing failed: ', { err })
-    }
-  }
-
-  // SET ADDR
-  try {
-    await client.simulateContract({
+    }),
+    encodeFunctionData({
       functionName: 'setAddr',
       abi: dbAbi,
       args: [
         namehash(publicAddress),
         '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0',
       ],
-      address: resolverAddr,
-      account: signer.address,
-    })
-  } catch (err) {
-    const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [domain, url, message] = data?.args as [
-        DomainData,
-        string,
-        MessageData,
-      ]
-      await handleDBStorage({ domain, url, message, signer })
-    } else {
-      console.error('writing failed: ', { err })
-    }
-  }
-
-  // SET ADDR BY COIN
-  try {
-    await client.simulateContract({
+    }),
+    encodeFunctionData({
       functionName: 'setAddr',
       abi: dbAbi,
       args: [
@@ -145,18 +111,26 @@ const _ = (async () => {
         1n,
         '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0',
       ],
-      address: resolverAddr,
+    }),
+  ]
+
+  try {
+    await client.simulateContract({
+      functionName: 'multicall',
+      abi: dbAbi,
+      args: [calls],
       account: signer.address,
+      address: resolverAddr,
     })
   } catch (err) {
     const data = getRevertErrorData(err)
     if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [domain, url, message] = data?.args as [
+      const [domain, url, message] = data.args as [
         DomainData,
         string,
         MessageData,
       ]
-      await handleDBStorage({ domain, url, message, signer })
+      await handleDBStorage({ domain, url, message, signer, multicall: true })
     } else {
       console.error('writing failed: ', { err })
     }
