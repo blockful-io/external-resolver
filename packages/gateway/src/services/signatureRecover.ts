@@ -1,8 +1,7 @@
-import { Address, recoverTypedDataAddress } from "viem";
-import { TypedSignature } from "../types";
+import { Address, recoverTypedDataAddress } from 'viem'
+import { TypedSignature } from '../types'
 
 export class SignatureRecover {
-
   async recoverMessageSigner({
     domain,
     signature,

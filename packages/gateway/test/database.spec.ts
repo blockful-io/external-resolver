@@ -29,7 +29,11 @@ import {
 } from '../src/handlers'
 import { PostgresRepository } from '../src/repositories'
 import { Address, Text, Domain } from '../src/entities'
-import { OwnershipValidator, formatTTL } from '../src/services'
+import {
+  OwnershipValidator,
+  SignatureRecover,
+  formatTTL,
+} from '../src/services'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
@@ -37,7 +41,8 @@ const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 describe('Gateway Database', () => {
   let repo: PostgresRepository,
     datasource: DataSource,
-    validator: OwnershipValidator
+    validator: OwnershipValidator,
+    signatureRecover: SignatureRecover
 
   beforeAll(async () => {
     datasource = new DataSource({
@@ -47,7 +52,8 @@ describe('Gateway Database', () => {
       synchronize: true,
     })
     repo = new PostgresRepository(await datasource.initialize())
-    validator = new OwnershipValidator(repo)
+    signatureRecover = new SignatureRecover()
+    validator = new OwnershipValidator(repo, signatureRecover, [repo])
   })
 
   afterEach(async () => {
@@ -63,7 +69,7 @@ describe('Gateway Database', () => {
         const owner = privateKeyToAddress(pvtKey)
         const node = namehash('blockful.eth')
         const server = new ccip.Server()
-        server.add(abi, withRegisterDomain(repo, validator))
+        server.add(abi, withRegisterDomain(repo, signatureRecover))
         await doCall({
           server,
           abi,
@@ -86,13 +92,13 @@ describe('Gateway Database', () => {
         const pvtKey = generatePrivateKey()
         const owner = privateKeyToAddress(pvtKey)
         const domain = new Domain()
-        domain.node = namehash('public.eth')
+        domain.node = namehash('public.eth') as `0x${string}`
         domain.ttl = 300
         domain.owner = owner
         await datasource.manager.save(domain)
 
         const server = new ccip.Server()
-        server.add(abi, withRegisterDomain(repo, validator))
+        server.add(abi, withRegisterDomain(repo, signatureRecover))
         const result = await doCall({
           server,
           abi,
@@ -116,7 +122,7 @@ describe('Gateway Database', () => {
     describe('Transfer Domain', () => {
       it('should transfer existing domain', async () => {
         const pvtKey = generatePrivateKey()
-        const node = namehash('blockful.eth')
+        const node = namehash('blockful.eth') as `0x${string}`
         const domain = new Domain()
         domain.node = node
         domain.ttl = 300
@@ -152,7 +158,7 @@ describe('Gateway Database', () => {
       it('should handle transferring domain not found', async () => {
         const pvtKey = generatePrivateKey()
         const owner = privateKeyToAddress(pvtKey)
-        const node = namehash('blockful.eth')
+        const node = namehash('blockful.eth') as `0x${string}`
 
         const server = new ccip.Server()
         server.add(abi, withTransferDomain(repo, validator))
@@ -180,7 +186,7 @@ describe('Gateway Database', () => {
       it('should set new contenthash', async () => {
         const pvtKey = generatePrivateKey()
         const domain = new Domain()
-        domain.node = namehash('public.eth')
+        domain.node = namehash('public.eth') as `0x${string}`
         domain.ttl = 300
         domain.owner = privateKeyToAddress(pvtKey)
         await datasource.manager.save(domain)
@@ -212,7 +218,7 @@ describe('Gateway Database', () => {
       // Register a domain 'public.eth' with a content hash, then query for it
       it('should query contenthash', async () => {
         const domain = new Domain()
-        domain.node = namehash('public.eth')
+        domain.node = namehash('public.eth') as `0x${string}`
         domain.ttl = 300
         domain.owner = privateKeyToAddress(generatePrivateKey())
         await datasource.manager.save(domain)
@@ -263,7 +269,7 @@ describe('Gateway Database', () => {
 
     beforeEach(async () => {
       domain = new Domain()
-      domain.node = namehash('public.eth')
+      domain.node = namehash('public.eth') as `0x${string}`
       domain.ttl = 300
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
@@ -467,7 +473,7 @@ describe('Gateway Database', () => {
 
     beforeEach(async () => {
       domain = new Domain()
-      domain.node = namehash('public.eth')
+      domain.node = namehash('public.eth') as `0x${string}`
       domain.ttl = 300
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
@@ -597,7 +603,7 @@ describe('Gateway Database', () => {
 
     beforeEach(async () => {
       domain = new Domain()
-      domain.node = namehash('public.eth')
+      domain.node = namehash('public.eth') as `0x${string}`
       domain.ttl = 2000
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
@@ -712,7 +718,7 @@ describe('Gateway Database', () => {
 
     beforeEach(async () => {
       domain = new Domain()
-      domain.node = namehash('public.eth')
+      domain.node = namehash('public.eth') as `0x${string}`
       domain.ttl = 2000
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)

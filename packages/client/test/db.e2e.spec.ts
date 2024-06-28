@@ -54,13 +54,18 @@ import {
 import { DomainData, MessageData } from '@blockful/gateway/src/types'
 import { InMemoryRepository } from '@blockful/gateway/src/repositories'
 import { withSigner } from '@blockful/gateway/src/middlewares'
-import { OwnershipValidator } from '@blockful/gateway/src/services'
+import {
+  EthereumClient,
+  OwnershipValidator,
+  SignatureRecover,
+} from '@blockful/gateway/src/services'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 import { getRevertErrorData, handleDBStorage } from '../src/client'
+import { Domain } from '@blockful/gateway/src/entities'
 
 const GATEWAY_URL = 'http://127.0.0.1:3000/{sender}/{data}.json'
 
-let universalResolverAddress: Hash
+let universalResolverAddress: Hash, registryAddr: Hash, dbResolverAddr: Hash
 
 const client = createTestClient({
   chain: anvil,
@@ -99,7 +104,7 @@ async function deployContract({
 }
 
 async function deployContracts(signer: Hash) {
-  const registryAddr = await deployContract({
+  registryAddr = await deployContract({
     abi: abiRegistry,
     bytecode: bytecodeRegistry.object as Hash,
     account: signer,
@@ -118,7 +123,7 @@ async function deployContracts(signer: Hash) {
     args: [registryAddr, [GATEWAY_URL]],
   })
 
-  const dbResolverAddr = await deployContract({
+  dbResolverAddr = await deployContract({
     abi: abiDBResolver,
     bytecode: bytecodeDBResolver.object as Hash,
     account: signer,
@@ -130,7 +135,7 @@ async function deployContracts(signer: Hash) {
     { account: signer },
   )
   await registry.write.setSubnodeRecord(
-    [namehash('eth'), labelhash('offchain'), signer, dbResolverAddr, 10000000],
+    [namehash('eth'), labelhash('l1domain'), signer, dbResolverAddr, 10000000],
     { account: signer },
   )
 }
@@ -139,7 +144,12 @@ function setupGateway(
   privateKey: `0x${string}`,
   { repo }: { repo: InMemoryRepository },
 ) {
-  const validator = new OwnershipValidator(repo)
+  const signatureRecover = new SignatureRecover()
+  const ethClient = new EthereumClient(client, registryAddr)
+  const validator = new OwnershipValidator(repo, signatureRecover, [
+    ethClient,
+    repo,
+  ])
 
   const server = new ccip.Server()
   server.app.use(withSigner(privateKey))
@@ -148,7 +158,7 @@ function setupGateway(
     abi,
     withQuery(),
     withGetText(repo),
-    withRegisterDomain(repo, validator),
+    withRegisterDomain(repo, signatureRecover),
     withSetText(repo, validator),
     withGetAddr(repo),
     withSetAddr(repo, validator),
@@ -206,7 +216,9 @@ describe('DatabaseResolver', () => {
   const name = normalize('database.eth')
   const node = namehash(name)
   const domains = new Map()
-  const owner = privateKeyToAccount(generatePrivateKey())
+  const owner = privateKeyToAccount(
+    '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+  )
   const domain = {
     node,
     owner: owner.address,
@@ -220,9 +232,8 @@ describe('DatabaseResolver', () => {
   before(async () => {
     localNode = spawn('anvil')
 
-    const [signer] = await client.getAddresses()
-    await deployContracts(signer)
-
+    // const [signer] = await client.getAddresses()
+    await deployContracts(owner.address)
     repo = new InMemoryRepository()
     setupGateway(
       '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
@@ -293,6 +304,39 @@ describe('DatabaseResolver', () => {
     })
 
     expect(twitter).equal('@blockful')
+  })
+
+  it('should register domain from L1 and write valid text record onto the database', async () => {
+    const expected: Domain = {
+      node: namehash('l1domain.eth'),
+      owner: owner.address,
+      ttl: 300,
+      addresses: [],
+      texts: [],
+    }
+
+    // l1domain.eth only exists in the L1 at this point
+    const response = await offchainWriting({
+      name,
+      functionName: 'setText',
+      abi: abiDBResolver,
+      args: [expected.node, 'com.twitter', '@blockful'],
+      universalResolverAddress,
+      signer: owner,
+    })
+
+    expect(response?.status).equal(200)
+
+    const twitter = await client.getEnsText({
+      name: normalize('l1domain.eth'),
+      key: 'com.twitter',
+      universalResolverAddress,
+    })
+    expect(twitter).equal('@blockful')
+
+    const actual = await repo.getDomain({ node: expected.node })
+    console.log({ actual, expected })
+    expect(actual).to.deep.equal(expected)
   })
 
   it('should block unauthorized text change', async () => {

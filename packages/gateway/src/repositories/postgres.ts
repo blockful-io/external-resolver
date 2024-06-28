@@ -38,13 +38,19 @@ export class PostgresRepository {
   }
 
   async register({ node, ttl, owner }: RegisterDomainProps) {
-    await this.client.getRepository(Domain).insert({
-      node,
-      ttl,
-      addresses: [],
-      texts: [],
-      owner,
-    })
+    await this.client.getRepository(Domain).upsert(
+      [
+        {
+          node,
+          ttl,
+          owner,
+        },
+      ],
+      {
+        conflictPaths: ['node', 'ttl', 'owner'],
+        skipUpdateIfNoValuesChanged: true,
+      },
+    )
   }
 
   async transfer({ node, owner }: TransferDomainProps) {

@@ -48,7 +48,9 @@ export class EthereumClient<chain extends Chain> {
         functionName: 'ownerOf',
         args: [node],
       })) as `0x${string}`
-    } catch { /** error is expected when it isn't a contract */ }
+    } catch {
+      /** error is expected when it isn't a contract */
+    }
     return owner === address
   }
 }
