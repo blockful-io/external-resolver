@@ -37,7 +37,11 @@ import {
 import { InMemoryRepository } from '../src/repositories'
 import { withSigner, makeMessageHash } from '../src/middlewares'
 import { Domain } from '../src/entities'
-import { OwnershipValidator, formatTTL } from '../src/services'
+import {
+  OwnershipValidator,
+  SignatureRecover,
+  formatTTL,
+} from '../src/services'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 const abi = parseAbi(serverAbi)
@@ -46,11 +50,13 @@ describe('Gateway API', () => {
   let repo: InMemoryRepository,
     domain: Domain,
     privateKey: Hex,
-    validator: OwnershipValidator
+    validator: OwnershipValidator,
+    signatureRecover: SignatureRecover
 
   beforeAll(async () => {
     repo = new InMemoryRepository()
     privateKey = generatePrivateKey()
+    signatureRecover = new SignatureRecover()
   })
 
   beforeEach(async () => {
@@ -67,7 +73,7 @@ describe('Gateway API', () => {
     const domains = new Map()
     domains.set(node, domain)
     repo.setDomains(domains)
-    validator = new OwnershipValidator(repo)
+    validator = new OwnershipValidator(signatureRecover, [repo])
   })
 
   afterEach(async () => await repo.clear())
@@ -76,7 +82,7 @@ describe('Gateway API', () => {
     describe('Register domain', () => {
       it('should register new domain', async () => {
         const server = new ccip.Server()
-        server.add(serverAbi, withRegisterDomain(repo, validator))
+        server.add(serverAbi, withRegisterDomain(repo, signatureRecover))
         const app = server.makeApp('/')
 
         const domain: Domain = {
@@ -115,14 +121,13 @@ describe('Gateway API', () => {
 
         const response = await repo.getDomain({
           node: domain.node as `0x${string}`,
-          coin: '60',
         })
         expect(response).toEqual(domain)
       })
 
       it('should handle registering existing domain', async () => {
         const server = new ccip.Server()
-        server.add(serverAbi, withRegisterDomain(repo, validator))
+        server.add(serverAbi, withRegisterDomain(repo, signatureRecover))
         const app = server.makeApp('/')
 
         const args = [domain.node, domain.ttl]
@@ -156,7 +161,6 @@ describe('Gateway API', () => {
 
         const response = await repo.getDomain({
           node: domain.node as `0x${string}`,
-          coin: '60',
         })
         expect(response).toEqual(domain)
       })
@@ -197,7 +201,6 @@ describe('Gateway API', () => {
 
         const response = await repo.getDomain({
           node: domain.node as `0x${string}`,
-          coin: '60',
         })
         expect(response).toEqual({ ...domain, owner: expectedOwner })
       })
@@ -239,7 +242,6 @@ describe('Gateway API', () => {
 
         const response = await repo.getDomain({
           node,
-          coin: '60',
         })
         expect(response).toBeNull()
       })
@@ -382,7 +384,7 @@ describe('Gateway API', () => {
 
       repo.setTexts([
         {
-          domain,
+          domain: domain.node,
           key,
           value: 'blockful',
         },
@@ -430,7 +432,7 @@ describe('Gateway API', () => {
       const value = 'blockful'
       repo.setTexts([
         {
-          domain,
+          domain: domain.node,
           key,
           value,
         },
@@ -542,7 +544,7 @@ describe('Gateway API', () => {
     it('should handle request for update address', async () => {
       repo.setAddresses([
         {
-          domain,
+          domain: domain.node,
           coin: '60',
           address: '0x',
         },
@@ -591,7 +593,7 @@ describe('Gateway API', () => {
       const address = privateKeyToAddress(privateKey)
       repo.setAddresses([
         {
-          domain,
+          domain: domain.node,
           coin: '60',
           address,
         },

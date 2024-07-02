@@ -42,14 +42,14 @@ export class InMemoryRepository {
 
   setAddresses(addresses: Address[]) {
     this.addresses = addresses.reduce((map, addr) => {
-      map.set(`${addr.domain.node}-${addr.coin}`, addr)
+      map.set(`${addr.domain}-${addr.coin}`, addr)
       return map
     }, new Map())
   }
 
   setTexts(texts: Text[]) {
     this.texts = texts.reduce((map, text) => {
-      map.set(`${text.domain.node}-${text.key}`, text)
+      map.set(`${text.domain}-${text.key}`, text)
       return map
     }, new Map())
   }
@@ -102,11 +102,7 @@ export class InMemoryRepository {
       existingAddress.address = address
       return
     }
-    const domain = this.domains.get(node)
-    if (!domain) {
-      throw new Error('Domain foreign key on address violated')
-    }
-    this.addresses.set(`${node}-${coin}`, { domain, address, coin })
+    this.addresses.set(`${node}-${coin}`, { domain: node, address, coin })
   }
 
   async getAddr({
@@ -115,28 +111,28 @@ export class InMemoryRepository {
   }: GetAddressProps): Promise<Response | undefined> {
     const address = this.addresses.get(`${node}-${coin}`)
     const domain = this.domains.get(node)
-    if (!address || !domain) return
-    return { value: address.address, ttl: domain.ttl }
+    let ttl = domain?.ttl
+    if (!address) return
+    if (!domain || !ttl) ttl = 300 // default value
+    return { value: address.address, ttl }
   }
 
   async setText({ node, key, value }: SetTextProps): Promise<void> {
-    const domain = this.domains.get(node)
-    if (!domain) {
-      throw new Error('Domain foreign key on address violated')
-    }
     const existingText = this.texts.get(`${node}-${key}`)
     if (existingText) {
       existingText.value = value
       return
     }
-    this.texts.set(`${node}-${key}`, { key, value, domain })
+    this.texts.set(`${node}-${key}`, { key, value, domain: node })
   }
 
   async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
     const text = this.texts.get(`${node}-${key}`)
     const domain = this.domains.get(node)
-    if (!text || !domain) return
-    return { value: text.value, ttl: domain.ttl }
+    let ttl = domain?.ttl
+    if (!text) return
+    if (!domain || !ttl) ttl = 300 // default value
+    return { value: text.value, ttl }
   }
 
   async setPubkey({ node, x, y }: SetPubkeyProps) {

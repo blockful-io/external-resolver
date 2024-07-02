@@ -3,9 +3,11 @@
  */
 import 'reflect-metadata'
 import { config } from 'dotenv'
-import { Hex } from 'viem'
+import { Hex, createPublicClient, http } from 'viem'
+import * as chains from 'viem/chains'
 
-import { NewDataSource } from '../src/datasources/postgres'
+import * as ccip from '@blockful/ccip-server'
+
 import {
   withGetText,
   withSetText,
@@ -24,10 +26,14 @@ import {
   withTransferDomain,
 } from '../src/handlers'
 import { abi } from '../src/abi'
-import { PostgresRepository } from '../src/repositories/postgres'
+import { PostgresRepository } from '../src/repositories'
 import { withLogger, withSigner } from '../src/middlewares'
-import { OwnershipValidator } from '../src/services'
-import * as ccip from '@blockful/ccip-server'
+import { NewDataSource } from '../src/datasources/postgres'
+import {
+  OwnershipValidator,
+  SignatureRecover,
+  EthereumClient,
+} from '../src/services'
 
 config({
   path: process.env.ENV_FILE || '../env',
@@ -39,14 +45,30 @@ const _ = (async () => {
   if (!dbUrl) {
     throw new Error('DATABASE_URL is required')
   }
-  const privateKey = process.env.GATEWAY_PRIVATE_KEY
-  if (!privateKey) {
-    throw new Error('GATEWAY_PRIVATE_KEY is required')
-  }
+  const privateKey =
+    process.env.GATEWAY_PRIVATE_KEY ||
+    '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+  const rpcURL = process.env.RPC_URL || 'http://localhost:8545'
+
+  const chainID = process.env.CHAIN_ID || '31337'
+  const chain = getChain(parseInt(chainID))
+  if (!chain) throw new Error(`invalid chain: ${chainID}`)
+  console.log(`Connected to chain: ${chain.name}`)
+
+  const client = createPublicClient({
+    chain,
+    transport: http(rpcURL),
+  })
+  const ethClient = new EthereumClient(client, process.env.ENS_REGISTRY) // Registry is optional
 
   const dbclient = await NewDataSource(dbUrl).initialize()
   const repo = new PostgresRepository(dbclient)
-  const validator = new OwnershipValidator(repo)
+
+  const signatureRecover = new SignatureRecover()
+  const ownershipValidator = new OwnershipValidator(signatureRecover, [
+    ethClient,
+    repo,
+  ])
 
   const server = new ccip.Server()
   server.app.use(withSigner(privateKey as Hex))
@@ -56,19 +78,19 @@ const _ = (async () => {
     abi,
     withQuery(), // required for Universal Resolver integration
     withGetText(repo),
-    withSetText(repo, validator),
+    withSetText(repo, ownershipValidator),
     withGetAbi(repo),
-    withSetAbi(repo, validator),
+    withSetAbi(repo, ownershipValidator),
     withGetPubkey(repo),
-    withSetPubkey(repo, validator),
+    withSetPubkey(repo, ownershipValidator),
     withGetAddr(repo),
     withGetAddrByCoin(repo),
-    withSetAddr(repo, validator),
-    withSetAddrByCoin(repo, validator),
+    withSetAddr(repo, ownershipValidator),
+    withSetAddrByCoin(repo, ownershipValidator),
     withGetContentHash(repo),
-    withSetContentHash(repo, validator),
-    withRegisterDomain(repo, validator),
-    withTransferDomain(repo, validator),
+    withSetContentHash(repo, ownershipValidator),
+    withRegisterDomain(repo, signatureRecover),
+    withTransferDomain(repo, ownershipValidator),
   )
 
   const port = process.env.PORT || 3000
@@ -76,3 +98,7 @@ const _ = (async () => {
     console.log(`Gateway bound to port ${port}.`)
   })
 })()
+
+function getChain(chainId: number) {
+  return Object.values(chains).find((chain) => chain.id === chainId)
+}
