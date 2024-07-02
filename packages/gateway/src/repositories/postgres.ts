@@ -143,7 +143,7 @@ export class PostgresRepository {
         'domain',
         'text.domain = domain.node',
       )
-      .where('domain.node = :node ', { node })
+      .where('text.domain = :node ', { node })
       .andWhere('text.key = :key', { key })
       .select(['text.value', 'domain.ttl'])
       .getRawOne()

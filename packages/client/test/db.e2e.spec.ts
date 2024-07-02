@@ -6,6 +6,7 @@
   environment and stops at the gateway call. It still requires implementing the connection between the gateway and 
   layer two, or the gateway and the database.
 */
+import "reflect-metadata"
 
 // Importing abi and bytecode from contracts folder
 import {
@@ -20,7 +21,7 @@ import {
   abi as abiUniversalResolver,
   bytecode as bytecodeUniversalResolver,
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
-
+import { DataSource } from 'typeorm'
 import { abi } from '@blockful/gateway/src/abi'
 import { ChildProcess, spawn } from 'child_process'
 import { normalize, labelhash, namehash, packetToBytes } from 'viem/ens'
@@ -52,7 +53,8 @@ import {
   withRegisterDomain,
 } from '@blockful/gateway/src/handlers'
 import { DomainData, MessageData } from '@blockful/gateway/src/types'
-import { InMemoryRepository } from '@blockful/gateway/src/repositories'
+import { PostgresRepository } from '@blockful/gateway/src/repositories'
+import { Text, Domain, Address } from '@blockful/gateway/src/entities'
 import { withSigner } from '@blockful/gateway/src/middlewares'
 import {
   EthereumClient,
@@ -141,7 +143,7 @@ async function deployContracts(signer: Hash) {
 
 function setupGateway(
   privateKey: `0x${string}`,
-  { repo }: { repo: InMemoryRepository },
+  { repo }: { repo: PostgresRepository },
 ) {
   const signatureRecover = new SignatureRecover()
   const ethClient = new EthereumClient(client, registryAddr)
@@ -208,8 +210,7 @@ async function offchainWriting({
 }
 
 describe('DatabaseResolver', () => {
-  let repo: InMemoryRepository
-  const domains = new Map()
+  let repo: PostgresRepository, datasource: DataSource
   const owner = privateKeyToAccount(
     '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
   )
@@ -218,45 +219,50 @@ describe('DatabaseResolver', () => {
   before(async () => {
     localNode = spawn('anvil')
 
-    // const [signer] = await client.getAddresses()
     await deployContracts(owner.address)
-    repo = new InMemoryRepository()
+    datasource = new DataSource({
+      type: 'better-sqlite3',
+      database: './test.db',
+      entities: [Text, Domain, Address],
+      synchronize: true,
+    })
+    repo = new PostgresRepository(await datasource.initialize())
     setupGateway(
       '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
       { repo },
     )
   })
 
-  after(async () => {
-    localNode.kill()
+  beforeEach(async () => {
+    for (const entity of ['Text', 'Address', 'Domain']) {
+      await datasource.getRepository(entity).clear()
+    }
   })
 
-  describe('Subdomain created on database', () => {
+  after(async () => {
+    localNode.kill()
+    await datasource.destroy()
+  })
+
+  describe('Subdomain created on database', async () => {
     const name = normalize('database.eth')
     const node = namehash(name)
-    const domain = {
-      node,
-      owner: owner.address,
-      ttl: 300,
-      addresses: [],
-      texts: [],
-    }
-    domains.set(node, domain)
 
-    beforeEach(() => {
-      repo.setDomains(domains)
-      repo.setTexts([])
-      repo.setAddresses([])
+    beforeEach(async () => {
+      const domain = new Domain()
+      domain.node = node
+      domain.owner = owner.address
+      domain.ttl = 300
+      await datasource.manager.save(domain)
     })
 
     it('should read and parse the avatar from database', async () => {
-      repo.setTexts([
-        {
-          domain: domain.node,
-          key: 'avatar',
-          value: 'ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ',
-        },
-      ])
+      const text = new Text()
+      text.domain = node
+      text.key = 'avatar'
+      text.value = 'ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ'
+      await datasource.manager.save(text)
+
       const avatar = await client.getEnsAvatar({
         name,
         universalResolverAddress,
@@ -267,13 +273,12 @@ describe('DatabaseResolver', () => {
     })
 
     it('should read valid text record from database', async () => {
-      repo.setTexts([
-        {
-          domain: domain.node,
-          key: 'com.twitter',
-          value: '@database',
-        },
-      ])
+      const text = new Text()
+      text.domain = node
+      text.key = 'com.twitter'
+      text.value = '@database'
+      await datasource.manager.save(text)
+
       const twitter = await client.getEnsText({
         name,
         key: 'com.twitter',
@@ -336,13 +341,12 @@ describe('DatabaseResolver', () => {
     })
 
     it('should read ETH address from database', async () => {
-      repo.setAddresses([
-        {
-          domain: domain.node,
-          coin: '60',
-          address: '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5',
-        },
-      ])
+      const address = new Address()
+      address.domain = node
+      address.coin = '60'
+      address.address = '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'
+      await datasource.manager.save(address)
+
       const addr = await client.getEnsAddress({
         name,
         universalResolverAddress,
@@ -498,20 +502,13 @@ describe('DatabaseResolver', () => {
     const name = normalize('l1domain.eth')
     const node = namehash(name)
 
-    beforeEach(() => {
-      repo.setDomains(new Map()) // no domain on the database
-      repo.setTexts([])
-      repo.setAddresses([])
-    })
+    it('should read the avatar from database', async () => {
+      const text = new Text()
+      text.domain = node
+      text.key = 'avatar'
+      text.value = 'ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ'
+      await datasource.manager.save(text)
 
-    it('should read and parse the avatar from database', async () => {
-      repo.setTexts([
-        {
-          domain: node,
-          key: 'avatar',
-          value: 'ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ',
-        },
-      ])
       const avatar = await client.getEnsAvatar({
         name,
         universalResolverAddress,
@@ -522,13 +519,12 @@ describe('DatabaseResolver', () => {
     })
 
     it('should read valid text record from database', async () => {
-      repo.setTexts([
-        {
-          domain: node,
-          key: 'com.twitter',
-          value: '@database',
-        },
-      ])
+      const text = new Text()
+      text.domain = node
+      text.key = 'com.twitter'
+      text.value = '@database'
+      await datasource.manager.save(text)
+
       const twitter = await client.getEnsText({
         name,
         key: 'com.twitter',
@@ -591,13 +587,12 @@ describe('DatabaseResolver', () => {
     })
 
     it('should read ETH address from database', async () => {
-      repo.setAddresses([
-        {
-          domain: node,
-          coin: '60',
-          address: '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5',
-        },
-      ])
+      const address = new Address()
+      address.domain = node
+      address.coin = '60'
+      address.address = '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'
+      await datasource.manager.save(address)
+
       const addr = await client.getEnsAddress({
         name,
         universalResolverAddress,
