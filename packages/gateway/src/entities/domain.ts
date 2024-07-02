@@ -16,13 +16,13 @@ import { Text } from './text'
  */
 @Entity()
 export class Domain {
-  @PrimaryColumn({ unique: true })
+  @PrimaryColumn()
   node: `0x${string}`
 
   @Column({ nullable: true, length: 32 })
   contenthash?: `0x${string}`
 
-  @Column({ type: 'bigint' })
+  @Column()
   ttl: number
 
   @OneToMany(() => Address, (addr) => addr.domain, { cascade: true })
@@ -31,7 +31,7 @@ export class Domain {
   @OneToMany(() => Text, (text) => text.domain, { cascade: true })
   texts: Text[]
 
-  @Column({ type: 'varchar' })
+  @PrimaryColumn()
   owner: string
 
   @CreateDateColumn()

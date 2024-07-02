@@ -45,16 +45,12 @@ const _ = (async () => {
   if (!dbUrl) {
     throw new Error('DATABASE_URL is required')
   }
-  const privateKey = process.env.GATEWAY_PRIVATE_KEY
-  if (!privateKey) {
-    throw new Error('GATEWAY_PRIVATE_KEY is required')
-  }
-  const chainID = process.env.CHAIN_ID
-  if (!chainID) {
-    throw new Error('CHAIN_ID is required')
-  }
+  const privateKey =
+    process.env.GATEWAY_PRIVATE_KEY ||
+    '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
   const rpcURL = process.env.RPC_URL || 'http://localhost:8545'
 
+  const chainID = process.env.CHAIN_ID || '31337'
   const chain = getChain(parseInt(chainID))
   if (!chain) throw new Error(`invalid chain: ${chainID}`)
   console.log(`Connected to chain: ${chain.name}`)
@@ -69,7 +65,7 @@ const _ = (async () => {
   const repo = new PostgresRepository(dbclient)
 
   const signatureRecover = new SignatureRecover()
-  const ownershipValidator = new OwnershipValidator(repo, signatureRecover, [
+  const ownershipValidator = new OwnershipValidator(signatureRecover, [
     ethClient,
     repo,
   ])

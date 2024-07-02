@@ -1,9 +1,5 @@
 import { Address, Hex } from 'viem'
-import { RegisterDomainProps, TypedSignature } from '../types'
-
-interface Repository {
-  register(params: RegisterDomainProps)
-}
+import { TypedSignature } from '../types'
 
 interface DomainOwnerVerifier {
   verifyOwnership(node: Hex, address: `0x${string}`): Promise<boolean>
@@ -18,16 +14,10 @@ interface SignatureRecover {
 }
 
 export class OwnershipValidator {
-  private repo: Repository
   private recover: SignatureRecover
   private ownershipVerifiers: DomainOwnerVerifier[]
 
-  constructor(
-    repo: Repository,
-    recover: SignatureRecover,
-    verifier: DomainOwnerVerifier[],
-  ) {
-    this.repo = repo
+  constructor(recover: SignatureRecover, verifier: DomainOwnerVerifier[]) {
     this.recover = recover
     this.ownershipVerifiers = verifier
   }
@@ -45,11 +35,6 @@ export class OwnershipValidator {
     )
 
     // at least one of the validators should return true (Ethereum or DB)
-    const valid = validations.includes(true)
-    if (valid) {
-      await this.repo.register({ node, owner: signer, ttl: 300 })
-    }
-
-    return valid
+    return validations.includes(true)
   }
 }

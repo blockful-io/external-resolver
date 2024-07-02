@@ -47,16 +47,14 @@ export class PostgresRepository {
         },
       ],
       {
-        conflictPaths: ['node', 'ttl', 'owner'],
+        conflictPaths: ['node', 'owner'],
         skipUpdateIfNoValuesChanged: true,
       },
     )
   }
 
   async transfer({ node, owner }: TransferDomainProps) {
-    await this.client.getRepository(Domain).update(node, {
-      owner,
-    })
+    await this.client.getRepository(Domain).update({ node }, { owner })
   }
 
   async getDomain({ node }: DomainProps): Promise<Domain | null> {
@@ -66,9 +64,12 @@ export class PostgresRepository {
   }
 
   async setContentHash({ node, contenthash }: SetContentHashProps) {
-    await this.client.getRepository(Domain).update(node, {
-      contenthash,
-    })
+    await this.client.getRepository(Domain).update(
+      { node },
+      {
+        contenthash,
+      },
+    )
   }
 
   async getContentHash({
@@ -88,9 +89,7 @@ export class PostgresRepository {
     await this.client.getRepository(Address).upsert(
       [
         {
-          domain: {
-            node,
-          },
+          domain: node,
           address,
           coin,
         },
@@ -109,13 +108,18 @@ export class PostgresRepository {
     const addr = await this.client
       .getRepository(Address)
       .createQueryBuilder('addr')
-      .innerJoin('addr.domain', 'domain')
+      .leftJoinAndMapOne(
+        'addr.domain',
+        Domain,
+        'domain',
+        'addr.domain = domain.node',
+      )
       .where('addr.domain = :node ', { node })
       .andWhere('addr.coin = :coin', { coin })
       .select(['addr.address', 'domain.ttl'])
-      .getOne()
+      .getRawOne()
 
-    if (addr) return { value: addr.address, ttl: addr.domain.ttl }
+    if (addr) return { value: addr.addr_address, ttl: addr.domain_ttl || 300 } // default ttl value
   }
 
   async setText({ node, key, value }: SetTextProps) {
@@ -123,9 +127,7 @@ export class PostgresRepository {
       {
         key,
         value,
-        domain: {
-          node,
-        },
+        domain: node,
       },
       { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )
@@ -135,13 +137,18 @@ export class PostgresRepository {
     const text = await this.client
       .getRepository(Text)
       .createQueryBuilder('text')
-      .innerJoin('text.domain', 'domain')
-      .where('text.domain = :node ', { node })
+      .leftJoinAndMapOne(
+        'text.domain',
+        Domain,
+        'domain',
+        'text.domain = domain.node',
+      )
+      .where('domain.node = :node ', { node })
       .andWhere('text.key = :key', { key })
       .select(['text.value', 'domain.ttl'])
-      .getOne()
+      .getRawOne()
 
-    if (text) return { value: text.value, ttl: text.domain.ttl }
+    if (text) return { value: text.text_value, ttl: text.domain_ttl || 300 } // default ttl value
   }
 
   async setPubkey({ node, x, y }: SetPubkeyProps) {
@@ -149,9 +156,7 @@ export class PostgresRepository {
       {
         key: 'pubkey',
         value: `(${x},${y})`,
-        domain: {
-          node,
-        },
+        domain: node,
       },
       { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )
@@ -176,9 +181,7 @@ export class PostgresRepository {
       {
         key: 'ABI',
         value,
-        domain: {
-          node,
-        },
+        domain: node,
       },
       { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )
