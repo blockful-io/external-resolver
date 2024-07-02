@@ -3,6 +3,7 @@ import {
   Chain,
   HttpTransport,
   PublicClient,
+  fromHex,
   getChainContractAddress,
   parseAbiItem,
 } from 'viem'
@@ -44,9 +45,13 @@ export class EthereumClient<chain extends Chain> {
       // handling NameWrapper owner
       owner = (await this.client.readContract({
         address: owner,
-        abi: ['function ownerOf(uint256 id) view returns (address owner)'],
+        abi: [
+          parseAbiItem(
+            'function ownerOf(uint256 id) view returns (address owner)',
+          ),
+        ],
         functionName: 'ownerOf',
-        args: [node],
+        args: [fromHex(node, 'bigint')],
       })) as `0x${string}`
     } catch {
       /** error is expected when it isn't a contract */
