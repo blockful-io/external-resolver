@@ -73,7 +73,7 @@ describe('Gateway API', () => {
     const domains = new Map()
     domains.set(node, domain)
     repo.setDomains(domains)
-    validator = new OwnershipValidator(repo, signatureRecover, [repo])
+    validator = new OwnershipValidator(signatureRecover, [repo])
   })
 
   afterEach(async () => await repo.clear())
@@ -384,7 +384,7 @@ describe('Gateway API', () => {
 
       repo.setTexts([
         {
-          domain,
+          domain: domain.node,
           key,
           value: 'blockful',
         },
@@ -432,7 +432,7 @@ describe('Gateway API', () => {
       const value = 'blockful'
       repo.setTexts([
         {
-          domain,
+          domain: domain.node,
           key,
           value,
         },
@@ -544,7 +544,7 @@ describe('Gateway API', () => {
     it('should handle request for update address', async () => {
       repo.setAddresses([
         {
-          domain,
+          domain: domain.node,
           coin: '60',
           address: '0x',
         },
@@ -593,7 +593,7 @@ describe('Gateway API', () => {
       const address = privateKeyToAddress(privateKey)
       repo.setAddresses([
         {
-          domain,
+          domain: domain.node,
           coin: '60',
           address,
         },

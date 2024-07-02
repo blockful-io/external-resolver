@@ -53,7 +53,7 @@ describe('Gateway Database', () => {
     })
     repo = new PostgresRepository(await datasource.initialize())
     signatureRecover = new SignatureRecover()
-    validator = new OwnershipValidator(repo, signatureRecover, [repo])
+    validator = new OwnershipValidator(signatureRecover, [repo])
   })
 
   afterEach(async () => {
@@ -309,7 +309,7 @@ describe('Gateway Database', () => {
       const text = new Text()
       text.key = 'avatar'
       text.value = 'blockful.png'
-      text.domain = domain
+      text.domain = domain.node
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -341,7 +341,7 @@ describe('Gateway Database', () => {
       const text = new Text()
       text.key = 'avatar'
       text.value = 'blockful.png'
-      text.domain = domain
+      text.domain = domain.node
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -395,8 +395,7 @@ describe('Gateway Database', () => {
       const text = new Text()
       text.key = 'avatar'
       text.value = 'blockful.png'
-      text.domain = domain
-      domain.owner = privateKeyToAddress(generatePrivateKey())
+      text.domain = domain.node
       await datasource.manager.save(text)
 
       const server = new ccip.Server()
@@ -517,7 +516,7 @@ describe('Gateway Database', () => {
       const addr = new Address()
       addr.address = TEST_ADDRESS
       addr.coin = '1'
-      addr.domain = domain
+      addr.domain = domain.node
       await datasource.manager.save(addr)
 
       const result = await doCall({
@@ -578,7 +577,7 @@ describe('Gateway Database', () => {
       const addr = new Address()
       addr.coin = '60'
       addr.address = '0x1234567890123456789012345678901234567890'
-      addr.domain = domain
+      addr.domain = domain.node
       await datasource.manager.save(addr)
 
       const server = new ccip.Server()
@@ -658,7 +657,7 @@ describe('Gateway Database', () => {
       const text = new Text()
       text.key = 'ABI'
       text.value = expectedAbi
-      text.domain = domain
+      text.domain = domain.node
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -683,7 +682,7 @@ describe('Gateway Database', () => {
       const text = new Text()
       text.key = 'ABI'
       text.value = toHex('[{}]')
-      text.domain = domain
+      text.domain = domain.node
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -759,7 +758,7 @@ describe('Gateway Database', () => {
       const text = new Text()
       text.key = 'pubkey'
       text.value = expectedDb
-      text.domain = domain
+      text.domain = domain.node
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -784,7 +783,7 @@ describe('Gateway Database', () => {
       const text = new Text()
       text.key = 'pubkey'
       text.value = '(0x123,0x456)'
-      text.domain = domain
+      text.domain = domain.node
       await datasource.manager.save(text)
 
       const result = await doCall({
