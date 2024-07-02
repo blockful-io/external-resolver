@@ -1,6 +1,6 @@
-FROM node:18 as base
+FROM node:18 AS base
 
-FROM base as builder
+FROM base AS builder
 WORKDIR /app
 COPY . .
 RUN npx turbo@1.13.3 prune @blockful/gateway --docker

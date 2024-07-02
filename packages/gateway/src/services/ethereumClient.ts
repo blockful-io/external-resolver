@@ -4,10 +4,8 @@ import {
   HttpTransport,
   PublicClient,
   getChainContractAddress,
+  parseAbiItem,
 } from 'viem'
-
-import { abi } from '@blockful/contracts/out/ENSRegistry.sol/ENSRegistry.json'
-import { abi as nameWrapperABI } from '@blockful/contracts/out/NameWrapper.sol/NameWrapper.json'
 
 export class EthereumClient<chain extends Chain> {
   private client: PublicClient<HttpTransport, chain>
@@ -35,7 +33,9 @@ export class EthereumClient<chain extends Chain> {
 
     let owner = (await this.client.readContract({
       address: this.registryAddress as `0x${string}`,
-      abi,
+      abi: [
+        parseAbiItem('function owner(bytes32 node) view returns (address)'),
+      ],
       functionName: 'owner',
       args: [node],
     })) as `0x${string}`
@@ -44,7 +44,7 @@ export class EthereumClient<chain extends Chain> {
       // handling NameWrapper owner
       owner = (await this.client.readContract({
         address: owner,
-        abi: nameWrapperABI,
+        abi: ['function ownerOf(uint256 id) view returns (address owner)'],
         functionName: 'ownerOf',
         args: [node],
       })) as `0x${string}`
