@@ -6,7 +6,7 @@
   environment and stops at the gateway call. It still requires implementing the connection between the gateway and 
   layer two, or the gateway and the database.
 */
-import "reflect-metadata"
+import 'reflect-metadata'
 
 // Importing abi and bytecode from contracts folder
 import {
@@ -254,6 +254,76 @@ describe('DatabaseResolver', () => {
       domain.owner = owner.address
       domain.ttl = 300
       await datasource.manager.save(domain)
+    })
+
+    it('should register new domain', async () => {
+      const node = namehash(normalize('newdomain.eth'))
+      const response = await offchainWriting({
+        name,
+        functionName: 'register',
+        abi: abiDBResolver,
+        args: [node, 300],
+        universalResolverAddress,
+        signer: owner,
+      })
+
+      expect(response?.status).equal(200)
+
+      const d = await datasource.getRepository(Domain).countBy({
+        node,
+        owner: owner.address,
+      })
+      expect(d).eq(1)
+    })
+
+    it('should block register of duplicated domain with same owner', async () => {
+      const response = await offchainWriting({
+        name,
+        functionName: 'register',
+        abi: abiDBResolver,
+        args: [node, 300],
+        universalResolverAddress,
+        signer: owner,
+      })
+
+      expect(response?.status).equal(400)
+
+      const d = await datasource.getRepository(Domain).countBy({
+        node,
+        owner: owner.address,
+      })
+      expect(d).eq(1)
+    })
+
+    it('should block register of duplicated domain with different owner', async () => {
+      const newOwner = privateKeyToAccount(generatePrivateKey())
+      const response = await offchainWriting({
+        name,
+        functionName: 'register',
+        abi: abiDBResolver,
+        args: [node, 300],
+        universalResolverAddress,
+        signer: newOwner,
+      })
+
+      expect(response?.status).equal(401)
+
+      const d1 = await datasource.getRepository(Domain).existsBy({
+        node,
+        owner: newOwner.address,
+      })
+      expect(d1).eq(false)
+
+      const d = await datasource.getRepository(Domain).existsBy({
+        node,
+        owner: owner.address,
+      })
+      expect(d).eq(true)
+
+      const count = await datasource.getRepository(Domain).countBy({
+        node,
+      })
+      expect(count).eq(1)
     })
 
     it('should read and parse the avatar from database', async () => {
