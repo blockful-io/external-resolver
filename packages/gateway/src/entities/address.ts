@@ -2,12 +2,9 @@ import {
   Entity,
   Column,
   PrimaryColumn,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm'
-import { Domain } from './domain'
 
 /**
  * Represents an Address entity on the database.
@@ -15,19 +12,14 @@ import { Domain } from './domain'
  */
 @Entity()
 export class Address {
-  @PrimaryColumn({ unique: true })
+  @PrimaryColumn()
   coin: string
 
   @Column()
   address: string
 
-  @JoinColumn({ name: 'domain', referencedColumnName: 'node' })
-  @ManyToOne(() => Domain, (domain) => domain.addresses)
-  @PrimaryColumn({
-    name: 'domain',
-    type: 'text',
-  })
-  domain: Domain
+  @PrimaryColumn()
+  domain: string
 
   @CreateDateColumn()
   createdAt?: Date
