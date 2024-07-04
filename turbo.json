@@ -19,8 +19,7 @@
     "lint": {},
     "@blockful/gateway#build": {
       "dependsOn": [
-        "@blockful/ccip-server#build",
-        "@blockful/contracts#build"
+        "@blockful/ccip-server#build"
       ]
     },
     "@blockful/gateway#test": {
