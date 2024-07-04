@@ -22,7 +22,7 @@
     "@commitlint/config-conventional": "^19.2.2",
     "@rocketseat/eslint-config": "^2.2.2",
     "@types/eslint": "^8",
-    "@types/node": "^20.14.1",
+    "@types/node": "^20.14.9",
     "commitizen": "^4.3.0",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.57.0",
