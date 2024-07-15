@@ -73,7 +73,7 @@ describe('Gateway API', () => {
     const domains = new Map()
     domains.set(node, domain)
     repo.setDomains(domains)
-    validator = new OwnershipValidator(signatureRecover, [repo])
+    validator = new OwnershipValidator(1, signatureRecover, [repo])
   })
 
   afterEach(async () => await repo.clear())
