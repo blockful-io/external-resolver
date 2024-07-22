@@ -2,7 +2,7 @@ import * as ccip from '@blockful/ccip-server'
 
 import {
   SetPubkeyProps,
-  GetPubkeyProps,
+  NodeProps,
   OwnershipValidator,
   TypedSignature,
   GetPubkeyResponse,
@@ -37,7 +37,7 @@ export function withSetPubkey(
 }
 
 interface ReadRepository {
-  getPubkey(params: GetPubkeyProps): Promise<GetPubkeyResponse | undefined>
+  getPubkey(params: NodeProps): Promise<GetPubkeyResponse | undefined>
 }
 
 export function withGetPubkey(repo: ReadRepository): ccip.HandlerDescription {

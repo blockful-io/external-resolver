@@ -9,13 +9,12 @@ import {
   SetContentHashProps,
   Response,
   SetPubkeyProps,
-  GetPubkeyProps,
   GetPubkeyResponse,
   SetAbiProps,
-  GetAbiProps,
   DomainProps,
   TransferDomainProps,
   RegisterDomainProps,
+  NodeProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -37,13 +36,29 @@ export class PostgresRepository {
       .existsBy({ node, owner: address })
   }
 
-  async register({ node, ttl, owner }: RegisterDomainProps) {
+  async register({
+    name,
+    node,
+    label,
+    labelhash,
+    parent,
+    ttl,
+    owner,
+    resolver,
+    resolverVersion,
+  }: RegisterDomainProps) {
     await this.client.getRepository(Domain).upsert(
       [
         {
+          name,
           node,
+          label,
+          labelhash,
+          parent,
           ttl,
           owner,
+          resolver,
+          resolverVersion,
         },
       ],
       {
@@ -165,9 +180,7 @@ export class PostgresRepository {
   /**
    * getPubkey reutilized the getText function with `pubkey` as a reserved key
    */
-  async getPubkey({
-    node,
-  }: GetPubkeyProps): Promise<GetPubkeyResponse | undefined> {
+  async getPubkey({ node }: NodeProps): Promise<GetPubkeyResponse | undefined> {
     const pubkey = await this.getText({ node, key: 'pubkey' })
     if (!pubkey) return
 
@@ -190,7 +203,7 @@ export class PostgresRepository {
   /**
    *  getABI reutilized the getText function with `ABI` as a reserved key
    */
-  async getABI({ node }: GetAbiProps): Promise<Response | undefined> {
+  async getABI({ node }: NodeProps): Promise<Response | undefined> {
     return await this.getText({ node, key: 'ABI' })
   }
 }
