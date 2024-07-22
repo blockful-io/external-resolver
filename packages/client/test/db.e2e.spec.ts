@@ -251,18 +251,25 @@ describe('DatabaseResolver', () => {
     beforeEach(async () => {
       const domain = new Domain()
       domain.node = node
+      domain.name = name
+      domain.label = 'database'
+      domain.labelhash = labelhash(domain.label)
+      domain.parent = namehash('eth')
+      domain.resolver = '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2'
+      domain.resolverVersion = '1'
       domain.owner = owner.address
       domain.ttl = 300
       await datasource.manager.save(domain)
     })
 
     it('should register new domain', async () => {
-      const node = namehash(normalize('newdomain.eth'))
+      const name = normalize('newdomain.eth')
+      const node = namehash(name)
       const response = await offchainWriting({
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [node, 300],
+        args: [toHex(name), 300],
         universalResolverAddress,
         signer: owner,
       })
@@ -281,7 +288,7 @@ describe('DatabaseResolver', () => {
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [node, 300],
+        args: [toHex(name), 300],
         universalResolverAddress,
         signer: owner,
       })
@@ -301,7 +308,7 @@ describe('DatabaseResolver', () => {
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [node, 300],
+        args: [toHex(name), 300],
         universalResolverAddress,
         signer: newOwner,
       })
@@ -331,6 +338,8 @@ describe('DatabaseResolver', () => {
       text.domain = node
       text.key = 'avatar'
       text.value = 'ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ'
+      text.resolver = '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2'
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const avatar = await client.getEnsAvatar({
@@ -347,6 +356,8 @@ describe('DatabaseResolver', () => {
       text.domain = node
       text.key = 'com.twitter'
       text.value = '@database'
+      text.resolver = '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2'
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const twitter = await client.getEnsText({
@@ -415,6 +426,8 @@ describe('DatabaseResolver', () => {
       address.domain = node
       address.coin = '60'
       address.address = '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'
+      address.resolver = '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2'
+      address.resolverVersion = '1'
       await datasource.manager.save(address)
 
       const addr = await client.getEnsAddress({
@@ -577,6 +590,8 @@ describe('DatabaseResolver', () => {
       text.domain = node
       text.key = 'avatar'
       text.value = 'ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ'
+      text.resolver = '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2'
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const avatar = await client.getEnsAvatar({
@@ -593,6 +608,8 @@ describe('DatabaseResolver', () => {
       text.domain = node
       text.key = 'com.twitter'
       text.value = '@database'
+      text.resolver = '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2'
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const twitter = await client.getEnsText({
@@ -661,6 +678,8 @@ describe('DatabaseResolver', () => {
       address.domain = node
       address.coin = '60'
       address.address = '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'
+      address.resolver = '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2'
+      address.resolverVersion = '1'
       await datasource.manager.save(address)
 
       const addr = await client.getEnsAddress({
