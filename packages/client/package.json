@@ -26,7 +26,7 @@
     "reflect-metadata": "^0.2.2",
     "solidity-coverage": "^0.8.12",
     "typeorm": "^0.3.20",
-    "viem": "^2.17.0"
+    "viem": "^2.17.4"
   },
   "peerDependencies": {
     "@blockful/tsconfig": "*"

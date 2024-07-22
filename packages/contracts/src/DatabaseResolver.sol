@@ -8,19 +8,14 @@ import {OffchainLookup} from
     "@ens-contracts/dnsregistrar/OffchainDNSResolver.sol";
 import {IExtendedResolver} from
     "@ens-contracts/resolvers/profiles/IExtendedResolver.sol";
-import {IAddrResolver} from
-    "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
-import {INameResolver} from
-    "@ens-contracts/resolvers/profiles/INameResolver.sol";
-import {IABIResolver} from "@ens-contracts/resolvers/profiles/IABIResolver.sol";
-import {IPubkeyResolver} from
-    "@ens-contracts/resolvers/profiles/IPubkeyResolver.sol";
-import {ITextResolver} from
-    "@ens-contracts/resolvers/profiles/ITextResolver.sol";
-import {IContentHashResolver} from
-    "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
-import {IAddressResolver} from
-    "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
+import {AddrResolver} from "@ens-contracts/resolvers/profiles/AddrResolver.sol";
+import {NameResolver} from "@ens-contracts/resolvers/profiles/NameResolver.sol";
+import {ABIResolver} from "@ens-contracts/resolvers/profiles/ABIResolver.sol";
+import {PubkeyResolver} from
+    "@ens-contracts/resolvers/profiles/PubkeyResolver.sol";
+import {TextResolver} from "@ens-contracts/resolvers/profiles/TextResolver.sol";
+import {ContentHashResolver} from
+    "@ens-contracts/resolvers/profiles/ContentHashResolver.sol";
 
 import {IWriteDeferral} from "./IWriteDeferral.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
@@ -32,16 +27,15 @@ import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
  * Callers must implement EIP 3668 and ENSIP 10.
  */
 contract DatabaseResolver is
-    IAddrResolver,
-    INameResolver,
-    IABIResolver,
-    IPubkeyResolver,
-    ITextResolver,
-    IContentHashResolver,
-    IAddressResolver,
+    IERC165,
     IExtendedResolver,
     IWriteDeferral,
-    IERC165,
+    AddrResolver,
+    ABIResolver,
+    PubkeyResolver,
+    TextResolver,
+    ContentHashResolver,
+    NameResolver,
     Ownable
 {
 
@@ -93,6 +87,16 @@ contract DatabaseResolver is
         _addSigners(newSigners);
         _setGatewayUrl(newGatewayUrl);
         _setOffChainDatabaseTimeoutDuration(newOffChainDatabaseTimeoutDuration);
+    }
+
+    /* Dummy implementation of the isAuthorised to implement inherited virtual functions */
+    function isAuthorised(bytes32 /*node*/ )
+        internal
+        pure
+        override
+        returns (bool)
+    {
+        return true;
     }
 
     //////// OFFCHAIN STORAGE REGISTER DOMAIN ////////
@@ -177,7 +181,7 @@ contract DatabaseResolver is
      * @param node The node to update.
      * @param a The address to set.
      */
-    function setAddr(bytes32 node, address a) external {
+    function setAddr(bytes32 node, address a) external override {
         IWriteDeferral.parameter[] memory params =
             new IWriteDeferral.parameter[](2);
 
@@ -214,7 +218,14 @@ contract DatabaseResolver is
      * @param coinType The constant used to define the coin type of the corresponding address.
      * @param a The address to set.
      */
-    function setAddr(bytes32 node, uint256 coinType, bytes memory a) public {
+    function setAddr(
+        bytes32 node,
+        uint256 coinType,
+        bytes memory a
+    )
+        public
+        override
+    {
         IWriteDeferral.parameter[] memory params =
             new IWriteDeferral.parameter[](3);
 
@@ -248,41 +259,6 @@ contract DatabaseResolver is
         _offChainLookup(msg.data);
     }
 
-    //////// ENS ERC-181 LOGIC ////////
-
-    /**
-     * Sets the name associated with an ENS node, for reverse records.
-     * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
-     */
-    function setName(bytes32 node, string calldata name) external {
-        IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](2);
-
-        params[0].name = "node";
-        params[0].value = TypeToString.bytes32ToString(node);
-
-        params[1].name = "name";
-        params[1].value = name;
-
-        _offChainStorage(params);
-    }
-
-    /**
-     * Returns the name associated with an ENS node, for reverse records.
-     * Defined in EIP181.
-     * @param - node The ENS node to query.
-     * @return Always reverts with an OffchainLookup error.
-     */
-    function name(bytes32 /* node */ )
-        external
-        view
-        override
-        returns (string memory)
-    {
-        _offChainLookup(msg.data);
-    }
-
     //////// ENS ERC-634 LOGIC ////////
 
     /**
@@ -298,6 +274,7 @@ contract DatabaseResolver is
         string calldata value
     )
         external
+        override
     {
         IWriteDeferral.parameter[] memory params =
             new IWriteDeferral.parameter[](3);
@@ -340,7 +317,13 @@ contract DatabaseResolver is
      * @param node The node to update.
      * @param hash The contenthash to set
      */
-    function setContenthash(bytes32 node, bytes calldata hash) external {
+    function setContenthash(
+        bytes32 node,
+        bytes calldata hash
+    )
+        external
+        override
+    {
         IWriteDeferral.parameter[] memory params =
             new IWriteDeferral.parameter[](2);
 
@@ -393,6 +376,7 @@ contract DatabaseResolver is
         bytes calldata data
     )
         external
+        override
     {
         IWriteDeferral.parameter[] memory params =
             new IWriteDeferral.parameter[](3);
@@ -420,7 +404,7 @@ contract DatabaseResolver is
         _offChainLookup(msg.data);
     }
 
-    function setPubkey(bytes32 node, bytes32 x, bytes32 y) external {
+    function setPubkey(bytes32 node, bytes32 x, bytes32 y) external override {
         IWriteDeferral.parameter[] memory params =
             new IWriteDeferral.parameter[](3);
 
@@ -617,16 +601,24 @@ contract DatabaseResolver is
      * @param interfaceID Interface ID.
      * @return True if a given interface ID is supported.
      */
-    function supportsInterface(bytes4 interfaceID) public pure returns (bool) {
-        return interfaceID == type(IExtendedResolver).interfaceId
-            || interfaceID == type(IAddrResolver).interfaceId
-            || interfaceID == type(IABIResolver).interfaceId
-            || interfaceID == type(IPubkeyResolver).interfaceId
-            || interfaceID == type(ITextResolver).interfaceId
-            || interfaceID == type(INameResolver).interfaceId
-            || interfaceID == type(IContentHashResolver).interfaceId
-            || interfaceID == type(IAddressResolver).interfaceId
-            || interfaceID == type(IWriteDeferral).interfaceId;
+    function supportsInterface(bytes4 interfaceID)
+        public
+        view
+        override(
+            IERC165,
+            ABIResolver,
+            AddrResolver,
+            NameResolver,
+            TextResolver,
+            PubkeyResolver,
+            ContentHashResolver
+        )
+        returns (bool)
+    {
+        return interfaceID == type(IERC165).interfaceId
+            || interfaceID == type(IWriteDeferral).interfaceId
+            || interfaceID == type(IExtendedResolver).interfaceId
+            || super.supportsInterface(interfaceID);
     }
 
 }
