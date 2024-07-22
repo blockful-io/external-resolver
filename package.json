@@ -12,7 +12,7 @@
     "contracts": "npm run -w @blockful/contracts",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
-    "build": "turbo run build",
+    "build": "turbo build --force",
     "prepare": "husky",
     "lint": "turbo run lint",
     "commit": "git-cz",

@@ -22,10 +22,10 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Use Node.js 20
+      - name: Use Node.js 21
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 21
           cache: 'npm'
       
       - name: Install Foundry
