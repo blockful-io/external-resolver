@@ -35,7 +35,7 @@ export function withSetAddr(
           node,
           addr,
           coin: '60', // default ether
-          resolver: signature.message.sender,
+          resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
         })
       } catch (err) {
@@ -67,7 +67,7 @@ export function withSetAddrByCoin(
           node,
           coin: coin.toString(),
           addr,
-          resolver: signature.message.sender,
+          resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
         })
       } catch (err) {

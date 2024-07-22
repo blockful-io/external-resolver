@@ -34,7 +34,7 @@ export function withSetAbi(
         await repo.setAbi({
           node,
           value: data,
-          resolver: signature.message.sender,
+          resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
         })
       } catch (err) {

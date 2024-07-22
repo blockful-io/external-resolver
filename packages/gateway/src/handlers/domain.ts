@@ -65,7 +65,7 @@ export function withRegisterDomain(
           ttl,
           owner: signer,
           parent: parentHash,
-          resolver: signature.message.sender,
+          resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
         })
       } catch (err) {

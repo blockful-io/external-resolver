@@ -35,7 +35,7 @@ export function withSetPubkey(
           node,
           x,
           y,
-          resolver: signature.message.sender,
+          resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
         })
       } catch (err) {

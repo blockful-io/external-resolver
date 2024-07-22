@@ -40,7 +40,7 @@ export function withSetText(
           node,
           key,
           value,
-          resolver: signature.message.sender,
+          resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
         })
       } catch (err) {
