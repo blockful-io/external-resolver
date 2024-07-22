@@ -21,6 +21,12 @@ export class Address {
   @PrimaryColumn()
   domain: string
 
+  @Column()
+  resolver: string
+
+  @Column()
+  resolverVersion: string
+
   @CreateDateColumn()
   createdAt?: Date
 

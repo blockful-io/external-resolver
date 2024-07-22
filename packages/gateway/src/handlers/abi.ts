@@ -2,10 +2,10 @@ import * as ccip from '@blockful/ccip-server'
 
 import {
   SetAbiProps,
-  GetAbiProps,
   Response,
   OwnershipValidator,
   TypedSignature,
+  NodeProps,
 } from '../types'
 
 interface WriteRepository {
@@ -40,7 +40,7 @@ export function withSetAbi(
 }
 
 interface ReadRepository {
-  getABI(params: GetAbiProps): Promise<Response | undefined>
+  getABI(params: NodeProps): Promise<Response | undefined>
 }
 
 export function withGetAbi(repo: ReadRepository): ccip.HandlerDescription {
