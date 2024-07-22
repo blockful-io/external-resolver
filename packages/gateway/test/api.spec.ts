@@ -6,7 +6,6 @@
  */
 import 'reflect-metadata'
 import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest'
-import { hash as namehash } from 'eth-ens-namehash'
 import {
   Hex,
   encodeFunctionData,
@@ -17,9 +16,12 @@ import {
   verifyMessage,
   getAbiItem,
   AbiFunction,
+  toHex,
 } from 'viem'
+import { namehash, labelhash } from 'viem/ens'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 import request from 'supertest'
+
 import * as ccip from '@blockful/ccip-server'
 
 import { abi as serverAbi } from '../src/abi'
@@ -60,18 +62,23 @@ describe('Gateway API', () => {
   })
 
   beforeEach(async () => {
-    const node = namehash('public.eth') as Hex
     domain = {
-      node,
+      name: 'public.eth',
+      node: namehash('public.eth'),
+      label: 'public',
+      labelhash: labelhash('public'),
+      parent: namehash('eth'),
       owner: privateKeyToAddress(privateKey),
       ttl: 300,
       contenthash:
         '0x4d1ae8fa44de34a527a9c6973d37dfda8befc18ca6ec73fd97535b4cf02189c6', // public goods
       addresses: [],
       texts: [],
+      resolver: TEST_ADDRESS,
+      resolverVersion: '1',
     }
     const domains = new Map()
-    domains.set(node, domain)
+    domains.set(domain.node, domain)
     repo.setDomains(domains)
     validator = new OwnershipValidator(signatureRecover, [repo])
   })
@@ -86,14 +93,20 @@ describe('Gateway API', () => {
         const app = server.makeApp('/')
 
         const domain: Domain = {
+          name: 'newdomain.eth',
           node: namehash('newdomain.eth'),
+          label: 'newdomain',
+          labelhash: labelhash('newdomain'),
+          parent: namehash('eth'),
+          resolver: TEST_ADDRESS,
+          resolverVersion: '1',
           owner: privateKeyToAddress(privateKey),
           ttl: 300,
           addresses: [],
           texts: [],
         }
 
-        const args = [domain.node, domain.ttl]
+        const args = [toHex(domain.name), domain.ttl]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -120,7 +133,7 @@ describe('Gateway API', () => {
           })
 
         const response = await repo.getDomain({
-          node: domain.node as `0x${string}`,
+          node: domain.node,
         })
         expect(response).toEqual(domain)
       })
@@ -130,7 +143,7 @@ describe('Gateway API', () => {
         server.add(serverAbi, withRegisterDomain(repo, signatureRecover))
         const app = server.makeApp('/')
 
-        const args = [domain.node, domain.ttl]
+        const args = [toHex(domain.name), domain.ttl]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -387,6 +400,8 @@ describe('Gateway API', () => {
           domain: domain.node,
           key,
           value: 'blockful',
+          resolver: TEST_ADDRESS,
+          resolverVersion: '1',
         },
       ])
       const server = new ccip.Server()
@@ -435,6 +450,8 @@ describe('Gateway API', () => {
           domain: domain.node,
           key,
           value,
+          resolver: TEST_ADDRESS,
+          resolverVersion: '1',
         },
       ])
       const server = new ccip.Server()
@@ -546,7 +563,9 @@ describe('Gateway API', () => {
         {
           domain: domain.node,
           coin: '60',
-          address: '0x',
+          address: TEST_ADDRESS,
+          resolver: TEST_ADDRESS,
+          resolverVersion: '1',
         },
       ])
       const address = privateKeyToAddress(privateKey)
@@ -596,6 +615,8 @@ describe('Gateway API', () => {
           domain: domain.node,
           coin: '60',
           address,
+          resolver: TEST_ADDRESS,
+          resolverVersion: '1',
         },
       ])
       const server = new ccip.Server()
