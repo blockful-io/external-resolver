@@ -6,12 +6,12 @@ import {
   fromHex,
   getChainContractAddress,
   parseAbiItem,
+  Hex,
 } from 'viem'
 
 export class EthereumClient<chain extends Chain> {
-  private client: PublicClient<HttpTransport, chain>
-
   private registryAddress: string
+  private client: PublicClient<HttpTransport, chain>
 
   constructor(
     client: PublicClient<HttpTransport, chain>,
@@ -26,20 +26,17 @@ export class EthereumClient<chain extends Chain> {
       })
   }
 
-  async verifyOwnership(
-    node: `0x${string}`,
-    address: `0x${string}`,
-  ): Promise<boolean> {
+  async verifyOwnership(node: Hex, address: Hex): Promise<boolean> {
     if (!this.registryAddress) return false
 
     let owner = (await this.client.readContract({
-      address: this.registryAddress as `0x${string}`,
+      address: this.registryAddress as Hex,
       abi: [
         parseAbiItem('function owner(bytes32 node) view returns (address)'),
       ],
       functionName: 'owner',
       args: [node],
-    })) as `0x${string}`
+    })) as Hex
 
     try {
       // handling NameWrapper owner
@@ -52,7 +49,7 @@ export class EthereumClient<chain extends Chain> {
         ],
         functionName: 'ownerOf',
         args: [fromHex(node, 'bigint')],
-      })) as `0x${string}`
+      })) as Hex
     } catch {
       /** error is expected when it isn't a contract */
     }

@@ -19,11 +19,14 @@ export function withSetText(
 ): ccip.HandlerDescription {
   return {
     type: 'setText(bytes32 node, string calldata key, string calldata value)',
-    func: async ({ node, key, value }, { signature }) => {
+    func: async (
+      { node, key, value },
+      { signature }: { signature: TypedSignature },
+    ) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
-          signature: signature! as TypedSignature,
+          signature,
         })
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
@@ -33,7 +36,13 @@ export function withSetText(
           return { error: { message: 'Reserved key', status: 400 } }
         }
 
-        await repo.setText({ node, key, value })
+        await repo.setText({
+          node,
+          key,
+          value,
+          resolver: signature.message.sender,
+          resolverVersion: signature.domain.version,
+        })
       } catch (err) {
         return { error: { message: 'Unable to save text', status: 400 } }
       }

@@ -19,16 +19,25 @@ export function withSetAddr(
 ): ccip.HandlerDescription {
   return {
     type: 'setAddr(bytes32 node, address addr)',
-    func: async ({ node, addr }, { signature }) => {
+    func: async (
+      { node, addr },
+      { signature }: { signature: TypedSignature },
+    ) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
-          signature: signature! as TypedSignature,
+          signature,
         })
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
         }
-        await repo.setAddr({ node, addr, coin: '60' }) // default ether
+        await repo.setAddr({
+          node,
+          addr,
+          coin: '60', // default ether
+          resolver: signature.message.sender,
+          resolverVersion: signature.domain.version,
+        })
       } catch (err) {
         return { error: { message: 'Unable to save address', status: 400 } }
       }
@@ -42,7 +51,10 @@ export function withSetAddrByCoin(
 ): ccip.HandlerDescription {
   return {
     type: 'setAddr(bytes32 node, uint256 coinType, bytes memory addr)',
-    func: async ({ node, coinType: coin, addr }, { signature }) => {
+    func: async (
+      { node, coinType: coin, addr },
+      { signature }: { signature: TypedSignature },
+    ) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
@@ -51,7 +63,13 @@ export function withSetAddrByCoin(
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
         }
-        await repo.setAddr({ node, coin: coin.toString(), addr })
+        await repo.setAddr({
+          node,
+          coin: coin.toString(),
+          addr,
+          resolver: signature.message.sender,
+          resolverVersion: signature.domain.version,
+        })
       } catch (err) {
         return { error: { message: 'Unable to save address', status: 400 } }
       }

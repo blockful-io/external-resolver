@@ -20,7 +20,6 @@ interface SignatureRecover {
 
 interface WriteRepository {
   register(params: RegisterDomainProps)
-  getDomain(params: DomainProps): Promise<Domain | null>
   transfer(params: TransferDomainProps)
   setContentHash(params: SetContentHashProps)
 }

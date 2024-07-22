@@ -47,7 +47,7 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const name = normalize('jorge.blockful.eth')
+  const name = normalize('blockful.eth')
   const node = namehash(name)
   const signer = privateKeyToAccount(privateKey)
 

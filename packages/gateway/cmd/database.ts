@@ -4,7 +4,6 @@
 import 'reflect-metadata'
 import { config } from 'dotenv'
 import { Hex, createPublicClient, http } from 'viem'
-import * as chains from 'viem/chains'
 
 import * as ccip from '@blockful/ccip-server'
 
@@ -99,7 +98,3 @@ const _ = (async () => {
     console.log(`Gateway bound to port ${port}.`)
   })
 })()
-
-function getChain(chainId: number) {
-  return Object.values(chains).find((chain) => chain.id === chainId)
-}
