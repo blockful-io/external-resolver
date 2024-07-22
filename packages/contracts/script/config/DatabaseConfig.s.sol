@@ -19,6 +19,7 @@ contract DatabaseConfig is Script, ENSHelper {
 
     struct NetworkConfig {
         string gatewayUrl;
+        string graphqlUrl;
         uint32 gatewayTimestamp;
         address[] signers;
         ENSRegistry registry;
@@ -35,6 +36,7 @@ contract DatabaseConfig is Script, ENSHelper {
         view
         returns (
             string memory gatewayUrl,
+            string memory graphQLUrl,
             uint32 gatewayTimestamp,
             address[] memory signers,
             ENSRegistry registry
@@ -42,6 +44,7 @@ contract DatabaseConfig is Script, ENSHelper {
     {
         return (
             _activeNetworkConfig.gatewayUrl,
+            _activeNetworkConfig.graphqlUrl,
             _activeNetworkConfig.gatewayTimestamp,
             _activeNetworkConfig.signers,
             _activeNetworkConfig.registry
@@ -52,6 +55,7 @@ contract DatabaseConfig is Script, ENSHelper {
         address[] memory signers = new address[](0);
         return NetworkConfig({
             gatewayUrl: vm.envString("GATEWAY_URL"),
+            graphqlUrl: vm.envString("GRAPHQL_URL"),
             gatewayTimestamp: 600,
             signers: signers,
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e)
@@ -62,6 +66,7 @@ contract DatabaseConfig is Script, ENSHelper {
         address[] memory signers = new address[](0);
         return NetworkConfig({
             gatewayUrl: vm.envString("GATEWAY_URL"),
+            graphqlUrl: vm.envString("GRAPHQL_URL"),
             gatewayTimestamp: 600,
             signers: signers,
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e)
@@ -99,6 +104,7 @@ contract DatabaseConfig is Script, ENSHelper {
 
         return NetworkConfig({
             gatewayUrl: urls[0],
+            graphqlUrl: "https://127.0.0.1:4000",
             gatewayTimestamp: 600,
             signers: signers,
             registry: registry

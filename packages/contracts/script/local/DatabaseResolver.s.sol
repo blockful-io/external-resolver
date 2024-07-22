@@ -17,14 +17,16 @@ contract DatabaseResolverScript is Script, ENSHelper {
         DatabaseConfig config = new DatabaseConfig(block.chainid, msg.sender);
         (
             string memory gatewayUrl,
+            string memory graphqlUrl,
             uint32 gatewayTimestamp,
             address[] memory signers,
             ENSRegistry registry
         ) = config.activeNetworkConfig();
 
         vm.broadcast();
-        DatabaseResolver resolver =
-            new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
+        DatabaseResolver resolver = new DatabaseResolver(
+            gatewayUrl, graphqlUrl, gatewayTimestamp, signers
+        );
 
         vm.startBroadcast();
 
