@@ -100,13 +100,21 @@ export class PostgresRepository {
     if (domain) return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
-  async setAddr({ node, addr: address, coin }: SetAddressProps) {
+  async setAddr({
+    node,
+    addr: address,
+    coin,
+    resolver,
+    resolverVersion,
+  }: SetAddressProps) {
     await this.client.getRepository(Address).upsert(
       [
         {
           domain: node,
           address,
           coin,
+          resolver,
+          resolverVersion,
         },
       ],
       {
@@ -137,12 +145,14 @@ export class PostgresRepository {
     if (addr) return { value: addr.addr_address, ttl: addr.domain_ttl || 300 } // default ttl value
   }
 
-  async setText({ node, key, value }: SetTextProps) {
+  async setText({ node, key, value, resolver, resolverVersion }: SetTextProps) {
     await this.client.getRepository(Text).upsert(
       {
         key,
         value,
         domain: node,
+        resolver,
+        resolverVersion,
       },
       { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )
@@ -166,12 +176,14 @@ export class PostgresRepository {
     if (text) return { value: text.text_value, ttl: text.domain_ttl || 300 } // default ttl value
   }
 
-  async setPubkey({ node, x, y }: SetPubkeyProps) {
+  async setPubkey({ node, x, y, resolver, resolverVersion }: SetPubkeyProps) {
     await this.client.getRepository(Text).upsert(
       {
         key: 'pubkey',
         value: `(${x},${y})`,
         domain: node,
+        resolver,
+        resolverVersion,
       },
       { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )
@@ -189,12 +201,14 @@ export class PostgresRepository {
     return { value: { x, y }, ttl: pubkey.ttl }
   }
 
-  async setAbi({ node, value }: SetAbiProps) {
+  async setAbi({ node, value, resolver, resolverVersion }: SetAbiProps) {
     await this.client.getRepository(Text).upsert(
       {
         key: 'ABI',
         value,
         domain: node,
+        resolver,
+        resolverVersion,
       },
       { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )

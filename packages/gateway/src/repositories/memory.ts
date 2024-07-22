@@ -117,7 +117,13 @@ export class InMemoryRepository {
     return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
-  async setAddr({ node, addr: address, coin }: SetAddressProps) {
+  async setAddr({
+    node,
+    addr: address,
+    coin,
+    resolver,
+    resolverVersion,
+  }: SetAddressProps) {
     const existingAddress = this.addresses.get(`${node}-${coin}`)
     if (existingAddress) {
       existingAddress.address = address
@@ -127,8 +133,8 @@ export class InMemoryRepository {
       domain: node,
       address,
       coin,
-      resolver: '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2',
-      resolverVersion: 'v0.0.1',
+      resolver,
+      resolverVersion,
     })
   }
 
@@ -144,7 +150,13 @@ export class InMemoryRepository {
     return { value: address.address, ttl }
   }
 
-  async setText({ node, key, value }: SetTextProps): Promise<void> {
+  async setText({
+    node,
+    key,
+    value,
+    resolver,
+    resolverVersion,
+  }: SetTextProps): Promise<void> {
     const existingText = this.texts.get(`${node}-${key}`)
     if (existingText) {
       existingText.value = value
@@ -154,8 +166,8 @@ export class InMemoryRepository {
       key,
       value,
       domain: node,
-      resolver: '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2',
-      resolverVersion: 'v0.0.1',
+      resolver,
+      resolverVersion,
     })
   }
 
@@ -168,8 +180,14 @@ export class InMemoryRepository {
     return { value: text.value, ttl }
   }
 
-  async setPubkey({ node, x, y }: SetPubkeyProps) {
-    await this.setText({ node, key: 'pubkey', value: `(${x},${y})` })
+  async setPubkey({ node, x, y, resolver, resolverVersion }: SetPubkeyProps) {
+    await this.setText({
+      node,
+      key: 'pubkey',
+      value: `(${x},${y})`,
+      resolver,
+      resolverVersion,
+    })
   }
 
   /**
@@ -184,8 +202,8 @@ export class InMemoryRepository {
     return { value: { x, y }, ttl: pubkey.ttl }
   }
 
-  async setAbi({ node, value }: SetAbiProps) {
-    await this.setText({ node, key: 'ABI', value })
+  async setAbi({ node, value, resolver, resolverVersion }: SetAbiProps) {
+    await this.setText({ node, key: 'ABI', value, resolver, resolverVersion })
   }
 
   /**

@@ -19,14 +19,20 @@ export type RegisterDomainProps = Omit<
 export type TransferDomainProps = Pick<Domain, 'node' | 'owner'>
 export type SetContentHashProps = Pick<Domain, 'node' | 'contenthash'>
 
+export type ResolverProps = {
+  resolver: `0x${string}`
+  resolverVersion: string
+}
+
 export type NodeProps = {
   node: `0x${string}`
 }
 
-export type SetAddressProps = NodeProps & {
-  addr: string
-  coin: string
-}
+export type SetAddressProps = NodeProps &
+  ResolverProps & {
+    addr: string
+    coin: string
+  }
 
 export type GetAddressProps = NodeProps & {
   coin: string
@@ -36,18 +42,21 @@ export type GetTextProps = NodeProps & {
   key: string
 }
 
-export type SetTextProps = GetTextProps & {
-  value: string
-}
+export type SetTextProps = GetTextProps &
+  ResolverProps & {
+    value: string
+  }
 
-export type SetAbiProps = NodeProps & {
-  value: string
-}
+export type SetAbiProps = NodeProps &
+  ResolverProps & {
+    value: string
+  }
 
-export type SetPubkeyProps = NodeProps & {
-  x: `0x${string}`
-  y: `0x${string}`
-}
+export type SetPubkeyProps = NodeProps &
+  ResolverProps & {
+    x: `0x${string}`
+    y: `0x${string}`
+  }
 
 export type GetPubkeyResponse = {
   value: PubKey

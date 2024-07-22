@@ -18,17 +18,26 @@ export function withSetPubkey(
 ): ccip.HandlerDescription {
   return {
     type: 'setPubkey(bytes32 node,bytes32 x, bytes32 y)',
-    func: async ({ node, x, y }, { signature }) => {
+    func: async (
+      { node, x, y },
+      { signature }: { signature: TypedSignature },
+    ) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
-          signature: signature! as TypedSignature,
+          signature,
         })
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
         }
 
-        await repo.setPubkey({ node, x, y })
+        await repo.setPubkey({
+          node,
+          x,
+          y,
+          resolver: signature.domain.verifyingContract,
+          resolverVersion: signature.domain.version,
+        })
       } catch (err) {
         return { error: { message: 'Unable to save abi', status: 400 } }
       }

@@ -18,11 +18,14 @@ export function withSetAbi(
 ): ccip.HandlerDescription {
   return {
     type: 'setABI(bytes32 node, uint256 contentType, bytes calldata data)',
-    func: async ({ node, data /*, contentType */ }, { signature }) => {
+    func: async (
+      { node, data /*, contentType */ },
+      { signature }: { signature: TypedSignature },
+    ) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
-          signature: signature! as TypedSignature,
+          signature,
         })
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
@@ -31,6 +34,8 @@ export function withSetAbi(
         await repo.setAbi({
           node,
           value: data,
+          resolver: signature.domain.verifyingContract,
+          resolverVersion: signature.domain.version,
         })
       } catch (err) {
         return { error: { message: 'Unable to save abi', status: 400 } }
