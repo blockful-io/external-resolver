@@ -65,6 +65,7 @@ import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 import { getRevertErrorData, handleDBStorage } from '../src/client'
 
 const GATEWAY_URL = 'http://127.0.0.1:3000/{sender}/{data}.json'
+const GRAPHQL_URL = 'http://127.0.0.1:4000'
 
 let universalResolverAddress: Hash, registryAddr: Hash, dbResolverAddr: Hash
 
@@ -128,7 +129,7 @@ async function deployContracts(signer: Hash) {
     abi: abiDBResolver,
     bytecode: bytecodeDBResolver.object as Hash,
     account: signer,
-    args: [GATEWAY_URL, 600, [signer]],
+    args: [GATEWAY_URL, GRAPHQL_URL, 600, [signer]],
   })
 
   await registry.write.setSubnodeRecord(
