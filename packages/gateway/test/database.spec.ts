@@ -53,7 +53,8 @@ describe('Gateway Database', () => {
     })
     repo = new PostgresRepository(await datasource.initialize())
     signatureRecover = new SignatureRecover()
-    validator = new OwnershipValidator(1, signatureRecover, [repo])
+    const chainId = 1
+    validator = new OwnershipValidator(chainId, signatureRecover, [repo])
   })
 
   afterEach(async () => {
