@@ -1,9 +1,14 @@
+import { config } from 'dotenv'
 import { ApolloServer } from '@apollo/server'
 import { startStandaloneServer } from '@apollo/server/standalone'
 
 import { NewDataSource } from '../src/datasources/postgres'
 import { PostgresRepository } from '../src/repositories'
 import { domainResolver } from '../src/resolvers'
+
+config({
+  path: process.env.ENV_FILE || '../../../.env',
+})
 
 const typeDefs = `#graphql
   scalar Bytes
@@ -18,10 +23,20 @@ const typeDefs = `#graphql
     labelhash: Bytes
     resolvedAddress: Bytes
     parent: Domain
-    subdomains: [Domain]
+    subdomains: [String]
     subdomainCount: Int!
     resolver: Resolver!
-    # expiryDate: BigInt
+    expiryDate: BigInt
+  }
+
+  type Text {
+    key: String
+    value: String
+  }
+
+  type Address {
+    address: Bytes
+    coin: BigInt
   }
 
   type Resolver {
@@ -32,8 +47,8 @@ const typeDefs = `#graphql
     domain: Domain
     addr: Bytes
     contentHash: Bytes
-    texts: [String!]
-    coinTypes: [BigInt!]
+    texts: [Text!]
+    addresses: [Address!]
   }
 
   type Query {
@@ -43,12 +58,11 @@ const typeDefs = `#graphql
 
 // eslint-disable-next-line
 const _ = (async () => {
-  // const dbUrl = process.env.DATABASE_URL
-  // if (!dbUrl) {
-  //   throw new Error('DATABASE_URL is required')
-  // }
+  const dbUrl = process.env.DATABASE_URL
+  if (!dbUrl) {
+    throw new Error('DATABASE_URL is required')
+  }
 
-  const dbUrl = 'postgresql://blockful:ensdomains@localhost:5432/ensdomains'
   const dbclient = await NewDataSource(dbUrl).initialize()
   const repo = new PostgresRepository(dbclient)
 

@@ -153,26 +153,30 @@ export class PostgresRepository {
     if (addr) return { value: addr.addr_address, ttl: addr.domain_ttl || 300 } // default ttl value
   }
 
-  async getAddressCoins({ node }: NodeProps): Promise<string[]> {
+  async getAddresses({
+    node,
+  }: NodeProps): Promise<Pick<Address, 'address' | 'coin'>[]> {
     const addrs = await this.client
       .getRepository(Address)
       .createQueryBuilder('address')
-      .select(['address.coin'])
+      .select(['address.coin', 'address.address'])
       .where('address.domain = :node ', { node })
       .getMany()
 
-    return addrs.map((addr) => addr.coin)
+    return addrs.map(({ coin, address }) => ({ address, coin }))
   }
 
-  async getTextKeys({ node }: NodeProps): Promise<string[]> {
+  async getTexts({ node }: NodeProps): Promise<Pick<Text, 'key' | 'value'>[]> {
     const texts = await this.client
       .getRepository(Text)
       .createQueryBuilder('text')
-      .select(['text.key'])
+      .select(['text.key', 'text.value'])
       .where('text.domain = :node ', { node })
+      .andWhere('text.key != :key', { key: 'pubkey' })
+      .andWhere('text.key != :key', { key: 'ABI' })
       .getMany()
 
-    return texts.map((text) => text.key)
+    return texts.map(({ key, value }) => ({ key, value }))
   }
 
   async setText({ node, key, value, resolver, resolverVersion }: SetTextProps) {

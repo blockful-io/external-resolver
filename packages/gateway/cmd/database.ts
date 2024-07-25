@@ -36,7 +36,7 @@ import {
 } from '../src/services'
 
 config({
-  path: process.env.ENV_FILE || '../env',
+  path: process.env.ENV_FILE || '../../../.env',
 })
 
 // eslint-disable-next-line

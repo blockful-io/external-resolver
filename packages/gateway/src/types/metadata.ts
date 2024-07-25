@@ -1,6 +1,16 @@
 import { Domain } from '../entities'
 
-export type Resolver = {
+export interface Text {
+  key: string
+  value: string
+}
+
+export interface Address {
+  address: string
+  coin: string
+}
+
+export interface Resolver {
   id: string
   node: string
   context: string
@@ -8,11 +18,11 @@ export type Resolver = {
   domain: Domain
   addr?: string
   contentHash?: string
-  texts: string[]
-  coinTypes: string[]
+  texts: Text[]
+  addresses: Address[]
 }
 
-export type DomainMetadata = {
+export interface DomainMetadata {
   id: string
   context: string
   name: string
@@ -21,8 +31,8 @@ export type DomainMetadata = {
   labelhash: string
   resolvedAddress: string
   parent: Domain | string
-  subdomains: DomainMetadata[]
+  subdomains: string[]
   subdomainCount: number
   resolver: Resolver
-  // expiryDate: BigInt
+  expiryDate: bigint
 }

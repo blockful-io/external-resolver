@@ -2,17 +2,19 @@ import { namehash } from 'viem'
 
 import { Domain } from '../entities'
 import {
+  Address,
   DomainMetadata,
   DomainProps,
   GetAddressProps,
   Response,
+  Text,
 } from '../types'
 
 interface ReadRepository {
   getDomain(params: DomainProps): Promise<Domain | null>
   getSubdomains({ node }: Pick<Domain, 'node'>): Promise<Domain[]>
-  getTextKeys({ node }: Pick<Domain, 'node'>): Promise<string[]>
-  getAddressCoins({ node }: Pick<Domain, 'node'>): Promise<string[]>
+  getTexts({ node }: Pick<Domain, 'node'>): Promise<Text[]>
+  getAddresses({ node }: Pick<Domain, 'node'>): Promise<Address[]>
   getAddr(params: GetAddressProps): Promise<Response | undefined>
 }
 
@@ -28,12 +30,12 @@ export async function domainResolver(
     (await repo.getDomain({ node: domain.parent })) || domain.parent
   const subdomains = await repo.getSubdomains({ node })
 
-  const xs = await Promise.all(
+  const subMetadatas = await Promise.all(
     subdomains.map((s) => domainResolver({ name: s.name }, repo)),
   )
-  const texts = await repo.getTextKeys({ node })
-  const coinTypes = await repo.getAddressCoins({ node })
-  const addr = await repo.getAddr({ node, coin: '60' }) // ETH
+  const texts = await repo.getTexts({ node })
+  const addresses = await repo.getAddresses({ node })
+  const addr = addresses.find((addr) => addr.coin === '60') // ETH
 
   const context = domain.owner
 
@@ -46,18 +48,19 @@ export async function domainResolver(
     labelhash: domain.labelhash,
     resolvedAddress: domain.resolver,
     parent,
-    subdomains: xs.reduce<DomainMetadata[]>((x, y) => (y ? [...x, y] : x), []),
-    subdomainCount: xs.length,
+    subdomains: subMetadatas.map((s) => s!.name),
+    subdomainCount: subdomains.length,
+    expiryDate: 0n, // offchain domains don't have expire date
     resolver: {
       id: `${context}-${domain.node}`,
       node: domain.node,
       context: domain.owner,
       address: domain.resolver,
       domain,
-      addr: addr?.value,
+      addr: addr?.address,
       contentHash: domain.contenthash,
       texts,
-      coinTypes: coinTypes,
+      addresses,
     },
   }
 }
