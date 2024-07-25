@@ -10,6 +10,7 @@
     "start:db": "node ./dist/database.js",
     "start:eth": "node ./dist/ethereum.js",
     "start:arb": "node ./dist/arbitrum.js",
+    "start:metadata": "node ./dist/metadata.js",
     "dev:db": "ENV_FILE=../../.env ts-node ./cmd/database.ts --watch",
     "dev:eth": "ENV_FILE=../../.env ts-node ./cmd/ethereum.ts --watch",
     "dev:arb": "ENV_FILE=../../.env ts-node ./cmd/arbitrum.ts --watch",
