@@ -18,7 +18,7 @@ import {
   AbiFunction,
   toHex,
 } from 'viem'
-import { namehash, labelhash } from 'viem/ens'
+import { namehash } from 'viem/ens'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 import request from 'supertest'
 
@@ -65,8 +65,6 @@ describe('Gateway API', () => {
     domain = {
       name: 'public.eth',
       node: namehash('public.eth'),
-      label: 'public',
-      labelhash: labelhash('public'),
       parent: namehash('eth'),
       owner: privateKeyToAddress(privateKey),
       ttl: 300,
@@ -95,8 +93,6 @@ describe('Gateway API', () => {
         const domain: Domain = {
           name: 'newdomain.eth',
           node: namehash('newdomain.eth'),
-          label: 'newdomain',
-          labelhash: labelhash('newdomain'),
           parent: namehash('eth'),
           resolver: TEST_ADDRESS,
           resolverVersion: '1',

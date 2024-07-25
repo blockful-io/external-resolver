@@ -14,7 +14,7 @@ export type WritingProps = {
 export type DomainProps = Pick<Domain, 'node'>
 export type RegisterDomainProps = Omit<
   Domain,
-  'subdomains' | 'addresses' | 'texts' | 'createdAt' | 'updatedAt'
+  'addresses' | 'texts' | 'createdAt' | 'updatedAt'
 >
 export type TransferDomainProps = Pick<Domain, 'node' | 'owner'>
 export type SetContentHashProps = Pick<Domain, 'node' | 'contenthash'>

@@ -1,4 +1,4 @@
-import { hexToString, labelhash, namehash } from 'viem'
+import { hexToString, namehash } from 'viem'
 
 import * as ccip from '@blockful/ccip-server'
 
@@ -53,16 +53,12 @@ export function withRegisterDomain(
           return { error: { message: 'Domain already exists', status: 400 } }
         }
 
-        const [, label] = /(.*)\.eth/.exec(name) || []
-        const lhash = labelhash(label)
         const [, parent] = /\w*\.(.*)$/.exec(name) || []
         const parentHash = namehash(parent)
 
         await repo.register({
           name,
           node,
-          label,
-          labelhash: lhash,
           ttl,
           owner: signer,
           parent: parentHash,
