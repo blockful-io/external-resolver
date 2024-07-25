@@ -52,11 +52,15 @@ export function withRegisterDomain(
           return { error: { message: 'Domain already exists', status: 400 } }
         }
 
+        const [, parent] = /\w*\.(.*)$/.exec(name) || []
+        const parentHash = namehash(parent)
+
         await repo.register({
           name,
           node,
           ttl,
           owner: signer,
+          parent: parentHash,
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
         })

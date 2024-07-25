@@ -86,8 +86,7 @@ describe('Gateway Database', () => {
         })
         expect(d).not.toBeNull()
         expect(d!.name).toEqual(name)
-        expect(d!.resolver).toEqual(TEST_ADDRESS)
-        expect(d!.resolverVersion).toEqual('1')
+        expect(d!.parent).toEqual(namehash('eth'))
         expect(d!.ttl).toEqual(300)
       })
 
@@ -100,6 +99,7 @@ describe('Gateway Database', () => {
         domain.node = namehash('public.eth')
         domain.ttl = 300
         domain.owner = owner
+        domain.parent = namehash('eth')
         domain.resolver = TEST_ADDRESS
         domain.resolverVersion = '1'
         await datasource.manager.save(domain)
@@ -133,6 +133,7 @@ describe('Gateway Database', () => {
         const domain = new Domain()
         domain.node = node
         domain.name = 'blockful.eth'
+        domain.parent = namehash('eth')
         domain.resolver = TEST_ADDRESS
         domain.resolverVersion = '1'
         domain.ttl = 300
@@ -198,6 +199,7 @@ describe('Gateway Database', () => {
         const domain = new Domain()
         domain.name = 'public.eth'
         domain.node = namehash('public.eth')
+        domain.parent = namehash('eth')
         domain.resolver = TEST_ADDRESS
         domain.resolverVersion = '1'
         domain.ttl = 300
@@ -233,6 +235,7 @@ describe('Gateway Database', () => {
         const domain = new Domain()
         domain.name = 'public.eth'
         domain.node = namehash(domain.name)
+        domain.parent = namehash('eth')
         domain.resolver = TEST_ADDRESS
         domain.resolverVersion = '1'
         domain.ttl = 300
@@ -288,6 +291,7 @@ describe('Gateway Database', () => {
       domain.name = 'public.eth'
       domain.node = namehash(domain.name)
       domain.ttl = 300
+      domain.parent = namehash('eth')
       domain.resolver = TEST_ADDRESS
       domain.resolverVersion = '1'
       pvtKey = generatePrivateKey()
@@ -499,6 +503,7 @@ describe('Gateway Database', () => {
       domain = new Domain()
       domain.name = 'public.eth'
       domain.node = namehash(domain.name)
+      domain.parent = namehash('eth')
       domain.resolver = TEST_ADDRESS
       domain.resolverVersion = '1'
       domain.ttl = 300
@@ -636,6 +641,7 @@ describe('Gateway Database', () => {
       domain = new Domain()
       domain.name = 'public.eth'
       domain.node = namehash(domain.name)
+      domain.parent = namehash('eth')
       domain.resolver = TEST_ADDRESS
       domain.resolverVersion = '1'
       domain.ttl = 2000
@@ -759,6 +765,7 @@ describe('Gateway Database', () => {
       domain.node = namehash('public.eth') as `0x${string}`
       domain.ttl = 2000
       domain.name = 'public.eth'
+      domain.parent = namehash('eth')
       domain.resolver = TEST_ADDRESS
       domain.resolverVersion = '1'
       pvtKey = generatePrivateKey()

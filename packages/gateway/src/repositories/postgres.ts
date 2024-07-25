@@ -38,6 +38,7 @@ export class PostgresRepository {
   async register({
     name,
     node,
+    parent,
     ttl,
     owner,
     resolver,
@@ -48,6 +49,7 @@ export class PostgresRepository {
         {
           name,
           node,
+          parent,
           ttl,
           owner,
           resolver,

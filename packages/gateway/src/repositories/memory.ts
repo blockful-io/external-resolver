@@ -61,6 +61,7 @@ export class InMemoryRepository {
 
   async register({
     name,
+    parent,
     node,
     ttl,
     owner,
@@ -70,6 +71,7 @@ export class InMemoryRepository {
     this.domains.set(node, {
       name,
       node,
+      parent,
       addresses: [],
       texts: [],
       ttl,

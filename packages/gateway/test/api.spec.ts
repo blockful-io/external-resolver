@@ -65,6 +65,7 @@ describe('Gateway API', () => {
     domain = {
       name: 'public.eth',
       node: namehash('public.eth'),
+      parent: namehash('eth'),
       owner: privateKeyToAddress(privateKey),
       ttl: 300,
       contenthash:
@@ -92,6 +93,7 @@ describe('Gateway API', () => {
         const domain: Domain = {
           name: 'newdomain.eth',
           node: namehash('newdomain.eth'),
+          parent: namehash('eth'),
           resolver: TEST_ADDRESS,
           resolverVersion: '1',
           owner: privateKeyToAddress(privateKey),

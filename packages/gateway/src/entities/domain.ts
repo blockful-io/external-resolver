@@ -22,6 +22,9 @@ export class Domain {
   @Column()
   name: string
 
+  @Column()
+  parent: `0x${string}`
+
   @Column({ nullable: true, length: 32 })
   contenthash?: `0x${string}`
 
