@@ -1,4 +1,4 @@
-import { Hex, labelhash, namehash } from 'viem'
+import { Hex, labelhash, namehash, zeroAddress } from 'viem'
 
 import { Text, Address, DomainMetadata, NodeProps } from '../types'
 import { Domain } from '../entities'
@@ -23,7 +23,7 @@ export async function domainResolver(
   const node = namehash(name)
   const domain = await repo.getDomain({ node })
   const resolver = domain?.resolver || (await client.getResolver(node))
-  if (!resolver) return
+  if (!resolver || resolver === zeroAddress) return
 
   const [, labelName] = /(.*)\.eth/.exec(name) || []
   const lhash = labelhash(labelName)
@@ -49,7 +49,7 @@ export async function domainResolver(
     subdomainCount: subdomains.length,
     expiryDate: 0n, // offchain domains don't have expire date
     resolver: {
-      id: `${context}-$node}`,
+      id: `${context}-${node}`,
       node,
       context,
       address: resolver,
