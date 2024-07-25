@@ -11,7 +11,7 @@ export type WritingProps = {
   signature: `0x${string}`
 }
 
-export type DomainProps = Pick<Domain, 'node'>
+export type NodeProps = Pick<Domain, 'node'>
 export type RegisterDomainProps = Omit<
   Domain,
   'subdomains' | 'addresses' | 'texts' | 'createdAt' | 'updatedAt'
@@ -22,10 +22,6 @@ export type SetContentHashProps = Pick<Domain, 'node' | 'contenthash'>
 export type ResolverProps = {
   resolver: `0x${string}`
   resolverVersion: string
-}
-
-export type NodeProps = {
-  node: `0x${string}`
 }
 
 export type SetAddressProps = NodeProps &

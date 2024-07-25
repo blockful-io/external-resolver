@@ -11,7 +11,6 @@ import {
   SetPubkeyProps,
   GetPubkeyResponse,
   SetAbiProps,
-  DomainProps,
   TransferDomainProps,
   RegisterDomainProps,
   NodeProps,
@@ -72,18 +71,21 @@ export class PostgresRepository {
     await this.client.getRepository(Domain).update({ node }, { owner })
   }
 
-  async getDomain({ node }: DomainProps): Promise<Domain | null> {
+  async getDomain({ node }: NodeProps): Promise<Domain | null> {
     return await this.client.getRepository(Domain).findOneBy({
       node,
     })
   }
 
-  async getSubdomains({ node }: NodeProps): Promise<Domain[]> {
-    return await this.client
+  async getSubdomains({ node }: NodeProps): Promise<string[]> {
+    const names = await this.client
       .getRepository(Domain)
       .createQueryBuilder('domain')
       .where('parent = :node', { node })
+      .select(['domain.name'])
       .getMany()
+
+    return names.map((n) => n.name)
   }
 
   async setContentHash({ node, contenthash }: SetContentHashProps) {
@@ -95,9 +97,7 @@ export class PostgresRepository {
     )
   }
 
-  async getContentHash({
-    node,
-  }: GetAddressProps): Promise<Response | undefined> {
+  async getContentHash({ node }: NodeProps): Promise<Response | undefined> {
     const domain = await this.client
       .getRepository(Domain)
       .createQueryBuilder('domain')

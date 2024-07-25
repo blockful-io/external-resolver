@@ -89,6 +89,8 @@ describe('Gateway Database', () => {
         expect(d!.label).toEqual('blockful')
         expect(d!.labelhash).toEqual(labelhash('blockful'))
         expect(d!.parent).toEqual(namehash('eth'))
+        expect(d!.resolver).toEqual(TEST_ADDRESS)
+        expect(d!.resolverVersion).toEqual('1')
         expect(d!.ttl).toEqual(300)
       })
 

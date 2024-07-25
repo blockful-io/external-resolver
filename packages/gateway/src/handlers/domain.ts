@@ -3,7 +3,7 @@ import { hexToString, labelhash, namehash } from 'viem'
 import * as ccip from '@blockful/ccip-server'
 
 import {
-  DomainProps,
+  NodeProps,
   Response,
   SetContentHashProps,
   RegisterDomainProps,
@@ -25,8 +25,8 @@ interface WriteRepository {
 }
 
 interface ReadRepository {
-  getContentHash(params: DomainProps): Promise<Response | undefined>
-  getDomain(params: DomainProps): Promise<Domain | null>
+  getContentHash(params: NodeProps): Promise<Response | undefined>
+  getDomain(params: NodeProps): Promise<Domain | null>
 }
 
 export function withRegisterDomain(

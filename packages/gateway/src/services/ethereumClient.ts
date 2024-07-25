@@ -26,9 +26,7 @@ export class EthereumClient<chain extends Chain> {
       })
   }
 
-  async verifyOwnership(node: Hex, address: Hex): Promise<boolean> {
-    if (!this.registryAddress) return false
-
+  async getOwner(node: Hex): Promise<Hex> {
     let owner = (await this.client.readContract({
       address: this.registryAddress as Hex,
       abi: [
@@ -53,6 +51,22 @@ export class EthereumClient<chain extends Chain> {
     } catch {
       /** error is expected when it isn't a contract */
     }
-    return owner === address
+    return owner
+  }
+
+  async verifyOwnership(node: Hex, address: Hex): Promise<boolean> {
+    if (!this.registryAddress) return false
+    return (await this.getOwner(node)) === address
+  }
+
+  async getResolver(node: Hex): Promise<Hex | undefined> {
+    try {
+      return (await this.client.readContract({
+        address: this.registryAddress as Hex,
+        abi: [parseAbiItem('function resolver(bytes32 node) returns(address)')],
+        functionName: 'resolver',
+        args: [node],
+      })) as Hex
+    } catch {}
   }
 }

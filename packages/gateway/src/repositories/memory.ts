@@ -7,7 +7,6 @@ import {
   Response,
   RegisterDomainProps,
   TransferDomainProps,
-  DomainProps,
   SetAbiProps,
   GetPubkeyResponse,
   SetPubkeyProps,
@@ -97,7 +96,7 @@ export class InMemoryRepository {
     })
   }
 
-  async getDomain({ node }: DomainProps): Promise<Domain | null> {
+  async getDomain({ node }: NodeProps): Promise<Domain | null> {
     return this.domains.get(node) || null
   }
 

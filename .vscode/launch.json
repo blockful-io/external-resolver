@@ -125,8 +125,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "gateway metadata",
-      "skipFiles": ["<node_internals>/**"],
+      "name": "metadata api",
       "program": "${workspaceFolder}/packages/gateway/cmd/metadata.ts",
       "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
       "env": {

@@ -1,5 +1,3 @@
-import { Domain } from '../entities'
-
 export interface Text {
   key: string
   value: string
@@ -15,7 +13,6 @@ export interface Resolver {
   node: string
   context: string
   address: string
-  domain: Domain
   addr?: string
   contentHash?: string
   texts: Text[]
@@ -30,7 +27,7 @@ export interface DomainMetadata {
   labelName: string
   labelhash: string
   resolvedAddress: string
-  parent: Domain | string
+  parent: string
   subdomains: string[]
   subdomainCount: number
   resolver: Resolver

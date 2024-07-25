@@ -1,10 +1,13 @@
 import { config } from 'dotenv'
 import { ApolloServer } from '@apollo/server'
 import { startStandaloneServer } from '@apollo/server/standalone'
+import { createPublicClient, http } from 'viem'
 
+import { getChain } from '../src/chain'
 import { NewDataSource } from '../src/datasources/postgres'
-import { PostgresRepository } from '../src/repositories'
 import { domainResolver } from '../src/resolvers'
+import { EthereumClient } from '../src/services'
+import { PostgresRepository } from '../src/repositories'
 
 config({
   path: process.env.ENV_FILE || '../../../.env',
@@ -44,7 +47,6 @@ const typeDefs = `#graphql
     node: Bytes
     context: Bytes
     address: Bytes
-    domain: Domain
     addr: Bytes
     contentHash: Bytes
     texts: [Text!]
@@ -66,9 +68,20 @@ const _ = (async () => {
   const dbclient = await NewDataSource(dbUrl).initialize()
   const repo = new PostgresRepository(dbclient)
 
+  const rpcURL = process.env.RPC_URL || 'http://localhost:8545'
+  const chainID = process.env.CHAIN_ID || '31337'
+  const chain = getChain(parseInt(chainID))
+  if (!chain) throw new Error(`invalid chain: ${chainID}`)
+  console.log(`Connected to chain: ${chain.name}`)
+  const client = createPublicClient({
+    chain,
+    transport: http(rpcURL),
+  })
+  const ethClient = new EthereumClient(client, process.env.ENS_REGISTRY)
+
   const resolvers = {
     Query: {
-      domain: async (_, name) => domainResolver(name, repo),
+      domain: async (_, name) => domainResolver(name, repo, ethClient),
     },
   }
 
