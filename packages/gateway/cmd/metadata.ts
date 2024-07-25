@@ -8,55 +8,11 @@ import { NewDataSource } from '../src/datasources/postgres'
 import { domainResolver } from '../src/resolvers'
 import { EthereumClient } from '../src/services'
 import { PostgresRepository } from '../src/repositories'
+import { typeDefs } from '../src/types'
 
 config({
   path: process.env.ENV_FILE || '../../../.env',
 })
-
-const typeDefs = `#graphql
-  scalar Bytes
-  scalar BigInt
-
-  type Domain {
-    id: ID!
-    context: Bytes
-    name: String
-    namehash: Bytes
-    labelName: String
-    labelhash: Bytes
-    resolvedAddress: Bytes
-    parent: Domain
-    subdomains: [String]
-    subdomainCount: Int!
-    resolver: Resolver!
-    expiryDate: BigInt
-  }
-
-  type Text {
-    key: String
-    value: String
-  }
-
-  type Address {
-    address: Bytes
-    coin: BigInt
-  }
-
-  type Resolver {
-    id: ID!
-    node: Bytes
-    context: Bytes
-    address: Bytes
-    addr: Bytes
-    contentHash: Bytes
-    texts: [Text!]
-    addresses: [Address!]
-  }
-
-  type Query {
-    domain(name: String!): Domain
-  }
-`
 
 // eslint-disable-next-line
 const _ = (async () => {

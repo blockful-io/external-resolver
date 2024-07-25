@@ -1,3 +1,48 @@
+export const typeDefs = `#graphql
+  scalar Bytes
+  scalar BigInt
+
+  type Domain {
+    id: ID!
+    context: Bytes
+    name: String
+    namehash: Bytes
+    labelName: String
+    labelhash: Bytes
+    resolvedAddress: Bytes
+    parent: Bytes
+    subdomains: [String]
+    subdomainCount: Int!
+    resolver: Resolver!
+    expiryDate: BigInt
+  }
+
+  type Text {
+    key: String
+    value: String
+  }
+
+  type Address {
+    address: Bytes
+    coin: BigInt
+  }
+
+  type Resolver {
+    id: ID!
+    node: Bytes
+    context: Bytes
+    address: Bytes
+    addr: Bytes
+    contentHash: Bytes
+    texts: [Text!]
+    addresses: [Address!]
+  }
+
+  type Query {
+    domain(name: String!): Domain
+  }
+`
+
 export interface Text {
   key: string
   value: string
