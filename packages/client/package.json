@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .ts --fix"
   },
   "devDependencies": {
+    "@apollo/server": "^4.10.5",
     "@blockful/ccip-server": "*",
     "@blockful/gateway": "*",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
