@@ -17,6 +17,7 @@ import {
   getAbiItem,
   AbiFunction,
   toHex,
+  stringToHex,
 } from 'viem'
 import { namehash } from 'viem/ens'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
@@ -28,10 +29,12 @@ import { abi as serverAbi } from '../src/abi'
 import { serializeTypedSignature, signData } from './helper'
 import {
   withGetAddr,
+  withGetAddrByCoin,
   withGetContentHash,
   withGetText,
   withRegisterDomain,
   withSetAddr,
+  withSetAddrByCoin,
   withSetContentHash,
   withSetText,
   withTransferDomain,
@@ -81,7 +84,9 @@ describe('Gateway API', () => {
     validator = new OwnershipValidator(signatureRecover, [repo])
   })
 
-  afterEach(async () => await repo.clear())
+  afterEach(async () => {
+    await repo.clear()
+  })
 
   describe('API Domain', () => {
     describe('Register domain', () => {
@@ -512,9 +517,7 @@ describe('Gateway API', () => {
   })
 
   describe('API Address', () => {
-    // TODO: test multicoin read/write when issue is solved: https://github.com/smartcontractkit/ccip-read/issues/32
-
-    it('should handle set request for setAddr on ethereum', async () => {
+    it('should set ethereum address', async () => {
       const address = privateKeyToAddress(privateKey)
       const server = new ccip.Server()
       server.add(serverAbi, withSetAddr(repo, validator))
@@ -554,7 +557,7 @@ describe('Gateway API', () => {
       expect(response?.ttl).toEqual(domain.ttl)
     })
 
-    it('should handle request for update address', async () => {
+    it('should update ethereum address', async () => {
       repo.setAddresses([
         {
           domain: domain.node,
@@ -602,6 +605,154 @@ describe('Gateway API', () => {
       })
       expect(response?.value).toEqual(address)
       expect(response?.ttl).toEqual(domain.ttl)
+    })
+
+    it('should set bitcoin address', async () => {
+      const server = new ccip.Server()
+      server.add(serverAbi, withSetAddrByCoin(repo, validator))
+      const app = server.makeApp('/')
+
+      const expected = stringToHex('1FWQiwK27EnGXb6BiBMRLJvunJQZZPMcGd')
+
+      const args = [domain.node, 0, expected]
+      const data = encodeFunctionData({
+        abi,
+        functionName: 'setAddr',
+        args,
+      })
+
+      const signature = await signData({
+        pvtKey: privateKey,
+        args,
+        sender: TEST_ADDRESS,
+        func: getAbiItem({
+          abi,
+          name: 'setAddr',
+          args,
+        }) as AbiFunction,
+      })
+      await request(app)
+        .post('/')
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
+        .send({
+          data,
+          signature: serializeTypedSignature(signature),
+          sender: TEST_ADDRESS,
+        })
+
+      const response = await repo.getAddr({
+        node: domain.node,
+        coin: '0',
+      })
+      expect(response?.value).toEqual(expected)
+      expect(response?.ttl).toEqual(domain.ttl)
+    })
+
+    it('should update ethereum address', async () => {
+      const expected = stringToHex('1FWQiwK27EnGXb6BiBMRLJvunJQZZPMcGd')
+
+      repo.setAddresses([
+        {
+          domain: domain.node,
+          coin: '60',
+          address: expected,
+          resolver: expected,
+          resolverVersion: '1',
+        },
+      ])
+      const server = new ccip.Server()
+      server.app.use(withSigner(privateKey))
+      server.add(serverAbi, withSetAddrByCoin(repo, validator))
+      const app = server.makeApp('/')
+
+      const args = [domain.node, 0, expected]
+      const data = encodeFunctionData({
+        abi,
+        functionName: 'setAddr',
+        args,
+      })
+
+      const signature = await signData({
+        pvtKey: privateKey,
+        args,
+        sender: TEST_ADDRESS,
+        func: getAbiItem({
+          abi,
+          name: 'setAddr',
+          args,
+        }) as AbiFunction,
+      })
+      await request(app)
+        .post('/')
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
+        .send({
+          data,
+          signature: serializeTypedSignature(signature),
+          sender: TEST_ADDRESS,
+        })
+
+      const response = await repo.getAddr({
+        node: domain.node,
+        coin: '0',
+      })
+      expect(response?.value).toEqual(expected)
+      expect(response?.ttl).toEqual(domain.ttl)
+    })
+
+    it('should handle GET request for BTC addr', async () => {
+      const expected = stringToHex('1FWQiwK27EnGXb6BiBMRLJvunJQZZPMcGd')
+
+      repo.setAddresses([
+        {
+          domain: domain.node,
+          coin: '0',
+          address: expected,
+          resolver: TEST_ADDRESS,
+          resolverVersion: '1',
+        },
+      ])
+      const server = new ccip.Server()
+      server.app.use(withSigner(privateKey))
+      server.add(serverAbi, withGetAddrByCoin(repo))
+      const app = server.makeApp('/')
+
+      const args = [domain.node, 0]
+      const calldata = encodeFunctionData({
+        abi,
+        functionName: 'addr',
+        args,
+      })
+
+      const response = await request(app).get(
+        `/${TEST_ADDRESS}/${calldata}.json`,
+      )
+
+      expect(response.text).not.toBeNull()
+
+      const [data, ttl, sig] = decodeAbiParameters(
+        parseAbiParameters('bytes,uint64,bytes'),
+        response.text as Hex,
+      )
+
+      const mshHash = makeMessageHash(TEST_ADDRESS, ttl, calldata, data)
+      expect(
+        await verifyMessage({
+          address: privateKeyToAddress(privateKey),
+          message: { raw: mshHash },
+          signature: sig,
+        }),
+      ).toBeTruthy()
+
+      expect(
+        decodeFunctionResult({
+          abi,
+          functionName: 'addr',
+          data,
+          args,
+        }),
+      ).toEqual(expected)
     })
 
     it('should handle GET request for addr on ethereum', async () => {
