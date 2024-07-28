@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "packages/gateway/docker/database/Dockerfile"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+restartolicyMaxRetires = 4
+startCommand = "npm run gateway start:metadata"

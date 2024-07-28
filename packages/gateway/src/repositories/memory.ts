@@ -96,11 +96,6 @@ export class InMemoryRepository {
     return this.domains.get(node) || null
   }
 
-  async getSubdomains({ node }: NodeProps): Promise<Domain[]> {
-    console.log({ node })
-    return []
-  }
-
   async setContentHash({ node, contenthash }: SetContentHashProps) {
     const domain = this.domains.get(node)
     if (!domain) {
@@ -148,16 +143,6 @@ export class InMemoryRepository {
     if (!address) return
     if (!domain || !ttl) ttl = 300 // default value
     return { value: address.address, ttl }
-  }
-
-  async getAddressCoins({ node }: NodeProps): Promise<bigint[]> {
-    console.log({ node })
-    return []
-  }
-
-  async getTextKeys({ node }: NodeProps): Promise<string[]> {
-    console.log({ node })
-    return []
   }
 
   async setText({

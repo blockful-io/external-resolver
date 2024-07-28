@@ -21,13 +21,13 @@ const _ = (async () => {
     throw new Error('DATABASE_URL is required')
   }
 
-  const dbclient = await NewDataSource(dbUrl).initialize()
-  const repo = new PostgresRepository(dbclient)
+  const dbClient = await NewDataSource(dbUrl).initialize()
+  const repo = new PostgresRepository(dbClient)
 
   const rpcURL = process.env.RPC_URL || 'http://localhost:8545'
-  const chainID = process.env.CHAIN_ID || '31337'
-  const chain = getChain(parseInt(chainID))
-  if (!chain) throw new Error(`invalid chain: ${chainID}`)
+  const chainId = process.env.CHAIN_ID || '31337'
+  const chain = getChain(parseInt(chainId))
+  if (!chain) throw new Error(`invalid chain: ${chainId}`)
   console.log(`Connected to chain: ${chain.name}`)
   const client = createPublicClient({
     chain,
@@ -47,7 +47,7 @@ const _ = (async () => {
   })
 
   const { url } = await startStandaloneServer(server, {
-    listen: { port: 4000 },
+    listen: { port: parseInt(process.env.PORT || '3000') },
   })
 
   console.log(`🚀  Server ready at: ${url}`)
