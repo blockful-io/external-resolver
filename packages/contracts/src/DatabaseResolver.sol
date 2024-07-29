@@ -184,11 +184,7 @@ contract DatabaseResolver is
      * @dev Returns the metadata of the resolver on L2
      * @return graphqlUrl url of graphql endpoint that provides additional information about the offchain name and its subdomains
      */
-    function metadata(bytes calldata name)
-        external
-        view
-        returns (string memory)
-    {
+    function metadata() external view returns (string memory) {
         return (graphqlUrl);
     }
 
