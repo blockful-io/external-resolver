@@ -13,7 +13,7 @@ import { withQuery, withGetStorageSlot } from '../src/handlers'
 import { abi } from '../src/abi'
 import { withLogger } from '../src/middlewares'
 
-config({ path: process.env.ENV_FILE || '../../.env' })
+config({ path: process.env.ENV_FILE || '../.env' })
 
 function getChain(chainId: number): chains.Chain {
   return (
@@ -22,25 +22,32 @@ function getChain(chainId: number): chains.Chain {
   )
 }
 
-const _ = (async () => {
-  const rollupAddr = process.env.ROLLUP_ADDRESS
-  if (!rollupAddr) {
-    throw new Error('ROLLUP_ADDRESS is required')
-  }
+const {
+  ROLLUP_ADDRESS: rollupAddr,
+  CHAIN_ID: chainId = '31337',
+  CHAIN_ID_L2: chainIdL2 = '412346',
+  RPC_URL: rpcUrl = 'http://127.0.0.1:8545',
+  LAYER2_RPC: rpcUrlL2 = 'http://127.0.0.1:8547',
+  DEBUG,
+  PORT: port = 3000,
+} = process.env
 
-  const chain1 = getChain(parseInt(process.env.CHAIN_ID || '1337'))
+const _ = (async () => {
+  if (!rollupAddr) throw new Error('ROLLUP_ADDRESS is required')
+
+  const chain1 = getChain(parseInt(chainId))
   console.debug(`layer 1: ${chain1.name}`)
 
-  const chain2 = getChain(parseInt(process.env.CHAIN_ID_L2 || '412346'))
+  const chain2 = getChain(parseInt(chainIdL2))
   console.debug(`layer 2: ${chain2.name}`)
 
   const provider = createPublicClient({
     chain: chain1,
-    transport: http(process.env.RPC_URL || 'http://127.0.0.1:8545'),
+    transport: http(rpcUrl),
   })
   const providerL2 = createPublicClient({
     chain: chain2,
-    transport: http(process.env.LAYER2_RPC || 'http://127.0.0.1:8547'),
+    transport: http(rpcUrlL2),
   })
 
   const proofService = new ArbProofService(
@@ -51,7 +58,7 @@ const _ = (async () => {
   )
 
   const server = new ccip.Server()
-  server.app.use(withLogger({ abi, debug: process.env.DEBUG === 'true' }))
+  server.app.use(withLogger({ abi, debug: DEBUG === 'true' }))
 
   server.add(
     abi,
@@ -59,7 +66,6 @@ const _ = (async () => {
     withGetStorageSlot(proofService),
   )
 
-  const port = process.env.PORT || 3000
   server.makeApp('/').listen(port, () => {
     console.log(`Gateway bound to port ${port}.`)
   })

@@ -3,9 +3,10 @@
  * Blockchain Node and to redirect the request to a Gateway whenever necessary.
  */
 
-import { Command } from 'commander'
+import { config } from 'dotenv'
 import {
   Hash,
+  Hex,
   createPublicClient,
   getChainContractAddress,
   http,
@@ -21,27 +22,19 @@ import { abi as l2Abi } from '@blockful/contracts/out/L2Resolver.sol/L2Resolver.
 import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { getRevertErrorData, handleL2Storage, getChain } from './client'
 
-const program = new Command()
-program
-  .option('-r --resolver <address>', 'ENS Universal Resolver address')
-  .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
-  .option(
-    '-pl2 --providerL2 <url>',
-    'web3 provider URL for layer2',
-    'http://127.0.0.1:8547',
-  )
-  .option('-i --chainId <chainId>', 'chainId', '1337')
-  .option(
-    '-pk --privateKey <privateKey>',
-    'privateKey',
-    '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
-  )
-  .option('-l2r --l2resolver <l2resolver>', 'l2resolver')
+config({
+  path: process.env.ENV_FILE || '../.env',
+})
 
-program.parse(process.argv)
-
-const { provider, providerL2, chainId, privateKey, l2resolver } = program.opts()
-let { resolver } = program.opts()
+let {
+  UNIVERSAL_RESOLVER: resolver,
+  CHAIN_ID: chainId = '31337',
+  RPC_URL: provider = 'http://127.0.0.1:8545/',
+  LAYER2_RPC: providerL2 = 'http://127.0.0.1:8547',
+  L2_RESOLVER: l2resolver,
+  PRIVATE_KEY:
+    privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
+} = process.env
 
 const chain = getChain(parseInt(chainId))
 console.log(`Connecting to ${chain?.name}.`)
@@ -53,8 +46,10 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
+  if (!l2resolver) throw new Error('L2_RESOLVER is required')
+
   const publicAddress = normalize('blockful.eth')
-  const signer = privateKeyToAccount(privateKey)
+  const signer = privateKeyToAccount(privateKey as Hex)
 
   if (!resolver) {
     resolver = getChainContractAddress({
@@ -64,7 +59,7 @@ const _ = (async () => {
   }
 
   const [resolverAddr] = (await client.readContract({
-    address: resolver,
+    address: resolver as Hex,
     functionName: 'findResolver',
     abi: uAbi,
     args: [toHex(packetToBytes(publicAddress))],

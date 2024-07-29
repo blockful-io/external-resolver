@@ -3,9 +3,10 @@
  * Blockchain Node and to redirect the request to a Gateway whenever necessary.
  */
 
-import { Command } from 'commander'
+import { config } from 'dotenv'
 import {
   Hash,
+  Hex,
   createPublicClient,
   encodeFunctionData,
   getChainContractAddress,
@@ -21,21 +22,17 @@ import { abi as dbAbi } from '@blockful/contracts/out/DatabaseResolver.sol/Datab
 import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { getRevertErrorData, handleDBStorage, getChain } from './client'
 
-const program = new Command()
-program
-  .option('-r --resolver <address>', 'ENS Universal Resolver address')
-  .option('-p --provider <url>', 'web3 provider URL', 'http://127.0.0.1:8545/')
-  .option('-i --chainId <chainId>', 'chainId', '1337')
-  .option(
-    '-pk --privateKey <privateKey>',
-    'privateKey',
-    '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // anvil PK
-  )
+config({
+  path: process.env.ENV_FILE || '../.env',
+})
 
-program.parse(process.argv)
-
-const { provider, chainId, privateKey } = program.opts()
-let { resolver } = program.opts()
+let {
+  UNIVERSAL_RESOLVER: resolver,
+  CHAIN_ID: chainId = '31337',
+  RPC_URL: provider = 'http://127.0.0.1:8545/',
+  PRIVATE_KEY:
+    privateKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // anvil PK
+} = process.env
 
 const chain = getChain(parseInt(chainId))
 console.log(`Connecting to ${chain?.name}.`)
@@ -48,7 +45,7 @@ const client = createPublicClient({
 // eslint-disable-next-line
 const _ = (async () => {
   const publicAddress = normalize('blockful.eth')
-  const signer = privateKeyToAccount(privateKey)
+  const signer = privateKeyToAccount(privateKey as Hex)
 
   if (!resolver) {
     resolver = getChainContractAddress({
@@ -58,7 +55,7 @@ const _ = (async () => {
   }
 
   const [resolverAddr] = (await client.readContract({
-    address: resolver,
+    address: resolver as Hex,
     functionName: 'findResolver',
     abi: uAbi,
     args: [toHex(packetToBytes(publicAddress))],

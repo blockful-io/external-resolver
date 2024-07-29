@@ -25,21 +25,27 @@ function getChain(chainId: number) {
 }
 
 config({
-  path: process.env.ENV_FILE || '../env',
+  path: process.env.ENV_FILE || '../.env',
 })
+
+const {
+  CHAIN_ID: chainId = '31337',
+  RPC_URL: rpcUrl = 'http://127.0.0.1:8545',
+  DEBUG,
+  PORT: port = 3000,
+} = process.env
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const chainId = parseInt(process.env.CHAIN_ID || '')
-  const chain = getChain(Number.isInteger(chainId) ? chainId : 1337)
+  const chain = getChain(parseInt(chainId))
 
   const provider = createPublicClient({
     chain,
-    transport: http(process.env.RPC_URL || 'http://127.0.0.1:8545'),
+    transport: http(rpcUrl),
   })
 
   const server = new ccip.Server()
-  server.app.use(withLogger({ abi, debug: process.env.DEBUG === 'true' }))
+  server.app.use(withLogger({ abi, debug: DEBUG === 'true' }))
 
   server.add(
     abi,
@@ -47,7 +53,6 @@ const _ = (async () => {
     withGetStorageSlot(new L1ProofService(provider)),
   )
 
-  const port = process.env.PORT || 3000
   server.makeApp('/').listen(port, () => {
     console.log(`Gateway bound to port ${port}.`)
   })
