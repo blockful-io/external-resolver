@@ -52,7 +52,8 @@ contract DatabaseConfig is Script, ENSHelper {
     }
 
     function _getMainnetConfig() private view returns (NetworkConfig memory) {
-        address[] memory signers = new address[](0);
+        address[] memory signers = new address[](1);
+        signers[0] = vm.envAddress("GATEWAY_ADDRESS");
         return NetworkConfig({
             gatewayUrl: vm.envString("GATEWAY_URL"),
             graphqlUrl: vm.envString("GRAPHQL_URL"),
@@ -63,7 +64,8 @@ contract DatabaseConfig is Script, ENSHelper {
     }
 
     function _getSepoliaConfig() private view returns (NetworkConfig memory) {
-        address[] memory signers = new address[](0);
+        address[] memory signers = new address[](1);
+        signers[0] = vm.envAddress("GATEWAY_ADDRESS");
         return NetworkConfig({
             gatewayUrl: vm.envString("GATEWAY_URL"),
             graphqlUrl: vm.envString("GRAPHQL_URL"),
@@ -104,7 +106,7 @@ contract DatabaseConfig is Script, ENSHelper {
 
         return NetworkConfig({
             gatewayUrl: urls[0],
-            graphqlUrl: "https://127.0.0.1:4000",
+            graphqlUrl: "https://127.0.0.1:3000",
             gatewayTimestamp: 600,
             signers: signers,
             registry: registry
