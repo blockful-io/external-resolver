@@ -170,6 +170,12 @@ contract DatabaseResolver is
         override
         returns (bytes memory)
     {
+        if (bytes4(data[:4]) == this.name.selector) {
+            // name(bytes32) should be handled on-chain
+            (, bytes memory result) = address(this).staticcall(data);
+            return result;
+        }
+
         _offChainLookup(data);
     }
 
