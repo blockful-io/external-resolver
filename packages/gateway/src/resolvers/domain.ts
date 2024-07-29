@@ -47,7 +47,7 @@ export async function domainResolver(
     parent,
     subdomains,
     subdomainCount: subdomains.length,
-    expiryDate: 0n, // offchain domains don't have expire date
+    expiryDate: '0', // offchain domains don't have expire date
     resolver: {
       id: `${context}-${node}`,
       node,

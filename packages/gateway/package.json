@@ -14,6 +14,7 @@
     "dev:db": "ENV_FILE=../../.env ts-node ./cmd/database.ts --watch",
     "dev:eth": "ENV_FILE=../../.env ts-node ./cmd/ethereum.ts --watch",
     "dev:arb": "ENV_FILE=../../.env ts-node ./cmd/arbitrum.ts --watch",
+    "dev:metadata": "ENV_FILE=../../.env ts-node ./cmd/metadata.ts --watch",
     "lint": "eslint . --ext .ts --fix",
     "build": "tsup-node"
   },

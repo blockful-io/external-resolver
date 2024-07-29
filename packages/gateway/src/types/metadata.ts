@@ -14,7 +14,7 @@ export const typeDefs = `#graphql
     subdomains: [String]
     subdomainCount: Int!
     resolver: Resolver!
-    expiryDate: BigInt
+    expiryDate: String
   }
 
   type Text {
@@ -76,5 +76,5 @@ export interface DomainMetadata {
   subdomains: string[]
   subdomainCount: number
   resolver: Resolver
-  expiryDate: bigint
+  expiryDate: string
 }
