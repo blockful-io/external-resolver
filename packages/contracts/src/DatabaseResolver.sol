@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {OffchainLookup} from
     "@ens-contracts/dnsregistrar/OffchainDNSResolver.sol";
 import {IExtendedResolver} from
@@ -19,7 +18,6 @@ import {ContentHashResolver} from
 
 import {IWriteDeferral} from "./IWriteDeferral.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
-import {TypeToString} from "./utils/TypeToString.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 /**
@@ -103,64 +101,37 @@ contract DatabaseResolver is
 
     /**
      * Resolves a name, as specified by ENSIP 10 (wildcard).
-     * @param name The DNS-encoded name to be registered.
-     * @param ttl Expiration timestamp of the domain
-     * @param owner address of the owner of the domain
+     * @param -name The DNS-encoded name to be registered.
+     * @param -ttl Expiration timestamp of the domain
+     * @param -owner address of the owner of the domain
      */
     function register(
-        bytes memory name,
-        uint32 ttl,
-        address owner
+        bytes memory, /* name */
+        uint32, /* ttl */
+        address /* owner */
     )
         external
         view
     {
-        IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](3);
-
-        params[0].name = "name";
-        params[0].value = TypeToString.bytesToString(name);
-
-        params[1].name = "ttl";
-        params[1].value = Strings.toString(ttl);
-
-        params[2].name = "owner";
-        params[2].value = TypeToString.addressToString(owner);
-
-        _offChainStorage(params);
+        _offChainStorage();
     }
 
     //////// OFFCHAIN STORAGE TRANSFER DOMAIN ////////
 
     /**
      * Transfer a domain to a new owner
-     * @param node The DNS-encoded name to resolve.
-     * @param owner The address of the new owner
+     * @param -node The DNS-encoded name to resolve.
+     * @param -owner The address of the new owner
      */
-    function transfer(bytes32 node, address owner) external view {
-        IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](2);
-
-        params[0].name = "node";
-        params[0].value = TypeToString.bytes32ToString(node);
-
-        params[1].name = "owner";
-        params[1].value = TypeToString.addressToString(owner);
-
-        _offChainStorage(params);
+    function transfer(bytes32, /* node */ address /* owner */ ) external view {
+        _offChainStorage();
     }
 
-    function multicall(bytes[] calldata datas)
+    function multicall(bytes[] calldata /* data */ )
         external
-        returns (bytes[] memory /* results */ )
+        returns (bytes[] memory)
     {
-        IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](1);
-
-        params[0].name = "data";
-        params[0].value = TypeToString.bytesToString(msg.data);
-
-        _offChainStorage(params);
+        _offChainStorage();
     }
 
     //////// ENSIP 10 ////////
@@ -189,20 +160,11 @@ contract DatabaseResolver is
     /**
      * Sets the address associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
-     * @param a The address to set.
+     * @param -node The node to update.
+     * @param -a The address to set.
      */
-    function setAddr(bytes32 node, address a) external override {
-        IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](2);
-
-        params[0].name = "node";
-        params[0].value = TypeToString.bytes32ToString(node);
-
-        params[1].name = "address";
-        params[1].value = TypeToString.addressToString(a);
-
-        _offChainStorage(params);
+    function setAddr(bytes32, /* node */ address /* a */ ) external override {
+        _offChainStorage();
     }
 
     /**
@@ -225,31 +187,19 @@ contract DatabaseResolver is
     /**
      * Sets the address associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
-     * @param coinType The constant used to define the coin type of the corresponding address.
-     * @param a The address to set.
+     * @param -node The node to update.
+     * @param -coinType The constant used to define the coin type of the corresponding address.
+     * @param -a The address to set.
      */
     function setAddr(
-        bytes32 node,
-        uint256 coinType,
-        bytes memory a
+        bytes32, /* node */
+        uint256, /* coinType */
+        bytes memory /* a */
     )
         public
         override
     {
-        IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](3);
-
-        params[0].name = "node";
-        params[0].value = TypeToString.bytes32ToString(node);
-
-        params[1].name = "coin_type";
-        params[1].value = Strings.toString(coinType);
-
-        params[2].name = "address";
-        params[2].value = TypeToString.bytesToString(a);
-
-        _offChainStorage(params);
+        _offChainStorage();
     }
 
     /**
@@ -275,31 +225,19 @@ contract DatabaseResolver is
     /**
      * Sets the text data associated with an ENS node and key.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
-     * @param key The key to set.
-     * @param value The text data value to set.
+     * @param -node The node to update.
+     * @param -key The key to set.
+     * @param -value The text data value to set.
      */
     function setText(
-        bytes32 node,
-        string calldata key,
-        string calldata value
+        bytes32, /* node */
+        string calldata, /* key */
+        string calldata /* value */
     )
         external
         override
     {
-        IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](3);
-
-        params[0].name = "node";
-        params[0].value = TypeToString.bytes32ToString(node);
-
-        params[1].name = "key";
-        params[1].value = key;
-
-        params[2].name = "value";
-        params[2].value = value;
-
-        _offChainStorage(params);
+        _offChainStorage();
     }
 
     /**
@@ -325,26 +263,17 @@ contract DatabaseResolver is
     /**
      * Sets the contenthash associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
-     * @param hash The contenthash to set
+     * @param -node The node to update.
+     * @param -hash The contenthash to set
      */
     function setContenthash(
-        bytes32 node,
-        bytes calldata hash
+        bytes32, /* node */
+        bytes calldata /* hash */
     )
         external
         override
     {
-        IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](2);
-
-        params[0].name = "node";
-        params[0].value = TypeToString.bytes32ToString(node);
-
-        params[1].name = "hash";
-        params[1].value = TypeToString.bytesToString(hash);
-
-        _offChainStorage(params);
+        _offChainStorage();
     }
 
     /**
@@ -382,26 +311,14 @@ contract DatabaseResolver is
     }
 
     function setABI(
-        bytes32 node,
-        uint256 contentType,
-        bytes calldata data
+        bytes32, /* node */
+        uint256, /* contentType */
+        bytes calldata /* data */
     )
         external
         override
     {
-        IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](3);
-
-        params[0].name = "node";
-        params[0].value = TypeToString.bytes32ToString(node);
-
-        params[1].name = "contentType";
-        params[1].value = Strings.toString(contentType);
-
-        params[1].name = "data";
-        params[1].value = TypeToString.bytesToString(data);
-
-        _offChainStorage(params);
+        _offChainStorage();
     }
 
     //////// ENS ERC-619 LOGIC ////////
@@ -415,20 +332,15 @@ contract DatabaseResolver is
         _offChainLookup(msg.data);
     }
 
-    function setPubkey(bytes32 node, bytes32 x, bytes32 y) external override {
-        IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](3);
-
-        params[0].name = "node";
-        params[0].value = TypeToString.bytes32ToString(node);
-
-        params[1].name = "x";
-        params[1].value = TypeToString.bytes32ToString(x);
-
-        params[1].name = "y";
-        params[1].value = TypeToString.bytes32ToString(y);
-
-        _offChainStorage(params);
+    function setPubkey(
+        bytes32, /* node */
+        bytes32, /* x */
+        bytes32 /* y */
+    )
+        external
+        override
+    {
+        _offChainStorage();
     }
 
     //////// CCIP READ (EIP-3668) ////////
@@ -480,12 +392,8 @@ contract DatabaseResolver is
 
     /**
      * @notice Builds an StorageHandledByOffChainDatabase error.
-     * @param params The offChainDatabaseParamters used to build the corresponding mutation action.
      */
-    function _offChainStorage(IWriteDeferral.parameter[] memory params)
-        private
-        view
-    {
+    function _offChainStorage() private view {
         revert StorageHandledByOffChainDatabase(
             IWriteDeferral.domainData({
                 name: _WRITE_DEFERRAL_DOMAIN_NAME,
@@ -495,9 +403,8 @@ contract DatabaseResolver is
             }),
             gatewayUrl,
             IWriteDeferral.messageData({
-                functionSelector: msg.sig,
+                callData: msg.data,
                 sender: msg.sender,
-                parameters: params,
                 expirationTimestamp: block.timestamp
                     + gatewayDatabaseTimeoutDuration
             })

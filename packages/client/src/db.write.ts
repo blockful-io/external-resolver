@@ -124,7 +124,7 @@ const _ = (async () => {
         string,
         MessageData,
       ]
-      await handleDBStorage({ domain, url, message, signer, multicall: true })
+      await handleDBStorage({ domain, url, message, signer })
     } else {
       console.error('writing failed: ', { err })
     }
