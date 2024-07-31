@@ -1,3 +1,5 @@
+import { hexToString, namehash } from 'viem'
+
 import * as ccip from '@blockful/ccip-server'
 
 import {
@@ -23,17 +25,25 @@ interface WriteRepository {
   setContentHash(params: SetContentHashProps)
 }
 
+interface ReadRepository {
+  getContentHash(params: DomainProps): Promise<Response | undefined>
+  getDomain(params: DomainProps): Promise<Domain | null>
+}
+
 export function withRegisterDomain(
-  repo: WriteRepository,
+  repo: WriteRepository & ReadRepository,
   recover: SignatureRecover,
 ): ccip.HandlerDescription {
   return {
-    type: 'register(bytes32 node, uint32 ttl)',
-    func: async ({ node, ttl }, { signature }) => {
+    type: 'register(bytes memory name, uint32 ttl)',
+    func: async (
+      { name, ttl },
+      { signature }: { signature: TypedSignature },
+    ) => {
       try {
-        const signer = await recover.recoverMessageSigner(
-          signature as TypedSignature,
-        )
+        name = hexToString(name)
+        const node = namehash(name)
+        const signer = await recover.recoverMessageSigner(signature)
 
         const existingDomain = await repo.getDomain({ node })
         if (existingDomain) {
@@ -43,7 +53,18 @@ export function withRegisterDomain(
           return { error: { message: 'Domain already exists', status: 400 } }
         }
 
-        await repo.register({ node, ttl, owner: signer })
+        const [, parent] = /\w*\.(.*)$/.exec(name) || []
+        const parentHash = namehash(parent)
+
+        await repo.register({
+          name,
+          node,
+          ttl,
+          owner: signer,
+          parent: parentHash,
+          resolver: signature.message.sender,
+          resolverVersion: signature.domain.version,
+        })
       } catch (err) {
         return {
           error: { message: 'Unable to register new domain', status: 400 },
@@ -59,11 +80,14 @@ export function withTransferDomain(
 ): ccip.HandlerDescription {
   return {
     type: 'transfer(bytes32 node, address owner)',
-    func: async ({ node, owner }, { signature }) => {
+    func: async (
+      { node, owner },
+      { signature }: { signature: TypedSignature },
+    ) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
-          signature: signature! as TypedSignature,
+          signature,
         })
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
@@ -84,11 +108,14 @@ export function withSetContentHash(
 ): ccip.HandlerDescription {
   return {
     type: 'setContenthash(bytes32 node, bytes calldata contenthash)',
-    func: async ({ node, contenthash }, { signature }) => {
+    func: async (
+      { node, contenthash },
+      { signature }: { signature: TypedSignature },
+    ) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
-          signature: signature! as TypedSignature,
+          signature,
         })
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
@@ -102,10 +129,6 @@ export function withSetContentHash(
       }
     },
   }
-}
-
-interface ReadRepository {
-  getContentHash(params: DomainProps): Promise<Response | undefined>
 }
 
 export function withGetContentHash(

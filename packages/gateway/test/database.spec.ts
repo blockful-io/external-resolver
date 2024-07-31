@@ -7,9 +7,10 @@
 import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest'
-import { hash as namehash } from 'eth-ens-namehash'
 import * as ccip from '@blockful/ccip-server'
 import { Hex, pad, toHex } from 'viem'
+import { namehash } from 'viem/ens'
+import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
 import { doCall } from './helper'
 import { abi } from '../src/abi'
@@ -34,7 +35,6 @@ import {
   SignatureRecover,
   formatTTL,
 } from '../src/services'
-import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 
@@ -68,7 +68,8 @@ describe('Gateway Database', () => {
       it('should create new domain', async () => {
         const pvtKey = generatePrivateKey()
         const owner = privateKeyToAddress(pvtKey)
-        const node = namehash('blockful.eth')
+        const name = 'blockful.eth'
+        const node = namehash(name)
         const server = new ccip.Server()
         server.add(abi, withRegisterDomain(repo, signatureRecover))
         await doCall({
@@ -77,7 +78,7 @@ describe('Gateway Database', () => {
           sender: TEST_ADDRESS,
           method: 'register',
           pvtKey,
-          args: [node, 300],
+          args: [toHex(name), 300],
         })
 
         const d = await datasource.getRepository(Domain).findOneBy({
@@ -85,7 +86,9 @@ describe('Gateway Database', () => {
           owner,
         })
         expect(d).not.toBeNull()
-        expect(d?.ttl).toEqual(300)
+        expect(d!.name).toEqual(name)
+        expect(d!.parent).toEqual(namehash('eth'))
+        expect(d!.ttl).toEqual(300)
       })
 
       // Register a domain 'public.eth' with a given TTL, then attempt to register the same domain with a different TTL
@@ -93,9 +96,13 @@ describe('Gateway Database', () => {
         const pvtKey = generatePrivateKey()
         const owner = privateKeyToAddress(pvtKey)
         const domain = new Domain()
-        domain.node = namehash('public.eth') as `0x${string}`
+        domain.name = 'public.eth'
+        domain.node = namehash('public.eth')
         domain.ttl = 300
         domain.owner = owner
+        domain.parent = namehash('eth')
+        domain.resolver = TEST_ADDRESS
+        domain.resolverVersion = '1'
         await datasource.manager.save(domain)
 
         const server = new ccip.Server()
@@ -106,7 +113,7 @@ describe('Gateway Database', () => {
           sender: TEST_ADDRESS,
           method: 'register',
           pvtKey,
-          args: [domain.node, 400],
+          args: [toHex(domain.name), 400],
         })
 
         expect(result.data.length).toEqual(0)
@@ -123,9 +130,13 @@ describe('Gateway Database', () => {
     describe('Transfer Domain', () => {
       it('should transfer existing domain', async () => {
         const pvtKey = generatePrivateKey()
-        const node = namehash('blockful.eth') as `0x${string}`
+        const node = namehash('blockful.eth')
         const domain = new Domain()
         domain.node = node
+        domain.name = 'blockful.eth'
+        domain.parent = namehash('eth')
+        domain.resolver = TEST_ADDRESS
+        domain.resolverVersion = '1'
         domain.ttl = 300
         domain.owner = privateKeyToAddress(pvtKey)
         await datasource.manager.save(domain)
@@ -187,7 +198,11 @@ describe('Gateway Database', () => {
       it('should set new contenthash', async () => {
         const pvtKey = generatePrivateKey()
         const domain = new Domain()
-        domain.node = namehash('public.eth') as `0x${string}`
+        domain.name = 'public.eth'
+        domain.node = namehash('public.eth')
+        domain.parent = namehash('eth')
+        domain.resolver = TEST_ADDRESS
+        domain.resolverVersion = '1'
         domain.ttl = 300
         domain.owner = privateKeyToAddress(pvtKey)
         await datasource.manager.save(domain)
@@ -219,7 +234,11 @@ describe('Gateway Database', () => {
       // Register a domain 'public.eth' with a content hash, then query for it
       it('should query contenthash', async () => {
         const domain = new Domain()
-        domain.node = namehash('public.eth') as `0x${string}`
+        domain.name = 'public.eth'
+        domain.node = namehash(domain.name)
+        domain.parent = namehash('eth')
+        domain.resolver = TEST_ADDRESS
+        domain.resolverVersion = '1'
         domain.ttl = 300
         domain.owner = privateKeyToAddress(generatePrivateKey())
         await datasource.manager.save(domain)
@@ -270,8 +289,12 @@ describe('Gateway Database', () => {
 
     beforeEach(async () => {
       domain = new Domain()
-      domain.node = namehash('public.eth') as `0x${string}`
+      domain.name = 'public.eth'
+      domain.node = namehash(domain.name)
       domain.ttl = 300
+      domain.parent = namehash('eth')
+      domain.resolver = TEST_ADDRESS
+      domain.resolverVersion = '1'
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
       domain = await datasource.manager.save(domain)
@@ -311,6 +334,8 @@ describe('Gateway Database', () => {
       text.key = 'avatar'
       text.value = 'blockful.png'
       text.domain = domain.node
+      text.resolver = TEST_ADDRESS
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -343,6 +368,8 @@ describe('Gateway Database', () => {
       text.key = 'avatar'
       text.value = 'blockful.png'
       text.domain = domain.node
+      text.resolver = TEST_ADDRESS
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -397,6 +424,8 @@ describe('Gateway Database', () => {
       text.key = 'avatar'
       text.value = 'blockful.png'
       text.domain = domain.node
+      text.resolver = TEST_ADDRESS
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const server = new ccip.Server()
@@ -473,7 +502,11 @@ describe('Gateway Database', () => {
 
     beforeEach(async () => {
       domain = new Domain()
-      domain.node = namehash('public.eth') as `0x${string}`
+      domain.name = 'public.eth'
+      domain.node = namehash(domain.name)
+      domain.parent = namehash('eth')
+      domain.resolver = TEST_ADDRESS
+      domain.resolverVersion = '1'
       domain.ttl = 300
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
@@ -518,6 +551,8 @@ describe('Gateway Database', () => {
       addr.address = TEST_ADDRESS
       addr.coin = '1'
       addr.domain = domain.node
+      addr.resolver = TEST_ADDRESS
+      addr.resolverVersion = '1'
       await datasource.manager.save(addr)
 
       const result = await doCall({
@@ -579,6 +614,8 @@ describe('Gateway Database', () => {
       addr.coin = '60'
       addr.address = '0x1234567890123456789012345678901234567890'
       addr.domain = domain.node
+      addr.resolver = TEST_ADDRESS
+      addr.resolverVersion = '1'
       await datasource.manager.save(addr)
 
       const server = new ccip.Server()
@@ -603,7 +640,11 @@ describe('Gateway Database', () => {
 
     beforeEach(async () => {
       domain = new Domain()
-      domain.node = namehash('public.eth') as `0x${string}`
+      domain.name = 'public.eth'
+      domain.node = namehash(domain.name)
+      domain.parent = namehash('eth')
+      domain.resolver = TEST_ADDRESS
+      domain.resolverVersion = '1'
       domain.ttl = 2000
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
@@ -659,6 +700,8 @@ describe('Gateway Database', () => {
       text.key = 'ABI'
       text.value = expectedAbi
       text.domain = domain.node
+      text.resolver = TEST_ADDRESS
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -684,6 +727,8 @@ describe('Gateway Database', () => {
       text.key = 'ABI'
       text.value = toHex('[{}]')
       text.domain = domain.node
+      text.resolver = TEST_ADDRESS
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -720,6 +765,10 @@ describe('Gateway Database', () => {
       domain = new Domain()
       domain.node = namehash('public.eth') as `0x${string}`
       domain.ttl = 2000
+      domain.name = 'public.eth'
+      domain.parent = namehash('eth')
+      domain.resolver = TEST_ADDRESS
+      domain.resolverVersion = '1'
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
       domain = await datasource.manager.save(domain)
@@ -760,6 +809,8 @@ describe('Gateway Database', () => {
       text.key = 'pubkey'
       text.value = expectedDb
       text.domain = domain.node
+      text.resolver = TEST_ADDRESS
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const result = await doCall({
@@ -785,6 +836,8 @@ describe('Gateway Database', () => {
       text.key = 'pubkey'
       text.value = '(0x123,0x456)'
       text.domain = domain.node
+      text.resolver = TEST_ADDRESS
+      text.resolverVersion = '1'
       await datasource.manager.save(text)
 
       const result = await doCall({

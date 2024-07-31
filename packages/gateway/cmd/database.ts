@@ -4,7 +4,6 @@
 import 'reflect-metadata'
 import { config } from 'dotenv'
 import { Hex, createPublicClient, http } from 'viem'
-import * as chains from 'viem/chains'
 
 import * as ccip from '@blockful/ccip-server'
 
@@ -26,6 +25,7 @@ import {
   withTransferDomain,
 } from '../src/handlers'
 import { abi } from '../src/abi'
+import { getChain } from '../src/chain'
 import { PostgresRepository } from '../src/repositories'
 import { withLogger, withSigner } from '../src/middlewares'
 import { NewDataSource } from '../src/datasources/postgres'
@@ -98,7 +98,3 @@ const _ = (async () => {
     console.log(`Gateway bound to port ${port}.`)
   })
 })()
-
-function getChain(chainId: number) {
-  return Object.values(chains).find((chain) => chain.id === chainId)
-}

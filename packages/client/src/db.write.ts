@@ -47,7 +47,8 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const publicAddress = normalize('blockful.eth')
+  const name = normalize('blockful.eth')
+  const node = namehash(name)
   const signer = privateKeyToAccount(privateKey)
 
   if (!resolver) {
@@ -61,7 +62,7 @@ const _ = (async () => {
     address: resolver,
     functionName: 'findResolver',
     abi: uAbi,
-    args: [toHex(packetToBytes(publicAddress))],
+    args: [toHex(packetToBytes(name))],
   })) as Hash[]
 
   // REGISTER NEW DOMAIN
@@ -69,7 +70,7 @@ const _ = (async () => {
     await client.simulateContract({
       functionName: 'register',
       abi: dbAbi,
-      args: [namehash(publicAddress), 300],
+      args: [toHex(name), 300],
       account: signer.address,
       address: resolverAddr,
     })
@@ -93,24 +94,17 @@ const _ = (async () => {
     encodeFunctionData({
       functionName: 'setText',
       abi: dbAbi,
-      args: [namehash(publicAddress), 'com.twitter', '@blockful.eth'],
+      args: [node, 'com.twitter', '@blockful.eth'],
     }),
     encodeFunctionData({
       functionName: 'setAddr',
       abi: dbAbi,
-      args: [
-        namehash(publicAddress),
-        '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0',
-      ],
+      args: [node, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
     }),
     encodeFunctionData({
       functionName: 'setAddr',
       abi: dbAbi,
-      args: [
-        namehash(publicAddress),
-        1n,
-        '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0',
-      ],
+      args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
     }),
   ]
 

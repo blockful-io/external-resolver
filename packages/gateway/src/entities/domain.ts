@@ -19,6 +19,12 @@ export class Domain {
   @PrimaryColumn()
   node: `0x${string}`
 
+  @Column()
+  name: string
+
+  @Column()
+  parent: `0x${string}`
+
   @Column({ nullable: true, length: 32 })
   contenthash?: `0x${string}`
 
@@ -33,6 +39,12 @@ export class Domain {
 
   @PrimaryColumn()
   owner: string
+
+  @Column()
+  resolver: string
+
+  @Column()
+  resolverVersion: string
 
   @CreateDateColumn()
   createdAt?: Date

@@ -8,11 +8,10 @@ import {
   RegisterDomainProps,
   TransferDomainProps,
   DomainProps,
-  GetAbiProps,
   SetAbiProps,
-  GetPubkeyProps,
   GetPubkeyResponse,
   SetPubkeyProps,
+  NodeProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -61,8 +60,26 @@ export class InMemoryRepository {
     return this.domains.get(node)?.owner === address
   }
 
-  async register({ node, ttl, owner }: RegisterDomainProps) {
-    this.domains.set(node, { node, addresses: [], texts: [], ttl, owner })
+  async register({
+    name,
+    parent,
+    node,
+    ttl,
+    owner,
+    resolver,
+    resolverVersion,
+  }: RegisterDomainProps) {
+    this.domains.set(node, {
+      name,
+      node,
+      parent,
+      addresses: [],
+      texts: [],
+      ttl,
+      owner,
+      resolver,
+      resolverVersion,
+    })
   }
 
   async transfer({ node, owner }: TransferDomainProps) {
@@ -96,13 +113,25 @@ export class InMemoryRepository {
     return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
-  async setAddr({ node, addr: address, coin }: SetAddressProps) {
+  async setAddr({
+    node,
+    addr: address,
+    coin,
+    resolver,
+    resolverVersion,
+  }: SetAddressProps) {
     const existingAddress = this.addresses.get(`${node}-${coin}`)
     if (existingAddress) {
       existingAddress.address = address
       return
     }
-    this.addresses.set(`${node}-${coin}`, { domain: node, address, coin })
+    this.addresses.set(`${node}-${coin}`, {
+      domain: node,
+      address,
+      coin,
+      resolver,
+      resolverVersion,
+    })
   }
 
   async getAddr({
@@ -117,13 +146,25 @@ export class InMemoryRepository {
     return { value: address.address, ttl }
   }
 
-  async setText({ node, key, value }: SetTextProps): Promise<void> {
+  async setText({
+    node,
+    key,
+    value,
+    resolver,
+    resolverVersion,
+  }: SetTextProps): Promise<void> {
     const existingText = this.texts.get(`${node}-${key}`)
     if (existingText) {
       existingText.value = value
       return
     }
-    this.texts.set(`${node}-${key}`, { key, value, domain: node })
+    this.texts.set(`${node}-${key}`, {
+      key,
+      value,
+      domain: node,
+      resolver,
+      resolverVersion,
+    })
   }
 
   async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
@@ -135,16 +176,20 @@ export class InMemoryRepository {
     return { value: text.value, ttl }
   }
 
-  async setPubkey({ node, x, y }: SetPubkeyProps) {
-    await this.setText({ node, key: 'pubkey', value: `(${x},${y})` })
+  async setPubkey({ node, x, y, resolver, resolverVersion }: SetPubkeyProps) {
+    await this.setText({
+      node,
+      key: 'pubkey',
+      value: `(${x},${y})`,
+      resolver,
+      resolverVersion,
+    })
   }
 
   /**
    * getPubkey reutilized the getText function with `pubkey` as a reserved key
    */
-  async getPubkey({
-    node,
-  }: GetPubkeyProps): Promise<GetPubkeyResponse | undefined> {
+  async getPubkey({ node }: NodeProps): Promise<GetPubkeyResponse | undefined> {
     const pubkey = await this.getText({ node, key: 'pubkey' })
     if (!pubkey) return
 
@@ -153,14 +198,14 @@ export class InMemoryRepository {
     return { value: { x, y }, ttl: pubkey.ttl }
   }
 
-  async setAbi({ node, value }: SetAbiProps) {
-    await this.setText({ node, key: 'ABI', value })
+  async setAbi({ node, value, resolver, resolverVersion }: SetAbiProps) {
+    await this.setText({ node, key: 'ABI', value, resolver, resolverVersion })
   }
 
   /**
    *  getABI reutilized the getText function with `ABI` as a reserved key
    */
-  async getABI({ node }: GetAbiProps): Promise<Response | undefined> {
+  async getABI({ node }: NodeProps): Promise<Response | undefined> {
     return await this.getText({ node, key: 'ABI' })
   }
 }
