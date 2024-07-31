@@ -25,7 +25,7 @@ import { DataSource } from 'typeorm'
 import { abi } from '@blockful/gateway/src/abi'
 import { ChildProcess, spawn } from 'child_process'
 import { normalize, labelhash, namehash, packetToBytes } from 'viem/ens'
-import { anvil } from 'viem/chains'
+import { anvil, sepolia } from 'viem/chains'
 import {
   createTestClient,
   http,
@@ -159,7 +159,10 @@ function setupGateway(
 ) {
   const signatureRecover = new SignatureRecover()
   const ethClient = new EthereumClient(client, registryAddr)
-  const validator = new OwnershipValidator(signatureRecover, [ethClient, repo])
+  const validator = new OwnershipValidator(anvil.id, signatureRecover, [
+    ethClient,
+    repo,
+  ])
 
   const server = new ccip.Server()
   server.app.use(withSigner(privateKey))
@@ -185,6 +188,7 @@ async function offchainWriting({
   abi,
   universalResolverAddress,
   multicall,
+  chainId,
 }: {
   name: string
   functionName: string
@@ -193,6 +197,7 @@ async function offchainWriting({
   args: unknown[]
   universalResolverAddress: Hex
   multicall?: boolean
+  chainId?: number
 }): Promise<Response | void> {
   const [resolverAddr] = (await client.readContract({
     address: universalResolverAddress,
@@ -216,6 +221,10 @@ async function offchainWriting({
         string,
         MessageData,
       ]
+
+      if (chainId) {
+        domain.chainId = chainId
+      }
       return await handleDBStorage({ domain, url, message, signer, multicall })
     }
   }
@@ -419,6 +428,28 @@ describe('DatabaseResolver', () => {
       })
 
       expect(twitter).not.eq('@unauthorized')
+    })
+
+    it('should block writing text record with different chain ID', async () => {
+      const response = await offchainWriting({
+        name,
+        functionName: 'setText',
+        abi: abiDBResolver,
+        args: [node, 'com.twitter', '@blockful'],
+        universalResolverAddress,
+        signer: owner,
+        chainId: sepolia.id,
+      })
+
+      expect(response?.status).equal(401)
+
+      const twitter = await client.getEnsText({
+        name,
+        key: 'com.twitter',
+        universalResolverAddress,
+      })
+
+      expect(twitter).eq(null)
     })
 
     it('should read invalid text record from database', async () => {
@@ -707,6 +738,28 @@ describe('DatabaseResolver', () => {
       })
 
       expect(addr).to.be.an('null')
+    })
+
+    it('should block writing text record with different chain ID', async () => {
+      const response = await offchainWriting({
+        name,
+        functionName: 'setText',
+        abi: abiDBResolver,
+        args: [node, 'com.twitter', '@blockful'],
+        universalResolverAddress,
+        signer: owner,
+        chainId: sepolia.id,
+      })
+
+      expect(response?.status).equal(401)
+
+      const twitter = await client.getEnsText({
+        name,
+        key: 'com.twitter',
+        universalResolverAddress,
+      })
+
+      expect(twitter).eq(null)
     })
 
     it('should handle unsupported method', async () => {

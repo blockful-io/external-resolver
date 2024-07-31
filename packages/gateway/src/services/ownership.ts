@@ -14,10 +14,16 @@ interface SignatureRecover {
 }
 
 export class OwnershipValidator {
+  private chainID: number
   private recover: SignatureRecover
   private ownershipVerifiers: DomainOwnerVerifier[]
 
-  constructor(recover: SignatureRecover, verifier: DomainOwnerVerifier[]) {
+  constructor(
+    chainID: number,
+    recover: SignatureRecover,
+    verifier: DomainOwnerVerifier[],
+  ) {
+    this.chainID = chainID
     this.recover = recover
     this.ownershipVerifiers = verifier
   }
@@ -29,6 +35,11 @@ export class OwnershipValidator {
     node: `0x${string}`
     signature: TypedSignature
   }): Promise<boolean> {
+    // eslint-disable-next-line eqeqeq
+    if (signature.domain.chainId != this.chainID) {
+      return false
+    }
+
     const signer = await this.recover.recoverMessageSigner(signature)
     const validations = await Promise.all(
       this.ownershipVerifiers.map((v) => v.verifyOwnership(node, signer)),
