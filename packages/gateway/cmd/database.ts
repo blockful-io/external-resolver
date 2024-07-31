@@ -89,7 +89,7 @@ const _ = (async () => {
     withSetAddrByCoin(repo, ownershipValidator),
     withGetContentHash(repo),
     withSetContentHash(repo, ownershipValidator),
-    withRegisterDomain(repo, signatureRecover),
+    withRegisterDomain(repo),
     withTransferDomain(repo, ownershipValidator),
   )
 

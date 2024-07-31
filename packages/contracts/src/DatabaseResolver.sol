@@ -105,16 +105,27 @@ contract DatabaseResolver is
      * Resolves a name, as specified by ENSIP 10 (wildcard).
      * @param name The DNS-encoded name to be registered.
      * @param ttl Expiration timestamp of the domain
+     * @param owner address of the owner of the domain
      */
-    function register(bytes memory name, uint32 ttl) external view {
+    function register(
+        bytes memory name,
+        uint32 ttl,
+        address owner
+    )
+        external
+        view
+    {
         IWriteDeferral.parameter[] memory params =
-            new IWriteDeferral.parameter[](2);
+            new IWriteDeferral.parameter[](3);
 
         params[0].name = "name";
         params[0].value = TypeToString.bytesToString(name);
 
         params[1].name = "ttl";
         params[1].value = Strings.toString(ttl);
+
+        params[2].name = "owner";
+        params[2].value = TypeToString.addressToString(owner);
 
         _offChainStorage(params);
     }

@@ -71,14 +71,14 @@ describe('Gateway Database', () => {
         const name = 'blockful.eth'
         const node = namehash(name)
         const server = new ccip.Server()
-        server.add(abi, withRegisterDomain(repo, signatureRecover))
+        server.add(abi, withRegisterDomain(repo))
         await doCall({
           server,
           abi,
           sender: TEST_ADDRESS,
           method: 'register',
           pvtKey,
-          args: [toHex(name), 300],
+          args: [toHex(name), 300, owner],
         })
 
         const d = await datasource.getRepository(Domain).findOneBy({
@@ -106,14 +106,14 @@ describe('Gateway Database', () => {
         await datasource.manager.save(domain)
 
         const server = new ccip.Server()
-        server.add(abi, withRegisterDomain(repo, signatureRecover))
+        server.add(abi, withRegisterDomain(repo))
         const result = await doCall({
           server,
           abi,
           sender: TEST_ADDRESS,
           method: 'register',
           pvtKey,
-          args: [toHex(domain.name), 400],
+          args: [toHex(domain.name), 400, owner],
         })
 
         expect(result.data.length).toEqual(0)
