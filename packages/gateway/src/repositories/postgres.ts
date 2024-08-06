@@ -9,13 +9,12 @@ import {
   SetContentHashProps,
   Response,
   SetPubkeyProps,
-  GetPubkeyProps,
   GetPubkeyResponse,
   SetAbiProps,
-  GetAbiProps,
   DomainProps,
   TransferDomainProps,
   RegisterDomainProps,
+  NodeProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -37,13 +36,25 @@ export class PostgresRepository {
       .existsBy({ node, owner: address })
   }
 
-  async register({ node, ttl, owner }: RegisterDomainProps) {
+  async register({
+    name,
+    node,
+    parent,
+    ttl,
+    owner,
+    resolver,
+    resolverVersion,
+  }: RegisterDomainProps) {
     await this.client.getRepository(Domain).upsert(
       [
         {
+          name,
           node,
+          parent,
           ttl,
           owner,
+          resolver,
+          resolverVersion,
         },
       ],
       {
@@ -85,13 +96,21 @@ export class PostgresRepository {
     if (domain) return { value: domain.contenthash as string, ttl: domain.ttl }
   }
 
-  async setAddr({ node, addr: address, coin }: SetAddressProps) {
+  async setAddr({
+    node,
+    addr: address,
+    coin,
+    resolver,
+    resolverVersion,
+  }: SetAddressProps) {
     await this.client.getRepository(Address).upsert(
       [
         {
           domain: node,
           address,
           coin,
+          resolver,
+          resolverVersion,
         },
       ],
       {
@@ -122,12 +141,14 @@ export class PostgresRepository {
     if (addr) return { value: addr.addr_address, ttl: addr.domain_ttl || 300 } // default ttl value
   }
 
-  async setText({ node, key, value }: SetTextProps) {
+  async setText({ node, key, value, resolver, resolverVersion }: SetTextProps) {
     await this.client.getRepository(Text).upsert(
       {
         key,
         value,
         domain: node,
+        resolver,
+        resolverVersion,
       },
       { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )
@@ -151,12 +172,14 @@ export class PostgresRepository {
     if (text) return { value: text.text_value, ttl: text.domain_ttl || 300 } // default ttl value
   }
 
-  async setPubkey({ node, x, y }: SetPubkeyProps) {
+  async setPubkey({ node, x, y, resolver, resolverVersion }: SetPubkeyProps) {
     await this.client.getRepository(Text).upsert(
       {
         key: 'pubkey',
         value: `(${x},${y})`,
         domain: node,
+        resolver,
+        resolverVersion,
       },
       { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )
@@ -165,9 +188,7 @@ export class PostgresRepository {
   /**
    * getPubkey reutilized the getText function with `pubkey` as a reserved key
    */
-  async getPubkey({
-    node,
-  }: GetPubkeyProps): Promise<GetPubkeyResponse | undefined> {
+  async getPubkey({ node }: NodeProps): Promise<GetPubkeyResponse | undefined> {
     const pubkey = await this.getText({ node, key: 'pubkey' })
     if (!pubkey) return
 
@@ -176,12 +197,14 @@ export class PostgresRepository {
     return { value: { x, y }, ttl: pubkey.ttl }
   }
 
-  async setAbi({ node, value }: SetAbiProps) {
+  async setAbi({ node, value, resolver, resolverVersion }: SetAbiProps) {
     await this.client.getRepository(Text).upsert(
       {
         key: 'ABI',
         value,
         domain: node,
+        resolver,
+        resolverVersion,
       },
       { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
     )
@@ -190,7 +213,7 @@ export class PostgresRepository {
   /**
    *  getABI reutilized the getText function with `ABI` as a reserved key
    */
-  async getABI({ node }: GetAbiProps): Promise<Response | undefined> {
+  async getABI({ node }: NodeProps): Promise<Response | undefined> {
     return await this.getText({ node, key: 'ABI' })
   }
 }

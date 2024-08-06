@@ -1,70 +1,8 @@
 import { SignableMessage } from 'viem'
-import { Domain } from './entities'
-
-export type Response = {
-  value: string
-  ttl: number
-}
-
-export type WritingProps = {
-  data: `0x${string}`
-  signature: `0x${string}`
-}
-
-export type DomainProps = Pick<Domain, 'node'>
-export type RegisterDomainProps = Pick<Domain, 'node' | 'owner' | 'ttl'>
-export type TransferDomainProps = Pick<Domain, 'node' | 'owner'>
-export type SetContentHashProps = Pick<Domain, 'node' | 'contenthash'>
-
-export type SetAddressProps = {
-  node: `0x${string}`
-  addr: string
-  coin: string
-}
-
-export type GetAddressProps = {
-  node: `0x${string}`
-  coin: string
-}
-
-export type SetTextProps = {
-  node: `0x${string}`
-  key: string
-  value: string
-}
-
-export type GetTextProps = {
-  node: `0x${string}`
-  key: string
-}
-
-export type SetAbiProps = {
-  node: `0x${string}`
-  value: string
-}
-
-export type GetAbiProps = {
-  node: `0x${string}`
-}
-
-export type SetPubkeyProps = {
-  node: `0x${string}`
-  x: `0x${string}`
-  y: `0x${string}`
-}
-
-export type GetPubkeyProps = {
-  node: `0x${string}`
-}
 
 export type PubKey = {
   x: string
   y: string
-}
-
-export type GetPubkeyResponse = {
-  value: PubKey
-  ttl: number
 }
 
 export interface Signer {

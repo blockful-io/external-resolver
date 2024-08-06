@@ -103,15 +103,15 @@ contract DatabaseResolver is
 
     /**
      * Resolves a name, as specified by ENSIP 10 (wildcard).
-     * @param node The DNS-encoded name to resolve.
+     * @param name The DNS-encoded name to be registered.
      * @param ttl Expiration timestamp of the domain
      */
-    function register(bytes32 node, uint32 ttl) external view {
+    function register(bytes memory name, uint32 ttl) external view {
         IWriteDeferral.parameter[] memory params =
             new IWriteDeferral.parameter[](2);
 
-        params[0].name = "node";
-        params[0].value = TypeToString.bytes32ToString(node);
+        params[0].name = "name";
+        params[0].value = TypeToString.bytesToString(name);
 
         params[1].name = "ttl";
         params[1].value = Strings.toString(ttl);
@@ -170,6 +170,12 @@ contract DatabaseResolver is
         override
         returns (bytes memory)
     {
+        if (bytes4(data[:4]) == this.name.selector) {
+            // name(bytes32) should be handled on-chain
+            (, bytes memory result) = address(this).staticcall(data);
+            return result;
+        }
+
         _offChainLookup(data);
     }
 

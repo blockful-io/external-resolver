@@ -2,7 +2,7 @@ import * as ccip from '@blockful/ccip-server'
 
 import {
   SetPubkeyProps,
-  GetPubkeyProps,
+  NodeProps,
   OwnershipValidator,
   TypedSignature,
   GetPubkeyResponse,
@@ -18,17 +18,26 @@ export function withSetPubkey(
 ): ccip.HandlerDescription {
   return {
     type: 'setPubkey(bytes32 node,bytes32 x, bytes32 y)',
-    func: async ({ node, x, y }, { signature }) => {
+    func: async (
+      { node, x, y },
+      { signature }: { signature: TypedSignature },
+    ) => {
       try {
         const isOwner = await validator.verifyOwnership({
           node,
-          signature: signature! as TypedSignature,
+          signature,
         })
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
         }
 
-        await repo.setPubkey({ node, x, y })
+        await repo.setPubkey({
+          node,
+          x,
+          y,
+          resolver: signature.domain.verifyingContract,
+          resolverVersion: signature.domain.version,
+        })
       } catch (err) {
         return { error: { message: 'Unable to save abi', status: 400 } }
       }
@@ -37,7 +46,7 @@ export function withSetPubkey(
 }
 
 interface ReadRepository {
-  getPubkey(params: GetPubkeyProps): Promise<GetPubkeyResponse | undefined>
+  getPubkey(params: NodeProps): Promise<GetPubkeyResponse | undefined>
 }
 
 export function withGetPubkey(repo: ReadRepository): ccip.HandlerDescription {
