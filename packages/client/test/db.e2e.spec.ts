@@ -904,7 +904,8 @@ describe('DatabaseResolver', () => {
           typeDefs,
           resolvers: {
             Query: {
-              domain: async (_, name) => domainResolver(name, repo, ethClient),
+              domain: async (_, name) =>
+                domainResolver(name, repo, ethClient, '0x1resolver'),
             },
           },
         })
