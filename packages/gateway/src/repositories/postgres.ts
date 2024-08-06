@@ -157,6 +157,7 @@ export class PostgresRepository {
       .createQueryBuilder('address')
       .select(['address.coin', 'address.address'])
       .where('address.domain = :node ', { node })
+      .andWhere('length(address.address) > 0')
       .getMany()
 
     return addrs.map(({ coin, address }) => ({ address, coin }))
@@ -170,6 +171,7 @@ export class PostgresRepository {
       .where('text.domain = :node ', { node })
       .andWhere('text.key != :key', { key: 'pubkey' })
       .andWhere('text.key != :key', { key: 'ABI' })
+      .andWhere('length(text.value) > 0')
       .getMany()
 
     return texts.map(({ key, value }) => ({ key, value }))
