@@ -1,7 +1,7 @@
 import { config } from 'dotenv'
 import { ApolloServer } from '@apollo/server'
 import { startStandaloneServer } from '@apollo/server/standalone'
-import { createPublicClient, http } from 'viem'
+import { Hex, createPublicClient, http } from 'viem'
 
 import { getChain } from '../src/chain'
 import { NewDataSource } from '../src/datasources/postgres'
@@ -20,6 +20,10 @@ const _ = (async () => {
   if (!dbUrl) {
     throw new Error('DATABASE_URL is required')
   }
+  const resolverAddress = process.env.RESOLVER_ADDRESS as Hex
+  if (!resolverAddress) {
+    throw new Error('RESOLVER_ADDRESS is required')
+  }
 
   const dbClient = await NewDataSource(dbUrl).initialize()
   const repo = new PostgresRepository(dbClient)
@@ -37,7 +41,8 @@ const _ = (async () => {
 
   const resolvers = {
     Query: {
-      domain: async (_, name) => domainResolver(name, repo, ethClient),
+      domain: async (_, name) =>
+        domainResolver(name, repo, ethClient, resolverAddress),
     },
   }
 

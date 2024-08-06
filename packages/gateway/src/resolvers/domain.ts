@@ -1,4 +1,4 @@
-import { Hex, labelhash, namehash, zeroAddress } from 'viem'
+import { Hex, labelhash, namehash } from 'viem'
 import { normalize } from 'viem/ens'
 
 import { Text, Address, DomainMetadata, NodeProps } from '../types'
@@ -21,12 +21,13 @@ export async function domainResolver(
   { name }: { name: string },
   repo: ReadRepository,
   client: Client,
+  resolverAddress: Hex,
 ): Promise<DomainMetadata | undefined> {
   name = normalize(name)
   const node = namehash(name)
   const domain = await repo.getDomain({ node })
   const resolver = domain?.resolver || (await client.getResolver(node))
-  if (!resolver || resolver === zeroAddress) return
+  if (resolver !== resolverAddress) return
 
   // gather the first part of the domain (e.g. lucas.blockful.eth -> lucas)
   const [, label] = /^(\w+)/.exec(name) || []
