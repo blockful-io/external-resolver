@@ -270,7 +270,7 @@ describe('DatabaseResolver', () => {
     const node = namehash(name)
 
     beforeEach(async () => {
-      const domain = new Domain()
+      let domain = new Domain()
       domain.node = node
       domain.name = name
       domain.parent = namehash('eth')
@@ -278,7 +278,7 @@ describe('DatabaseResolver', () => {
       domain.resolverVersion = '1'
       domain.owner = owner.address
       domain.ttl = 300
-      await datasource.manager.save(domain)
+      domain = await datasource.manager.save(domain)
     })
 
     it('should register new domain', async () => {
@@ -905,7 +905,7 @@ describe('DatabaseResolver', () => {
           resolvers: {
             Query: {
               domain: async (_, name) =>
-                domainResolver(name, repo, ethClient, '0x1resolver'),
+                await domainResolver(name, repo, ethClient, dbResolverAddr),
             },
           },
         })

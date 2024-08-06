@@ -6,8 +6,17 @@
  */
 import 'reflect-metadata'
 import { DataSource } from 'typeorm'
-import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest'
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterEach,
+  beforeEach,
+  assert,
+} from 'vitest'
 import { namehash } from 'viem/ens'
+import { Hex, labelhash } from 'viem'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
 import { PostgresRepository } from '../src/repositories'
@@ -15,8 +24,6 @@ import { Address, Text, Domain } from '../src/entities'
 import { DomainMetadata, typeDefs } from '../src/types'
 import { ApolloServer } from '@apollo/server'
 import { domainResolver } from '../src/resolvers'
-import { Hex, labelhash } from 'viem'
-import assert from 'assert'
 
 describe('Metadata API', () => {
   let repo: PostgresRepository,
@@ -28,7 +35,7 @@ describe('Metadata API', () => {
   beforeAll(async () => {
     datasource = new DataSource({
       type: 'better-sqlite3',
-      database: './test.db',
+      database: './metadata.test.db',
       entities: [Text, Domain, Address],
       synchronize: true,
     })
@@ -198,6 +205,7 @@ describe('Metadata API', () => {
       },
     })
     assert(response.body.kind === 'single')
+    expect(response.body.singleResult.errors).toBeUndefined()
     const actual = response.body.singleResult.data?.domain as DomainMetadata
 
     assert(actual != null)
