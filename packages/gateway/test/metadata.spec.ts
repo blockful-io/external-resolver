@@ -52,16 +52,16 @@ describe('Metadata API', () => {
     beforeAll(async () => {
       pvtKey = generatePrivateKey()
       const node = namehash('public.eth')
-      const d = new Domain()
-      d.name = 'public.eth'
-      d.node = node
-      d.ttl = 300
-      d.parent = namehash('eth')
-      d.resolver = '0xresolver'
-      d.resolverVersion = '1'
-      d.contenthash = '0xcontenthash'
-      d.owner = privateKeyToAddress(pvtKey)
-      d.texts = [
+      domain = new Domain()
+      domain.name = 'public.eth'
+      domain.node = node
+      domain.ttl = 300
+      domain.parent = namehash('eth')
+      domain.resolver = '0xresolver'
+      domain.resolverVersion = '1'
+      domain.contenthash = '0xcontenthash'
+      domain.owner = privateKeyToAddress(pvtKey)
+      domain.texts = [
         {
           domain: node,
           key: '1key',
@@ -77,7 +77,7 @@ describe('Metadata API', () => {
           resolverVersion: '2',
         },
       ]
-      d.addresses = [
+      domain.addresses = [
         {
           address: '0x1',
           coin: '1',
@@ -93,7 +93,7 @@ describe('Metadata API', () => {
           resolverVersion: '2',
         },
       ]
-      domain = await datasource.manager.save(d)
+      domain = await datasource.manager.save(domain)
     })
 
     it('should read domain from db with no subdomains', async () => {
@@ -134,7 +134,7 @@ describe('Metadata API', () => {
       assert(response.body.kind === 'single')
       const actual = response.body.singleResult.data?.domain as DomainMetadata
 
-      expect(actual).not.toBe('null')
+      assert(actual)
       expect(actual.id).toEqual(`${domain.owner}-${domain.node}`)
       expect(actual.context).toEqual(domain.owner)
       expect(actual.labelName).toEqual('public')
@@ -174,44 +174,21 @@ describe('Metadata API', () => {
 
     it('should read domain from db with 1 subdomain', async () => {
       const node = namehash('d1.public.eth')
-      const d = new Domain()
+      let d = new Domain()
       d.name = 'd1.public.eth'
       d.node = node
       d.ttl = 300
-      d.parent = d.node
+      d.parent = namehash('public.eth')
       d.resolver = '0xresolver'
       d.resolverVersion = '1'
       d.owner = privateKeyToAddress(generatePrivateKey())
-      domain = await datasource.manager.save(d)
+      d = await datasource.manager.save(d)
 
       const response = await server.executeOperation({
         query: `query Domain($name: String!) {
           domain(name: $name) {
-            id
-            context
-            labelName
-            labelhash
-            name
-            namehash
-            resolvedAddress
             subdomains
             subdomainCount
-            resolver {
-              id
-              node
-              addr
-              address
-              contentHash
-              context
-              texts {
-                key
-                value
-              }
-              addresses {
-                address
-                coin
-              }
-            }
           }
         }`,
         variables: {
@@ -221,7 +198,7 @@ describe('Metadata API', () => {
       assert(response.body.kind === 'single')
       const actual = response.body.singleResult.data?.domain as DomainMetadata
 
-      expect(actual).not.toBe('null')
+      assert(actual)
       expect(actual.subdomainCount).toEqual(1)
       expect(actual.subdomains).toEqual([d.name])
     })
@@ -235,5 +212,9 @@ class DummyClient {
 
   async getResolver(_: Hex): Promise<Hex | undefined> {
     return '0x'
+  }
+
+  async getExpireDate(_: Hex): Promise<string> {
+    return '0'
   }
 }
