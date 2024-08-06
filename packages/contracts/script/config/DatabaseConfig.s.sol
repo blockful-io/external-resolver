@@ -36,7 +36,7 @@ contract DatabaseConfig is Script, ENSHelper {
         view
         returns (
             string memory gatewayUrl,
-            string memory graphQLUrl,
+            string memory graphqlUrl,
             uint32 gatewayTimestamp,
             address[] memory signers,
             ENSRegistry registry

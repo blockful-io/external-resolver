@@ -1,4 +1,5 @@
 import { Hex, labelhash, namehash, zeroAddress } from 'viem'
+import { normalize } from 'viem/ens'
 
 import { Text, Address, DomainMetadata, NodeProps } from '../types'
 import { Domain } from '../entities'
@@ -11,6 +12,7 @@ interface ReadRepository {
 }
 
 interface Client {
+  getExpireDate(node: Hex): Promise<string>
   getOwner(node: Hex): Promise<Hex>
   getResolver(node: Hex): Promise<Hex | undefined>
 }
@@ -20,34 +22,36 @@ export async function domainResolver(
   repo: ReadRepository,
   client: Client,
 ): Promise<DomainMetadata | undefined> {
+  name = normalize(name)
   const node = namehash(name)
   const domain = await repo.getDomain({ node })
   const resolver = domain?.resolver || (await client.getResolver(node))
   if (!resolver || resolver === zeroAddress) return
 
-  const [, labelName] = /(.*)\.eth/.exec(name) || []
-  const lhash = labelhash(labelName)
-  const [, parentName] = /\w*\.(.*)$/.exec(name) || []
-  const parent = namehash(parentName)
+  // gather the first part of the domain (e.g. lucas.blockful.eth -> lucas)
+  const [, label] = /^(\w+)/.exec(name) || []
+  // gather the last part of the domain (e.g. lucas.blockful.eth -> blockful.eth)
+  const [, parent] = /\w*\.(.*)$/.exec(name) || []
 
   const subdomains = await repo.getSubdomains({ node })
   const texts = await repo.getTexts({ node })
   const addresses = await repo.getAddresses({ node })
   const addr = addresses.find((addr) => addr.coin === '60') // ETH
   const context = domain?.owner || (await client.getOwner(node))
+  const expiryDate = await client.getExpireDate(node)
 
   return {
     id: `${context}-${node}`,
     context,
     name,
     namehash: node,
-    labelName,
-    labelhash: lhash,
+    labelName: label,
+    labelhash: labelhash(label),
     resolvedAddress: resolver,
-    parent,
+    parent: namehash(parent),
     subdomains,
     subdomainCount: subdomains.length,
-    expiryDate: '0', // offchain domains don't have expire date
+    expiryDate,
     resolver: {
       id: `${context}-${node}`,
       node,

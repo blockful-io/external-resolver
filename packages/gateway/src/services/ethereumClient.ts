@@ -69,4 +69,14 @@ export class EthereumClient<chain extends Chain> {
       })) as Hex
     } catch {}
   }
+
+  async getExpireDate(node: Hex): Promise<string> {
+    const ttl = (await this.client.readContract({
+      address: this.registryAddress as Hex,
+      abi: [parseAbiItem('function ttl(bytes32 node) returns(uint64)')],
+      functionName: 'ttl',
+      args: [node],
+    })) as bigint
+    return ttl.toString()!
+  }
 }

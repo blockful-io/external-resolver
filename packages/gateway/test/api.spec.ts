@@ -650,13 +650,13 @@ describe('Gateway API', () => {
       expect(response?.ttl).toEqual(domain.ttl)
     })
 
-    it('should update ethereum address', async () => {
+    it('should update BTC address', async () => {
       const expected = stringToHex('1FWQiwK27EnGXb6BiBMRLJvunJQZZPMcGd')
 
       repo.setAddresses([
         {
           domain: domain.node,
-          coin: '60',
+          coin: '0',
           address: expected,
           resolver: expected,
           resolverVersion: '1',
@@ -737,11 +737,11 @@ describe('Gateway API', () => {
         response.text as Hex,
       )
 
-      const mshHash = makeMessageHash(TEST_ADDRESS, ttl, calldata, data)
+      const msgHash = makeMessageHash(TEST_ADDRESS, ttl, calldata, data)
       expect(
         await verifyMessage({
           address: privateKeyToAddress(privateKey),
-          message: { raw: mshHash },
+          message: { raw: msgHash },
           signature: sig,
         }),
       ).toBeTruthy()
