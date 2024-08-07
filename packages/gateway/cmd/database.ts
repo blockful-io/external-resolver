@@ -59,7 +59,11 @@ const _ = (async () => {
     chain,
     transport: http(rpcURL),
   })
-  const ethClient = new EthereumClient(client, process.env.ENS_REGISTRY) // Registry is optional
+  const ethClient = new EthereumClient(
+    client,
+    process.env.REGISTRY_ADDRESS as Hex,
+    process.env.REGISTRAR_ADDRESS as Hex,
+  )
 
   const dbclient = await NewDataSource(dbUrl).initialize()
   const repo = new PostgresRepository(dbclient)

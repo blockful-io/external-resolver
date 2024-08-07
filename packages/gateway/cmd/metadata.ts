@@ -37,7 +37,11 @@ const _ = (async () => {
     chain,
     transport: http(rpcURL),
   })
-  const ethClient = new EthereumClient(client, process.env.ENS_REGISTRY)
+  const ethClient = new EthereumClient(
+    client,
+    process.env.REGISTRY_ADDRESS as Hex,
+    process.env.REGISTRAR_ADDRESS as Hex,
+  )
 
   const resolvers = {
     Query: {

@@ -12,7 +12,7 @@ interface ReadRepository {
 }
 
 interface Client {
-  getExpireDate(node: Hex): Promise<string>
+  getExpireDate(label: Hex): Promise<string>
   getOwner(node: Hex): Promise<Hex>
   getResolver(node: Hex): Promise<Hex | undefined>
 }
@@ -39,7 +39,7 @@ export async function domainResolver(
   const addresses = await repo.getAddresses({ node })
   const addr = addresses.find((addr) => addr.coin === '60') // ETH
   const context = domain?.owner || (await client.getOwner(node))
-  const expiryDate = await client.getExpireDate(node)
+  const expiryDate = await client.getExpireDate(labelhash(label))
 
   return {
     id: `${context}-${node}`,

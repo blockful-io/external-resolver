@@ -18,6 +18,10 @@ import {
   bytecode as bytecodeRegistry,
 } from '@blockful/contracts/out/ENSRegistry.sol/ENSRegistry.json'
 import {
+  abi as abiRegistrar,
+  bytecode as bytecodeRegistrar,
+} from '@blockful/contracts/out/BaseRegistrarImplementation.sol/BaseRegistrarImplementation.json'
+import {
   abi as abiUniversalResolver,
   bytecode as bytecodeUniversalResolver,
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
@@ -78,7 +82,10 @@ import { getRevertErrorData, handleDBStorage } from '../src/client'
 const GATEWAY_URL = 'http://127.0.0.1:3000/{sender}/{data}.json'
 const GRAPHQL_URL = 'http://127.0.0.1:4000'
 
-let universalResolverAddress: Hash, registryAddr: Hash, dbResolverAddr: Hash
+let universalResolverAddress: Hash,
+  registryAddr: Hash,
+  dbResolverAddr: Hash,
+  registrarAddr: Hash
 
 const client = createTestClient({
   chain: anvil,
@@ -136,6 +143,13 @@ async function deployContracts(signer: Hash) {
     args: [registryAddr, [GATEWAY_URL]],
   })
 
+  registrarAddr = await deployContract({
+    abi: abiRegistrar,
+    bytecode: bytecodeRegistrar.object as Hash,
+    account: signer,
+    args: [registryAddr, namehash('eth')],
+  })
+
   dbResolverAddr = await deployContract({
     abi: abiDBResolver,
     bytecode: bytecodeDBResolver.object as Hash,
@@ -158,7 +172,7 @@ function setupGateway(
   { repo }: { repo: PostgresRepository },
 ) {
   const signatureRecover = new SignatureRecover()
-  const ethClient = new EthereumClient(client, registryAddr)
+  const ethClient = new EthereumClient(client, registryAddr, registrarAddr)
   const validator = new OwnershipValidator(anvil.id, signatureRecover, [
     ethClient,
     repo,
@@ -899,7 +913,11 @@ describe('DatabaseResolver', () => {
       let server: ApolloServer
 
       before(async () => {
-        const ethClient = new EthereumClient(client, registryAddr)
+        const ethClient = new EthereumClient(
+          client,
+          registryAddr,
+          registrarAddr,
+        )
         server = new ApolloServer({
           typeDefs,
           resolvers: {

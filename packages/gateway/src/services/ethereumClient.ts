@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import {
   Chain,
   HttpTransport,
@@ -10,16 +9,19 @@ import {
 } from 'viem'
 
 export class EthereumClient<chain extends Chain> {
-  private registryAddress: string
+  private registryAddress: Hex
+  private registrarAddress?: Hex
   private client: PublicClient<HttpTransport, chain>
 
   constructor(
     client: PublicClient<HttpTransport, chain>,
-    ensRegistry?: string,
+    registryAddress?: Hex,
+    registrarAddress?: Hex,
   ) {
     this.client = client
+    this.registrarAddress = registrarAddress
     this.registryAddress =
-      ensRegistry ||
+      registryAddress ||
       getChainContractAddress({
         chain: client.chain!,
         contract: 'ensRegistry',
@@ -62,7 +64,7 @@ export class EthereumClient<chain extends Chain> {
   async getResolver(node: Hex): Promise<Hex | undefined> {
     try {
       return (await this.client.readContract({
-        address: this.registryAddress as Hex,
+        address: this.registryAddress,
         abi: [parseAbiItem('function resolver(bytes32 node) returns(address)')],
         functionName: 'resolver',
         args: [node],
@@ -70,13 +72,18 @@ export class EthereumClient<chain extends Chain> {
     } catch {}
   }
 
-  async getExpireDate(node: Hex): Promise<string> {
+  async getExpireDate(labelhash: Hex): Promise<string> {
+    if (!this.registrarAddress) return '0'
     try {
       const ttl = (await this.client.readContract({
-        address: this.registryAddress as Hex,
-        abi: [parseAbiItem('function ttl(bytes32 node) returns(uint64)')],
-        functionName: 'ttl',
-        args: [node],
+        address: this.registrarAddress,
+        abi: [
+          parseAbiItem(
+            'function nameExpires(uint256 id) view returns (uint256)',
+          ),
+        ],
+        functionName: 'nameExpires',
+        args: [fromHex(labelhash, 'bigint')],
       })) as bigint
       return ttl.toString()!
     } catch {

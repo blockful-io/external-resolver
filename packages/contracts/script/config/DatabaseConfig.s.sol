@@ -8,6 +8,8 @@ import {ReverseRegistrar} from
     "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 import {IBaseRegistrar} from "@ens-contracts/ethregistrar/IBaseRegistrar.sol";
+import {BaseRegistrarImplementation} from
+    "@ens-contracts/ethregistrar/BaseRegistrarImplementation.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 
@@ -91,6 +93,7 @@ contract DatabaseConfig is Script, ENSHelper {
         vm.startBroadcast(sender);
         ENSRegistry registry = new ENSRegistry();
         new UniversalResolver(address(registry), urls);
+        new BaseRegistrarImplementation(registry, namehash("eth"));
 
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
