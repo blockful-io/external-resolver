@@ -38,25 +38,27 @@ export async function domainResolver(
   const texts = await repo.getTexts({ node })
   const addresses = await repo.getAddresses({ node })
   const addr = addresses.find((addr) => addr.coin === '60') // ETH
-  const context = domain?.owner || (await client.getOwner(node))
+  const owner = domain?.owner || (await client.getOwner(node))
   const expiryDate = await client.getExpireDate(labelhash(label))
 
   return {
-    id: `${context}-${node}`,
-    context,
+    id: `${owner}-${node}`,
+    context: owner,
     name,
     namehash: node,
-    labelName: label,
+    owner,
+    label,
     labelhash: labelhash(label),
     resolvedAddress: resolver,
-    parent: namehash(parent),
+    parent,
+    parentHash: namehash(parent),
     subdomains,
     subdomainCount: subdomains.length,
     expiryDate,
     resolver: {
-      id: `${context}-${node}`,
+      id: `${owner}-${node}`,
       node,
-      context,
+      context: owner,
       address: resolver,
       addr: addr?.address,
       contentHash: domain?.contenthash,

@@ -967,8 +967,11 @@ describe('DatabaseResolver', () => {
             domain(name: $name) {
               id
               context
-              labelName
+              owner
+              label
               labelhash
+              parent
+              parentHash
               name
               namehash
               resolvedAddress
@@ -999,11 +1002,14 @@ describe('DatabaseResolver', () => {
         assert(response.body.kind === 'single')
         const actual = response.body.singleResult.data?.domain as DomainMetadata
 
-        expect(actual).not.equal(null)
+        assert(actual !== null)
         expect(actual.id).equal(`${owner.address}-${node}`)
         expect(actual.context).equal(owner.address)
-        expect(actual.labelName).equal('l1domain')
+        expect(actual.owner).equal(owner.address)
+        expect(actual.label).equal('l1domain')
         expect(actual.labelhash).equal(labelhash('l1domain'))
+        expect(actual.parent).equal('eth')
+        expect(actual.parentHash).equal(namehash('eth'))
         expect(actual.name).equal(name)
         expect(actual.namehash).equal(node)
         expect(actual.resolvedAddress).equal(dbResolverAddr)
@@ -1062,7 +1068,7 @@ describe('DatabaseResolver', () => {
         assert(response.body.kind === 'single')
         const actual = response.body.singleResult.data?.domain as DomainMetadata
 
-        expect(actual).not.equal(null)
+        assert(actual !== null)
         expect(actual.subdomains).eql([d.name])
         expect(actual.subdomainCount).equal(1)
       })

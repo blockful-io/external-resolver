@@ -111,10 +111,13 @@ describe('Metadata API', () => {
           domain(name: $name) {
             id
             context
-            labelName
+            owner
+            label
             labelhash
             name
             namehash
+            parent
+            parentHash
             resolvedAddress
             subdomains
             subdomainCount
@@ -146,10 +149,13 @@ describe('Metadata API', () => {
     assert(actual != null)
     expect(actual.id).toEqual(`${domain.owner}-${domain.node}`)
     expect(actual.context).toEqual(domain.owner)
-    expect(actual.labelName).toEqual('public')
+    expect(actual.owner).toEqual(domain.owner)
+    expect(actual.label).toEqual('public')
     expect(actual.labelhash).toEqual(labelhash('public'))
     expect(actual.name).toEqual(domain.name)
     expect(actual.namehash).toEqual(domain.node)
+    expect(actual.parent).toEqual('eth')
+    expect(actual.parentHash).toEqual(namehash('eth'))
     expect(actual.resolvedAddress).toEqual(domain.resolver)
     expect(actual.subdomains).toEqual([])
     expect(actual.subdomainCount).toEqual(0)

@@ -5,12 +5,14 @@ export const typeDefs = `#graphql
   type Domain {
     id: ID!
     context: Bytes
+    owner: Bytes
     name: String
     namehash: Bytes
-    labelName: String
+    label: String
     labelhash: Bytes
     resolvedAddress: Bytes
-    parent: Bytes
+    parent: String
+    parentHash: Bytes
     subdomains: [String]
     subdomainCount: Int!
     resolver: Resolver!
@@ -55,11 +57,11 @@ export interface Address {
 
 export interface Resolver {
   id: string
-  node: string
+  node: `0x${string}`
   context: string
-  address: string
+  address: `0x${string}`
   addr?: string
-  contentHash?: string
+  contentHash?: `0x${string}`
   texts: Text[]
   addresses: Address[]
 }
@@ -67,12 +69,14 @@ export interface Resolver {
 export interface DomainMetadata {
   id: string
   context: string
+  owner: `0x${string}`
   name: string
-  namehash: string
-  labelName: string
-  labelhash: string
-  resolvedAddress: string
+  namehash: `0x${string}`
+  label: string
+  labelhash: `0x${string}`
+  resolvedAddress: `0x${string}`
   parent: string
+  parentHash: `0x${string}`
   subdomains: string[]
   subdomainCount: number
   resolver: Resolver
