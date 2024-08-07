@@ -3,9 +3,6 @@ pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
 import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
-import {ReverseRegistrar} from
-    "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
-import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 
 import {ENSHelper} from "../Helper.sol";
 import {DatabaseConfig} from "../config/DatabaseConfig.s.sol";
@@ -17,14 +14,16 @@ contract DatabaseResolverScript is Script, ENSHelper {
         DatabaseConfig config = new DatabaseConfig(block.chainid, msg.sender);
         (
             string memory gatewayUrl,
+            string memory graphqlUrl,
             uint32 gatewayTimestamp,
             address[] memory signers,
             ENSRegistry registry
         ) = config.activeNetworkConfig();
 
         vm.broadcast();
-        DatabaseResolver resolver =
-            new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
+        DatabaseResolver resolver = new DatabaseResolver(
+            gatewayUrl, graphqlUrl, gatewayTimestamp, signers
+        );
 
         vm.startBroadcast();
 

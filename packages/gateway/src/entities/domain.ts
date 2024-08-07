@@ -38,10 +38,10 @@ export class Domain {
   texts: Text[]
 
   @PrimaryColumn()
-  owner: string
+  owner: `0x${string}`
 
   @Column()
-  resolver: string
+  resolver: `0x${string}`
 
   @Column()
   resolverVersion: string

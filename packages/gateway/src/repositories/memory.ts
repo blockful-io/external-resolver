@@ -7,7 +7,6 @@ import {
   Response,
   RegisterDomainProps,
   TransferDomainProps,
-  DomainProps,
   SetAbiProps,
   GetPubkeyResponse,
   SetPubkeyProps,
@@ -93,7 +92,7 @@ export class InMemoryRepository {
     })
   }
 
-  async getDomain({ node }: DomainProps): Promise<Domain | null> {
+  async getDomain({ node }: NodeProps): Promise<Domain | null> {
     return this.domains.get(node) || null
   }
 
@@ -199,7 +198,13 @@ export class InMemoryRepository {
   }
 
   async setAbi({ node, value, resolver, resolverVersion }: SetAbiProps) {
-    await this.setText({ node, key: 'ABI', value, resolver, resolverVersion })
+    await this.setText({
+      node,
+      key: 'ABI',
+      value,
+      resolver,
+      resolverVersion,
+    })
   }
 
   /**

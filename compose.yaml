@@ -4,7 +4,7 @@ services:
       context: packages/contracts
     container_name: contracts
     ports:
-      - "8545:8545"
+      - '8545:8545'
     networks:
       - local
     env_file:
@@ -15,7 +15,16 @@ services:
       context: .
       dockerfile: packages/gateway/docker/database/Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
+    depends_on:
+      - db
+
+  metadata-api:
+    build:
+      context: .
+      dockerfile: packages/gateway/docker/database/Dockerfile
+    ports:
+      - '4000:3000'
     depends_on:
       - db
 
@@ -23,7 +32,7 @@ services:
     image: postgres:16.2
     container_name: gateway-postgres-db
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - db_data:/data/db
     restart: always
