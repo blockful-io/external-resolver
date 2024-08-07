@@ -17,6 +17,7 @@ import {
   getAbiItem,
   AbiFunction,
   toHex,
+  Address,
   stringToHex,
 } from 'viem'
 import { namehash } from 'viem/ens'
@@ -54,22 +55,24 @@ const abi = parseAbi(serverAbi)
 describe('Gateway API', () => {
   let repo: InMemoryRepository,
     domain: Domain,
-    privateKey: Hex,
+    pvtKey: Hex,
+    owner: Address,
     validator: OwnershipValidator,
     signatureRecover: SignatureRecover
 
   beforeAll(async () => {
     repo = new InMemoryRepository()
-    privateKey = generatePrivateKey()
+    pvtKey = generatePrivateKey()
     signatureRecover = new SignatureRecover()
   })
 
   beforeEach(async () => {
+    owner = privateKeyToAddress(pvtKey)
     domain = {
       name: 'public.eth',
       node: namehash('public.eth'),
       parent: namehash('eth'),
-      owner: privateKeyToAddress(privateKey),
+      owner,
       ttl: 300,
       contenthash:
         '0x4d1ae8fa44de34a527a9c6973d37dfda8befc18ca6ec73fd97535b4cf02189c6', // public goods
@@ -93,7 +96,7 @@ describe('Gateway API', () => {
     describe('Register domain', () => {
       it('should register new domain', async () => {
         const server = new ccip.Server()
-        server.add(serverAbi, withRegisterDomain(repo, signatureRecover))
+        server.add(serverAbi, withRegisterDomain(repo))
         const app = server.makeApp('/')
 
         const domain: Domain = {
@@ -102,13 +105,13 @@ describe('Gateway API', () => {
           parent: namehash('eth'),
           resolver: TEST_ADDRESS,
           resolverVersion: '1',
-          owner: privateKeyToAddress(privateKey),
+          owner,
           ttl: 300,
           addresses: [],
           texts: [],
         }
 
-        const args = [toHex(domain.name), domain.ttl]
+        const args = [toHex(domain.name), domain.ttl, owner]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -116,7 +119,7 @@ describe('Gateway API', () => {
         })
 
         const signature = await signData({
-          pvtKey: privateKey,
+          pvtKey,
           args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
@@ -140,12 +143,12 @@ describe('Gateway API', () => {
         expect(response).toEqual(domain)
       })
 
-      it('should handle registering existing domain', async () => {
+      it('should block registering existing domain', async () => {
         const server = new ccip.Server()
-        server.add(serverAbi, withRegisterDomain(repo, signatureRecover))
+        server.add(serverAbi, withRegisterDomain(repo))
         const app = server.makeApp('/')
 
-        const args = [toHex(domain.name), domain.ttl]
+        const args = [toHex(domain.name), domain.ttl, owner]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -153,7 +156,7 @@ describe('Gateway API', () => {
         })
 
         const signature = await signData({
-          pvtKey: privateKey,
+          pvtKey,
           args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
@@ -179,6 +182,58 @@ describe('Gateway API', () => {
         })
         expect(response).toEqual(domain)
       })
+
+      it('should allow registering a domain with a different owner', async () => {
+        const server = new ccip.Server()
+        server.add(serverAbi, withRegisterDomain(repo))
+        const app = server.makeApp('/')
+
+        const newOwner = privateKeyToAddress(generatePrivateKey())
+        const domain: Domain = {
+          name: 'newdomain.eth',
+          node: namehash('newdomain.eth'),
+          parent: namehash('eth'),
+          resolver: TEST_ADDRESS,
+          resolverVersion: '1',
+          owner: newOwner,
+          ttl: 300,
+          addresses: [],
+          texts: [],
+        }
+
+        const args = [toHex(domain.name), domain.ttl, newOwner]
+        const data = encodeFunctionData({
+          abi,
+          functionName: 'register',
+          args,
+        })
+
+        const signature = await signData({
+          pvtKey, // different signer
+          args,
+          sender: TEST_ADDRESS,
+          func: getAbiItem({
+            abi,
+            name: 'register',
+          }) as AbiFunction,
+        })
+        const r = await request(app)
+          .post('/')
+          .set('Content-Type', 'application/json')
+          .set('Accept', 'application/json')
+          .send({
+            data,
+            signature: serializeTypedSignature(signature),
+            sender: TEST_ADDRESS,
+          })
+
+        expect(r.status).toEqual(200)
+
+        const actual = await repo.getDomain({
+          node: domain.node,
+        })
+        expect(actual).toEqual(domain)
+      })
     })
 
     describe('Transfer domain', () => {
@@ -196,7 +251,7 @@ describe('Gateway API', () => {
         })
 
         const signature = await signData({
-          pvtKey: privateKey,
+          pvtKey,
           args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
@@ -234,7 +289,7 @@ describe('Gateway API', () => {
         })
 
         const signature = await signData({
-          pvtKey: privateKey,
+          pvtKey,
           args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
@@ -279,7 +334,7 @@ describe('Gateway API', () => {
         })
 
         const signature = await signData({
-          pvtKey: privateKey,
+          pvtKey,
           args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
@@ -307,7 +362,7 @@ describe('Gateway API', () => {
 
       it('should handle GET contenthash', async () => {
         const server = new ccip.Server()
-        server.app.use(withSigner(privateKey))
+        server.app.use(withSigner(pvtKey))
         server.add(serverAbi, withGetContentHash(repo))
         const app = server.makeApp('/')
 
@@ -331,7 +386,7 @@ describe('Gateway API', () => {
         const mshHash = makeMessageHash(TEST_ADDRESS, ttl, calldata, data)
         expect(
           await verifyMessage({
-            address: privateKeyToAddress(privateKey),
+            address: privateKeyToAddress(pvtKey),
             message: { raw: mshHash },
             signature: sig,
           }),
@@ -367,7 +422,7 @@ describe('Gateway API', () => {
       })
 
       const signature = await signData({
-        pvtKey: privateKey,
+        pvtKey,
         args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
@@ -418,7 +473,7 @@ describe('Gateway API', () => {
       })
 
       const signature = await signData({
-        pvtKey: privateKey,
+        pvtKey,
         args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
@@ -457,7 +512,7 @@ describe('Gateway API', () => {
         },
       ])
       const server = new ccip.Server()
-      server.app.use(withSigner(privateKey))
+      server.app.use(withSigner(pvtKey))
       server.add(serverAbi, withGetText(repo))
       const app = server.makeApp('/')
 
@@ -481,7 +536,7 @@ describe('Gateway API', () => {
       const mshHash = makeMessageHash(TEST_ADDRESS, ttl, calldata, data)
       expect(
         await verifyMessage({
-          address: privateKeyToAddress(privateKey),
+          address: privateKeyToAddress(pvtKey),
           message: { raw: mshHash },
           signature: sig,
         }),
@@ -498,7 +553,7 @@ describe('Gateway API', () => {
 
     it('should handle GET request for not existing text', async () => {
       const server = new ccip.Server()
-      server.app.use(withSigner(privateKey))
+      server.app.use(withSigner(pvtKey))
       server.add(serverAbi, withGetText(repo))
       const app = server.makeApp('/')
 
@@ -519,7 +574,7 @@ describe('Gateway API', () => {
 
   describe('API Address', () => {
     it('should set ethereum address', async () => {
-      const address = privateKeyToAddress(privateKey)
+      const address = privateKeyToAddress(pvtKey)
       const server = new ccip.Server()
       server.add(serverAbi, withSetAddr(repo, validator))
       const app = server.makeApp('/')
@@ -532,7 +587,7 @@ describe('Gateway API', () => {
       })
 
       const signature = await signData({
-        pvtKey: privateKey,
+        pvtKey,
         args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
@@ -568,9 +623,9 @@ describe('Gateway API', () => {
           resolverVersion: '1',
         },
       ])
-      const address = privateKeyToAddress(privateKey)
+      const address = privateKeyToAddress(pvtKey)
       const server = new ccip.Server()
-      server.app.use(withSigner(privateKey))
+      server.app.use(withSigner(pvtKey))
       server.add(serverAbi, withSetAddr(repo, validator))
       const app = server.makeApp('/')
 
@@ -582,7 +637,7 @@ describe('Gateway API', () => {
       })
 
       const signature = await signData({
-        pvtKey: privateKey,
+        pvtKey,
         args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
@@ -623,7 +678,7 @@ describe('Gateway API', () => {
       })
 
       const signature = await signData({
-        pvtKey: privateKey,
+        pvtKey,
         args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
@@ -663,7 +718,7 @@ describe('Gateway API', () => {
         },
       ])
       const server = new ccip.Server()
-      server.app.use(withSigner(privateKey))
+      server.app.use(withSigner(pvtKey))
       server.add(serverAbi, withSetAddrByCoin(repo, validator))
       const app = server.makeApp('/')
 
@@ -675,7 +730,7 @@ describe('Gateway API', () => {
       })
 
       const signature = await signData({
-        pvtKey: privateKey,
+        pvtKey,
         args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
@@ -715,7 +770,7 @@ describe('Gateway API', () => {
         },
       ])
       const server = new ccip.Server()
-      server.app.use(withSigner(privateKey))
+      server.app.use(withSigner(pvtKey))
       server.add(serverAbi, withGetAddrByCoin(repo))
       const app = server.makeApp('/')
 
@@ -740,7 +795,7 @@ describe('Gateway API', () => {
       const msgHash = makeMessageHash(TEST_ADDRESS, ttl, calldata, data)
       expect(
         await verifyMessage({
-          address: privateKeyToAddress(privateKey),
+          address: privateKeyToAddress(pvtKey),
           message: { raw: msgHash },
           signature: sig,
         }),
@@ -757,7 +812,7 @@ describe('Gateway API', () => {
     })
 
     it('should handle GET request for addr on ethereum', async () => {
-      const address = privateKeyToAddress(privateKey)
+      const address = privateKeyToAddress(pvtKey)
       repo.setAddresses([
         {
           domain: domain.node,
@@ -768,7 +823,7 @@ describe('Gateway API', () => {
         },
       ])
       const server = new ccip.Server()
-      server.app.use(withSigner(privateKey))
+      server.app.use(withSigner(pvtKey))
       server.add(serverAbi, withGetAddr(repo))
       const app = server.makeApp('/')
 
@@ -792,7 +847,7 @@ describe('Gateway API', () => {
       const mshHash = makeMessageHash(TEST_ADDRESS, ttl, calldata, data)
       expect(
         await verifyMessage({
-          address: privateKeyToAddress(privateKey),
+          address: privateKeyToAddress(pvtKey),
           message: { raw: mshHash },
           signature: sig,
         }),
@@ -809,7 +864,7 @@ describe('Gateway API', () => {
 
     it('should handle GET request for invalid address ', async () => {
       const server = new ccip.Server()
-      server.app.use(withSigner(privateKey))
+      server.app.use(withSigner(pvtKey))
       server.add(serverAbi, withGetAddr(repo))
       const app = server.makeApp('/')
 

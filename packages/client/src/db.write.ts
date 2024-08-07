@@ -67,7 +67,7 @@ const _ = (async () => {
     await client.simulateContract({
       functionName: 'register',
       abi: dbAbi,
-      args: [toHex(name), 300],
+      args: [toHex(name), 300, signer.address],
       account: signer.address,
       address: resolverAddr,
     })

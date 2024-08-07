@@ -185,7 +185,7 @@ function setupGateway(
     abi,
     withQuery(),
     withGetText(repo),
-    withRegisterDomain(repo, signatureRecover),
+    withRegisterDomain(repo),
     withSetText(repo, validator),
     withGetAddr(repo),
     withSetAddr(repo, validator),
@@ -302,7 +302,7 @@ describe('DatabaseResolver', () => {
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [toHex(name), 300],
+        args: [toHex(name), 300, owner.address],
         universalResolverAddress,
         signer: owner,
       })
@@ -321,7 +321,7 @@ describe('DatabaseResolver', () => {
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [toHex(name), 300],
+        args: [toHex(name), 300, owner.address],
         universalResolverAddress,
         signer: owner,
       })
@@ -341,12 +341,12 @@ describe('DatabaseResolver', () => {
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [toHex(name), 300],
+        args: [toHex(name), 300, newOwner.address],
         universalResolverAddress,
         signer: newOwner,
       })
 
-      expect(response?.status).equal(401)
+      expect(response?.status).equal(400)
 
       const d1 = await datasource.getRepository(Domain).existsBy({
         node,
@@ -364,6 +364,28 @@ describe('DatabaseResolver', () => {
         node,
       })
       expect(count).eq(1)
+    })
+
+    it('should allow register a domain with different owner', async () => {
+      const newOwner = privateKeyToAddress(generatePrivateKey())
+      const name = normalize('newdomain.eth')
+      const node = namehash(name)
+      const response = await offchainWriting({
+        name,
+        functionName: 'register',
+        abi: abiDBResolver,
+        args: [toHex(name), 300, newOwner],
+        universalResolverAddress,
+        signer: owner,
+      })
+
+      expect(response?.status).equal(200)
+
+      const d = await datasource.getRepository(Domain).existsBy({
+        node,
+        owner: newOwner,
+      })
+      expect(d).eq(true)
     })
 
     it('should read and parse the avatar from database', async () => {

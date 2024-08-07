@@ -14,10 +14,6 @@ import {
 import { formatTTL } from '../services'
 import { Domain } from '../entities'
 
-interface SignatureRecover {
-  recoverMessageSigner(TypedSignature): Promise<`0x${string}`>
-}
-
 interface WriteRepository {
   register(params: RegisterDomainProps)
   transfer(params: TransferDomainProps)
@@ -31,24 +27,19 @@ interface ReadRepository {
 
 export function withRegisterDomain(
   repo: WriteRepository & ReadRepository,
-  recover: SignatureRecover,
 ): ccip.HandlerDescription {
   return {
-    type: 'register(bytes memory name, uint32 ttl)',
+    type: 'register(bytes memory name, uint32 ttl, address owner)',
     func: async (
-      { name, ttl },
+      { name, ttl, owner },
       { signature }: { signature: TypedSignature },
     ) => {
       try {
         name = hexToString(name)
         const node = namehash(name)
-        const signer = await recover.recoverMessageSigner(signature)
 
         const existingDomain = await repo.getDomain({ node })
         if (existingDomain) {
-          if (existingDomain.owner !== signer) {
-            return { error: { message: 'Forbidden action', status: 401 } }
-          }
           return { error: { message: 'Domain already exists', status: 400 } }
         }
 
@@ -59,7 +50,7 @@ export function withRegisterDomain(
           name,
           node,
           ttl,
-          owner: signer,
+          owner,
           parent: parentHash,
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
