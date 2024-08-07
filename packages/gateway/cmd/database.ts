@@ -39,20 +39,24 @@ config({
   path: process.env.ENV_FILE || '../../../.env',
 })
 
+const {
+  DATABASE_URL: dbUrl,
+  GATEWAY_PRIVATE_KEY:
+    privateKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+  RPC_URL: rpcURL = 'http://localhost:8545',
+  CHAIN_ID: chainId = '31337',
+  ENS_REGISTRY: registryAddress,
+  REGISTRAR_ADDRESS: registrarAddress,
+  DEBUG,
+  PORT: port = 3000,
+} = process.env
+
 // eslint-disable-next-line
 const _ = (async () => {
-  const dbUrl = process.env.DATABASE_URL
-  if (!dbUrl) {
-    throw new Error('DATABASE_URL is required')
-  }
-  const privateKey =
-    process.env.GATEWAY_PRIVATE_KEY ||
-    '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
-  const rpcURL = process.env.RPC_URL || 'http://localhost:8545'
+  if (!dbUrl) throw new Error('DATABASE_URL is required')
 
-  const chainID = parseInt(process.env.CHAIN_ID || '31337')
-  const chain = getChain(chainID)
-  if (!chain) throw new Error(`invalid chain: ${chainID}`)
+  const chain = getChain(parseInt(chainId))
+  if (!chain) throw new Error(`invalid chain: ${chainId}`)
   console.log(`Connected to chain: ${chain.name}`)
 
   const client = createPublicClient({
@@ -61,22 +65,23 @@ const _ = (async () => {
   })
   const ethClient = new EthereumClient(
     client,
-    process.env.REGISTRY_ADDRESS as Hex,
-    process.env.REGISTRAR_ADDRESS as Hex,
+    registryAddress as Hex,
+    registrarAddress as Hex,
   )
 
   const dbclient = await NewDataSource(dbUrl).initialize()
   const repo = new PostgresRepository(dbclient)
 
   const signatureRecover = new SignatureRecover()
-  const ownershipValidator = new OwnershipValidator(chainID, signatureRecover, [
-    ethClient,
-    repo,
-  ])
+  const ownershipValidator = new OwnershipValidator(
+    chain.id,
+    signatureRecover,
+    [ethClient, repo],
+  )
 
   const server = new ccip.Server()
   server.app.use(withSigner(privateKey as Hex))
-  server.app.use(withLogger({ abi, debug: process.env.DEBUG === 'true' }))
+  server.app.use(withLogger({ abi, debug: DEBUG === 'true' }))
 
   server.add(
     abi,
@@ -97,7 +102,6 @@ const _ = (async () => {
     withTransferDomain(repo, ownershipValidator),
   )
 
-  const port = process.env.PORT || 3000
   server.makeApp('/').listen(port, () => {
     console.log(`Gateway bound to port ${port}.`)
   })
