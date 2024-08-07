@@ -52,7 +52,7 @@ try {
     await client.simulateContract({
       functionName: 'register',
       abi: dbAbi,
-      args: [namehash(publicAddress), 300],
+      args: [toHex(name), 300],
       account: signer.address,
       address: resolverAddr,
     })
@@ -78,7 +78,7 @@ try {
     await client.simulateContract({
       functionName: 'setText',
       abi: l1Abi,
-      args: [toHex(packetToBytes(publicAddress)), 'com.twitter', '@blockful'],
+      args: [toHex(packetToBytes(name)), 'com.twitter', '@blockful'],
       address: resolverAddr,
     })
   } catch (err) {
@@ -92,7 +92,7 @@ try {
         args: {
           functionName: 'setText',
           abi: l2Abi,
-          args: [namehash(publicAddress), 'com.twitter', '@blockful'],
+          args: [namehash(name), 'com.twitter', '@blockful'],
           address: contractAddress,
           account: signer,
         },
@@ -109,17 +109,19 @@ try {
 
 To run the External Resolver project in its entirety, you'll need to complete the installation process. Since we provide an off-chain resolver solution, it's essential to set up both the database and the Arbitrum Layer 2 environment. This will enable you to run comprehensive end-to-end tests and verify the functionality of the entire project.
 
+### Prerequisites
+
+- [Foundry](https://book.getfoundry.sh)
+  - Run local node by calling `anvil`
+
 ### Setup
 
 1. Clone this repository to your local machine.
 2. Copy the `env.example` file to `.env` in the root directory.
-3. Install dependencies:
+3. Install dependencies: `npm install`
+4. Build the contracts: `npm run build`
 
-    ```bash
-    npm install
-    ```
-
-### Database Setup
+#### Database Setup
 
 1. Run a local PostgreSQL instance (no initial data is inserted):
 
@@ -130,7 +132,7 @@ To run the External Resolver project in its entirety, you'll need to complete th
 2. Deploy the contracts locally:
 
     ```bash
-    npm run contracts start:db
+    npm run contracts dev:db
     ```
 
 3. Start the gateway:
@@ -151,12 +153,12 @@ To run the External Resolver project in its entirety, you'll need to complete th
     npm run client read
     ```
 
-### Layer 2 Setup
+#### Layer 2 Setup
 
 1. Deploy the contracts to the local Arbitrum node (follow the [Arbitrum's local node setup tutorial](https://docs.arbitrum.io/run-arbitrum-node/run-local-dev-node)):
 
     ```bash
-    npm run contracts start:arb:l2
+    npm run contracts dev:arb:l2
     ```
 
 2. Gather the contract address from the terminal and add it [here](https://github.com/blockful-io/external-resolver/blob/main/packages/contracts/script/local/ArbResolver.s.sol#L56) so the L1 domain gets resolved by the L2 contract you just deployed.
@@ -175,7 +177,7 @@ To run the External Resolver project in its entirety, you'll need to complete th
 
 ## Deployment
 
-### Prerequisites
+### Gateway
 
 Ensure you have the [Railway CLI](https://docs.railway.app/guides/cli) installed.
 
@@ -202,6 +204,10 @@ Ensure you have the [Railway CLI](https://docs.railway.app/guides/cli) installed
     ```bash
     railway up
     ```
+
+### Contracts
+
+1. `npm run contracts deploy:db -- --rpc-url <RPC_URL>`
 
 ## Architecture
 

@@ -11,7 +11,6 @@ import {
   SetPubkeyProps,
   GetPubkeyResponse,
   SetAbiProps,
-  DomainProps,
   TransferDomainProps,
   RegisterDomainProps,
   NodeProps,
@@ -68,10 +67,21 @@ export class PostgresRepository {
     await this.client.getRepository(Domain).update({ node }, { owner })
   }
 
-  async getDomain({ node }: DomainProps): Promise<Domain | null> {
+  async getDomain({ node }: NodeProps): Promise<Domain | null> {
     return await this.client.getRepository(Domain).findOneBy({
       node,
     })
+  }
+
+  async getSubdomains({ node }: NodeProps): Promise<string[]> {
+    const names = await this.client
+      .getRepository(Domain)
+      .createQueryBuilder('domain')
+      .where('parent = :node', { node })
+      .select(['domain.name'])
+      .getMany()
+
+    return names.map((n) => n.name)
   }
 
   async setContentHash({ node, contenthash }: SetContentHashProps) {
@@ -83,9 +93,7 @@ export class PostgresRepository {
     )
   }
 
-  async getContentHash({
-    node,
-  }: GetAddressProps): Promise<Response | undefined> {
+  async getContentHash({ node }: NodeProps): Promise<Response | undefined> {
     const domain = await this.client
       .getRepository(Domain)
       .createQueryBuilder('domain')
@@ -139,6 +147,34 @@ export class PostgresRepository {
       .getRawOne()
 
     if (addr) return { value: addr.addr_address, ttl: addr.domain_ttl || 300 } // default ttl value
+  }
+
+  async getAddresses({
+    node,
+  }: NodeProps): Promise<Pick<Address, 'address' | 'coin'>[]> {
+    const addrs = await this.client
+      .getRepository(Address)
+      .createQueryBuilder('address')
+      .select(['address.coin', 'address.address'])
+      .where('address.domain = :node ', { node })
+      .andWhere('length(address.address) > 0')
+      .getMany()
+
+    return addrs.map(({ coin, address }) => ({ address, coin }))
+  }
+
+  async getTexts({ node }: NodeProps): Promise<Pick<Text, 'key' | 'value'>[]> {
+    const texts = await this.client
+      .getRepository(Text)
+      .createQueryBuilder('text')
+      .select(['text.key', 'text.value'])
+      .where('text.domain = :node ', { node })
+      .andWhere('text.key != :key', { key: 'pubkey' })
+      .andWhere('text.key != :key', { key: 'ABI' })
+      .andWhere('length(text.value) > 0')
+      .getMany()
+
+    return texts.map(({ key, value }) => ({ key, value }))
   }
 
   async setText({ node, key, value, resolver, resolverVersion }: SetTextProps) {
