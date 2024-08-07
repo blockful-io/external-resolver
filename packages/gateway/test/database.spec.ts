@@ -857,7 +857,7 @@ describe('Gateway Database', () => {
         .where('key = :key', { key: 'pubkey' })
         .andWhere('domain = :domain', { domain: domain.node })
         .getManyAndCount()
-      expect(count).toBe(1)
+      expect(count).eq(1)
       expect(actual[0]?.key).toEqual('pubkey')
       expect(actual[0]?.value).toEqual(expectedDb)
     })
