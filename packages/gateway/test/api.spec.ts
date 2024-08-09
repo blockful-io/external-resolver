@@ -68,14 +68,21 @@ describe('Gateway API', () => {
 
   beforeEach(async () => {
     owner = privateKeyToAddress(pvtKey)
+    const node = namehash('public.eth')
+    const contenthash = {
+      contentHash:
+        '0x4d1ae8fa44de34a527a9c6973d37dfda8befc18ca6ec73fd97535b4cf02189c6' as `0x${string}`,
+      domain: node,
+      resolver: TEST_ADDRESS,
+      resolverVersion: '1',
+    }
     domain = {
       name: 'public.eth',
-      node: namehash('public.eth'),
+      node,
       parent: namehash('eth'),
       owner,
       ttl: 300,
-      contenthash:
-        '0x4d1ae8fa44de34a527a9c6973d37dfda8befc18ca6ec73fd97535b4cf02189c6', // public goods
+      contenthash,
       addresses: [],
       texts: [],
       resolver: TEST_ADDRESS,

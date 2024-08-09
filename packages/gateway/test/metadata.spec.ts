@@ -62,7 +62,12 @@ describe('Metadata API', () => {
     domain.parent = namehash('eth')
     domain.resolver = '0xresolver'
     domain.resolverVersion = '1'
-    domain.contenthash = '0xcontenthash'
+    domain.contenthash = {
+      contentHash: '0xcontenthash',
+      resolver: '0xresolver',
+      resolverVersion: '1',
+      domain: node,
+    }
     domain.owner = privateKeyToAddress(pvtKey)
     domain.texts = [
       {

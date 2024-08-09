@@ -12,7 +12,7 @@ import {
   SetPubkeyProps,
   NodeProps,
 } from '../types'
-import { Address, Text, Domain } from '../entities'
+import { Address, Text, Domain, ABI, ContentHash, Pubkey } from '../entities'
 
 /* The `InMemoryRepository` is a repository implementation that
 stores domains, addresses, and texts in memory and provides methods for changing values
@@ -21,10 +21,14 @@ export class InMemoryRepository {
   private domains: Map<string, Domain>
   private addresses: Map<string, Address>
   private texts: Map<string, Text>
+  private abis: Map<string, ABI>
+  private pubkeys: Map<string, Pubkey>
+  private contenthash: Map<string, ContentHash>
 
   constructor() {
     this.domains = new Map()
     this.addresses = new Map()
+    this.texts = new Map()
     this.texts = new Map()
   }
 
@@ -96,20 +100,26 @@ export class InMemoryRepository {
     return this.domains.get(node) || null
   }
 
-  async setContentHash({ node, contenthash }: SetContentHashProps) {
-    const domain = this.domains.get(node)
-    if (!domain) {
-      throw new Error('Domain not found')
-    }
-    domain.contenthash = contenthash
+  async setContentHash({
+    node,
+    contenthash,
+    resolver,
+    resolverVersion,
+  }: SetContentHashProps) {
+    this.contenthash.set(node, {
+      contentHash: contenthash,
+      domain: node,
+      resolver,
+      resolverVersion,
+    })
   }
 
   async getContentHash({
     node,
   }: GetAddressProps): Promise<Response | undefined> {
     const domain = this.domains.get(node)
-    if (!domain) return
-    return { value: domain.contenthash as string, ttl: domain.ttl }
+    const content = this.contenthash.get(node)
+    if (content) return { value: content.contentHash, ttl: domain?.ttl || 300 }
   }
 
   async setAddr({
@@ -139,10 +149,8 @@ export class InMemoryRepository {
   }: GetAddressProps): Promise<Response | undefined> {
     const address = this.addresses.get(`${node}-${coin}`)
     const domain = this.domains.get(node)
-    let ttl = domain?.ttl
     if (!address) return
-    if (!domain || !ttl) ttl = 300 // default value
-    return { value: address.address, ttl }
+    return { value: address.address, ttl: domain?.ttl || 300 }
   }
 
   async setText({
@@ -169,48 +177,45 @@ export class InMemoryRepository {
   async getText({ node, key }: GetTextProps): Promise<Response | undefined> {
     const text = this.texts.get(`${node}-${key}`)
     const domain = this.domains.get(node)
-    let ttl = domain?.ttl
     if (!text) return
-    if (!domain || !ttl) ttl = 300 // default value
-    return { value: text.value, ttl }
+    return { value: text.value, ttl: domain?.ttl || 300 }
   }
 
   async setPubkey({ node, x, y, resolver, resolverVersion }: SetPubkeyProps) {
-    await this.setText({
-      node,
-      key: 'pubkey',
-      value: `(${x},${y})`,
+    await this.pubkeys.set(node, {
+      domain: node,
+      x,
+      y,
       resolver,
       resolverVersion,
     })
   }
 
   /**
-   * getPubkey reutilized the getText function with `pubkey` as a reserved key
+   * getPubkey stores the pubkey attached to the domain
    */
   async getPubkey({ node }: NodeProps): Promise<GetPubkeyResponse | undefined> {
-    const pubkey = await this.getText({ node, key: 'pubkey' })
-    if (!pubkey) return
-
-    // extracting the X and Y values from a string (e.g (0x10A,0x20D) -> x = 0x10A, y = 0x20D)
-    const [, x, y] = /\((0x\w+),(0x\w+)\)/g.exec(pubkey.value) || []
-    return { value: { x, y }, ttl: pubkey.ttl }
+    const domain = this.domains.get(node)
+    const pubkey = await this.pubkeys.get(node)
+    if (pubkey)
+      return { value: { x: pubkey.x, y: pubkey.y }, ttl: domain?.ttl || 300 }
   }
 
-  async setAbi({ node, value, resolver, resolverVersion }: SetAbiProps) {
-    await this.setText({
-      node,
-      key: 'ABI',
-      value,
+  async setAbi({ node, abi, resolver, resolverVersion }: SetAbiProps) {
+    await this.abis.set(node, {
+      domain: node,
+      abi,
       resolver,
       resolverVersion,
     })
   }
 
   /**
-   *  getABI reutilized the getText function with `ABI` as a reserved key
+   *  getABI stores the ABI attached to the domain
    */
   async getABI({ node }: NodeProps): Promise<Response | undefined> {
-    return await this.getText({ node, key: 'ABI' })
+    const domain = this.domains.get(node)
+    const abi = await this.abis.get(node)
+    if (abi) return { value: abi.abi, ttl: domain?.ttl || 300 }
   }
 }

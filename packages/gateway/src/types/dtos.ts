@@ -17,12 +17,16 @@ export type RegisterDomainProps = Omit<
   'addresses' | 'texts' | 'createdAt' | 'updatedAt'
 >
 export type TransferDomainProps = Pick<Domain, 'node' | 'owner'>
-export type SetContentHashProps = Pick<Domain, 'node' | 'contenthash'>
 
 export type ResolverProps = {
   resolver: `0x${string}`
   resolverVersion: string
 }
+
+export type SetContentHashProps = NodeProps &
+  ResolverProps & {
+    contenthash: `0x${string}`
+  }
 
 export type SetAddressProps = NodeProps &
   ResolverProps & {
@@ -45,7 +49,7 @@ export type SetTextProps = GetTextProps &
 
 export type SetAbiProps = NodeProps &
   ResolverProps & {
-    value: string
+    abi: string
   }
 
 export type SetPubkeyProps = NodeProps &

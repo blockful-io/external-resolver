@@ -5,10 +5,10 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm'
 
-import { Address } from './address'
-import { Text } from './text'
+import { Address, Text, ContentHash, Pubkey, ABI } from '.'
 
 /**
  * Represents the aggregation of ENS properties on the database.
@@ -25,9 +25,6 @@ export class Domain {
   @Column()
   parent: `0x${string}`
 
-  @Column({ nullable: true, length: 32 })
-  contenthash?: `0x${string}`
-
   @Column()
   ttl: number
 
@@ -36,6 +33,21 @@ export class Domain {
 
   @OneToMany(() => Text, (text) => text.domain, { cascade: true })
   texts: Text[]
+
+  @OneToOne(() => ContentHash, (contenthash) => contenthash.domain, {
+    cascade: true,
+    nullable: true,
+  })
+  contenthash?: ContentHash
+
+  @OneToOne(() => Pubkey, (pubkey) => pubkey.domain, {
+    cascade: true,
+    nullable: true,
+  })
+  pubkey?: Pubkey
+
+  @OneToOne(() => ABI, (abi) => abi.domain, { cascade: true, nullable: true })
+  ABI?: ABI
 
   @PrimaryColumn()
   owner: `0x${string}`

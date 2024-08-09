@@ -15,7 +15,7 @@ import {
   RegisterDomainProps,
   NodeProps,
 } from '../types'
-import { Address, Text, Domain } from '../entities'
+import { Address, Text, Domain, ContentHash, Pubkey, ABI } from '../entities'
 
 /* The PostgresRepository class provides methods for setting and getting content
 hash, address, and text data in a PostgreSQL database. */
@@ -85,23 +85,33 @@ export class PostgresRepository {
   }
 
   async setContentHash({ node, contenthash }: SetContentHashProps) {
-    await this.client.getRepository(Domain).update(
-      { node },
+    await this.client.getRepository(ContentHash).update(
+      { domain: node },
       {
-        contenthash,
+        contentHash: contenthash,
       },
     )
   }
 
   async getContentHash({ node }: NodeProps): Promise<Response | undefined> {
     const domain = await this.client
-      .getRepository(Domain)
-      .createQueryBuilder('domain')
-      .where('domain.node = :node ', { node })
-      .select(['domain.contenthash', 'domain.ttl'])
-      .getOne()
+      .getRepository(ContentHash)
+      .createQueryBuilder('contentHash')
+      .leftJoinAndMapOne(
+        'contentHash.domain',
+        Domain,
+        'domain',
+        'contentHash.domain = domain.node',
+      )
+      .where('contentHash.domain = :node ', { node })
+      .select(['contentHash.contentHash', 'domain.ttl'])
+      .getRawOne()
 
-    if (domain) return { value: domain.contenthash as string, ttl: domain.ttl }
+    if (domain)
+      return {
+        value: domain.contentHash_contentHash,
+        ttl: domain.contentHash_ttl,
+      }
   }
 
   async setAddr({
@@ -209,47 +219,71 @@ export class PostgresRepository {
   }
 
   async setPubkey({ node, x, y, resolver, resolverVersion }: SetPubkeyProps) {
-    await this.client.getRepository(Text).upsert(
+    await this.client.getRepository(Pubkey).upsert(
       {
-        key: 'pubkey',
-        value: `(${x},${y})`,
+        x,
+        y,
         domain: node,
         resolver,
         resolverVersion,
       },
-      { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
+      { conflictPaths: ['domain'], skipUpdateIfNoValuesChanged: true },
     )
   }
 
   /**
-   * getPubkey reutilized the getText function with `pubkey` as a reserved key
+   * getPubkey reads the Pubkey attached to the domain
    */
   async getPubkey({ node }: NodeProps): Promise<GetPubkeyResponse | undefined> {
-    const pubkey = await this.getText({ node, key: 'pubkey' })
-    if (!pubkey) return
+    const domain = await this.client
+      .getRepository(Pubkey)
+      .createQueryBuilder('pubkey')
+      .leftJoinAndMapOne(
+        'pubkey.domain',
+        Domain,
+        'domain',
+        'pubkey.domain = domain.node',
+      )
+      .where('pubkey.domain = :node ', { node })
+      .select(['pubkey.x', 'pubkey.y', 'domain.ttl'])
+      .getRawOne()
 
-    // extracting the X and Y values from a string (e.g (10,20) -> x = 10, y = 20)
-    const [, x, y] = /\((0x\w+),(0x\w+)\)/g.exec(pubkey.value) || []
-    return { value: { x, y }, ttl: pubkey.ttl }
+    if (domain)
+      return {
+        value: { x: domain.pubkey_x, y: domain.pubkey_y },
+        ttl: domain.abi_ttl,
+      }
   }
 
-  async setAbi({ node, value, resolver, resolverVersion }: SetAbiProps) {
-    await this.client.getRepository(Text).upsert(
+  async setAbi({ node, abi, resolver, resolverVersion }: SetAbiProps) {
+    await this.client.getRepository(ABI).upsert(
       {
-        key: 'ABI',
-        value,
+        abi,
         domain: node,
         resolver,
         resolverVersion,
       },
-      { conflictPaths: ['domain', 'key'], skipUpdateIfNoValuesChanged: true },
+      { conflictPaths: ['domain'], skipUpdateIfNoValuesChanged: true },
     )
   }
 
   /**
-   *  getABI reutilized the getText function with `ABI` as a reserved key
+   *  getABI reads the ABI attached to the domain
    */
   async getABI({ node }: NodeProps): Promise<Response | undefined> {
-    return await this.getText({ node, key: 'ABI' })
+    const domain = await this.client
+      .getRepository(ABI)
+      .createQueryBuilder('abi')
+      .leftJoinAndMapOne(
+        'abi.domain',
+        Domain,
+        'domain',
+        'abi.domain = domain.node',
+      )
+      .where('abi.domain = :node ', { node })
+      .select(['abi.abi', 'domain.ttl'])
+      .getRawOne()
+
+    if (domain) return { value: domain.abi_abi, ttl: domain.abi_ttl }
   }
 }

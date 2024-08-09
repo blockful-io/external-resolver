@@ -33,7 +33,7 @@ export function withSetAbi(
 
         await repo.setAbi({
           node,
-          value: data,
+          abi: data,
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
         })

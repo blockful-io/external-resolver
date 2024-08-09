@@ -31,10 +31,6 @@ export function withSetText(
         if (!isOwner) {
           return { error: { message: 'Unauthorized', status: 401 } }
         }
-        // Disable setting reserved keys since we're using the same table
-        if (key === 'pubkey' || key === 'ABI') {
-          return { error: { message: 'Reserved key', status: 400 } }
-        }
 
         await repo.setText({
           node,
