@@ -13,6 +13,7 @@
     "@apollo/server": "^4.10.5",
     "@blockful/ccip-server": "*",
     "@blockful/gateway": "*",
+    "@ensdomains/ensjs": "^4.0.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.8",
     "@nomicfoundation/ignition-core": "^0.15.5",

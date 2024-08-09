@@ -125,6 +125,21 @@
       },
       "console": "integratedTerminal",
       "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "register script",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/packages/client/scripts/register.ts",
+      "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
+      "env": {
+        "NODE_ENV": "development",
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/client/tsconfig.json",
+        "ENV_FILE": "${workspaceFolder}/.env.sepolia"
+      },
+      "console": "integratedTerminal",
+      "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"]
     }
   ]
 }

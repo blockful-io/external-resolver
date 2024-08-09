@@ -8,6 +8,8 @@ import {ReverseRegistrar} from
     "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 import {IBaseRegistrar} from "@ens-contracts/ethregistrar/IBaseRegistrar.sol";
+import {ETHRegistrarController} from
+    "@ens-contracts/ethregistrar/ETHRegistrarController.sol";
 import {BaseRegistrarImplementation} from
     "@ens-contracts/ethregistrar/BaseRegistrarImplementation.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
