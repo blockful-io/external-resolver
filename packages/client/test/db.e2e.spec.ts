@@ -993,9 +993,9 @@ describe('DatabaseResolver', () => {
               label
               labelhash
               parent
-              parentHash
+              parentNode
               name
-              namehash
+              node
               resolvedAddress
               subdomains
               subdomainCount
@@ -1031,9 +1031,9 @@ describe('DatabaseResolver', () => {
         expect(actual.label).equal('l1domain')
         expect(actual.labelhash).equal(labelhash('l1domain'))
         expect(actual.parent).equal('eth')
-        expect(actual.parentHash).equal(namehash('eth'))
+        expect(actual.parentNode).equal(namehash('eth'))
         expect(actual.name).equal(name)
-        expect(actual.namehash).equal(node)
+        expect(actual.node).equal(node)
         expect(actual.resolvedAddress).equal(dbResolverAddr)
         expect(actual.subdomains).eql([])
         expect(actual.subdomainCount).equal(0)

@@ -115,9 +115,9 @@ describe('Metadata API', () => {
             label
             labelhash
             name
-            namehash
+            node
             parent
-            parentHash
+            parentNode
             resolvedAddress
             subdomains
             subdomainCount
@@ -153,9 +153,9 @@ describe('Metadata API', () => {
     expect(actual.label).toEqual('public')
     expect(actual.labelhash).toEqual(labelhash('public'))
     expect(actual.name).toEqual(domain.name)
-    expect(actual.namehash).toEqual(domain.node)
+    expect(actual.node).toEqual(domain.node)
     expect(actual.parent).toEqual('eth')
-    expect(actual.parentHash).toEqual(namehash('eth'))
+    expect(actual.parentNode).toEqual(namehash('eth'))
     expect(actual.resolvedAddress).toEqual(domain.resolver)
     expect(actual.subdomains).toEqual([])
     expect(actual.subdomainCount).toEqual(0)
