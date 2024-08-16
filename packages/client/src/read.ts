@@ -13,7 +13,7 @@ config({
 })
 
 const {
-  UNIVERSAL_RESOLVER: resolver,
+  UNIVERSAL_RESOLVER_ADDRESS: resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   GATEWAY_URL: gateway = 'http://127.0.0.1:3000/{sender}/{data}.json',
