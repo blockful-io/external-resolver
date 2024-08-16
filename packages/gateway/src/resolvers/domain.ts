@@ -12,7 +12,7 @@ interface ReadRepository {
 }
 
 interface Client {
-  getExpireDate(label: Hex): Promise<string>
+  getExpireDate(label: Hex): Promise<bigint>
   getOwner(node: Hex): Promise<Hex>
   getResolver(node: Hex): Promise<Hex | undefined>
 }
@@ -55,6 +55,7 @@ export async function domainResolver(
     subdomains,
     subdomainCount: subdomains.length,
     expiryDate,
+    registerDate: domain?.createdAt && BigInt(domain?.createdAt.getTime()),
     resolver: {
       id: `${owner}-${node}`,
       node,
@@ -66,4 +67,9 @@ export async function domainResolver(
       addresses,
     },
   }
+}
+
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
+;(BigInt.prototype as any).toJSON = function () {
+  return this.toString()
 }

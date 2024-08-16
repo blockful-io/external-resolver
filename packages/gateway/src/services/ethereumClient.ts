@@ -72,10 +72,10 @@ export class EthereumClient<chain extends Chain> {
     } catch {}
   }
 
-  async getExpireDate(labelhash: Hex): Promise<string> {
-    if (!this.registrarAddress) return '0'
+  async getExpireDate(labelhash: Hex): Promise<bigint> {
+    if (!this.registrarAddress) return 0n
     try {
-      const ttl = (await this.client.readContract({
+      return (await this.client.readContract({
         address: this.registrarAddress,
         abi: [
           parseAbiItem(
@@ -85,9 +85,8 @@ export class EthereumClient<chain extends Chain> {
         functionName: 'nameExpires',
         args: [fromHex(labelhash, 'bigint')],
       })) as bigint
-      return ttl.toString()!
     } catch {
-      return '0'
+      return 0n
     }
   }
 }
