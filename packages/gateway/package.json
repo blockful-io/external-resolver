@@ -16,7 +16,12 @@
     "dev:arb": "ENV_FILE=../../.env ts-node ./cmd/arbitrum.ts --watch",
     "dev:metadata": "ENV_FILE=../../.env ts-node ./cmd/metadata.ts --watch",
     "lint": "eslint . --ext .ts --fix",
-    "build": "tsup-node"
+    "build": "tsup-node",
+    "typeorm": "ts-node -r tsconfig-paths/register ../../node_modules/typeorm/cli -d ./src/datasources/migration.config.ts",
+    "migration:create": "ENV_FILE=../../.env cross-var ts-node -r tsconfig-paths/register ../../node_modules/typeorm/cli migration:create ./src/datasources/migrations/$npm_config_name",
+    "migration:generate": "ENV_FILE=../../.env cross-var npm run typeorm -- migration:generate ./src/datasources/migrations/$npm_config_name",
+    "migration:up": "ENV_FILE=../../.env npm run typeorm -- migration:run -d ./src/datasources/migration.config.ts",
+    "migration:down": "ENV_FILE=../../.env npm run typeorm -- migration:revert -d ./src/datasources/migration.config.ts"
   },
   "keywords": [],
   "author": "",
@@ -30,9 +35,13 @@
     "@types/pg": "^8",
     "@types/supertest": "^6.0.2",
     "better-sqlite3": "^9.4.3",
+    "cross-var": "^1.1.0",
     "nodemon": "^3.1.4",
     "supertest": "^6.3.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "tsup": "^8.1.0",
+    "typeorm-ts-node-esm": "^0.3.20",
     "typescript": "^5.5.3",
     "unplugin-swc": "^1.5.1",
     "vitest": "^1.6.0"
@@ -47,7 +56,6 @@
     "graphql-scalars": "^1.23.0",
     "pg": "^8.12.0",
     "reflect-metadata": "^0.2.2",
-    "ts-node": "^10.9.2",
     "typeorm": "^0.3.20",
     "viem": "^2.17.4",
     "winston": "^3.13.1"
