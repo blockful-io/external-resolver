@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import {
   Chain,
   HttpTransport,
@@ -6,40 +5,38 @@ import {
   fromHex,
   getChainContractAddress,
   parseAbiItem,
+  Hex,
 } from 'viem'
 
 export class EthereumClient<chain extends Chain> {
+  private registryAddress: Hex
+  private registrarAddress?: Hex
   private client: PublicClient<HttpTransport, chain>
-
-  private registryAddress: string
 
   constructor(
     client: PublicClient<HttpTransport, chain>,
-    ensRegistry?: string,
+    registryAddress?: Hex,
+    registrarAddress?: Hex,
   ) {
     this.client = client
+    this.registrarAddress = registrarAddress
     this.registryAddress =
-      ensRegistry ||
+      registryAddress ||
       getChainContractAddress({
         chain: client.chain!,
         contract: 'ensRegistry',
       })
   }
 
-  async verifyOwnership(
-    node: `0x${string}`,
-    address: `0x${string}`,
-  ): Promise<boolean> {
-    if (!this.registryAddress) return false
-
+  async getOwner(node: Hex): Promise<Hex> {
     let owner = (await this.client.readContract({
-      address: this.registryAddress as `0x${string}`,
+      address: this.registryAddress as Hex,
       abi: [
         parseAbiItem('function owner(bytes32 node) view returns (address)'),
       ],
       functionName: 'owner',
       args: [node],
-    })) as `0x${string}`
+    })) as Hex
 
     try {
       // handling NameWrapper owner
@@ -52,10 +49,45 @@ export class EthereumClient<chain extends Chain> {
         ],
         functionName: 'ownerOf',
         args: [fromHex(node, 'bigint')],
-      })) as `0x${string}`
+      })) as Hex
     } catch {
       /** error is expected when it isn't a contract */
     }
-    return owner === address
+    return owner
+  }
+
+  async verifyOwnership(node: Hex, address: Hex): Promise<boolean> {
+    if (!this.registryAddress) return false
+    return (await this.getOwner(node)) === address
+  }
+
+  async getResolver(node: Hex): Promise<Hex | undefined> {
+    try {
+      return (await this.client.readContract({
+        address: this.registryAddress,
+        abi: [parseAbiItem('function resolver(bytes32 node) returns(address)')],
+        functionName: 'resolver',
+        args: [node],
+      })) as Hex
+    } catch {}
+  }
+
+  async getExpireDate(labelhash: Hex): Promise<string> {
+    if (!this.registrarAddress) return '0'
+    try {
+      const ttl = (await this.client.readContract({
+        address: this.registrarAddress,
+        abi: [
+          parseAbiItem(
+            'function nameExpires(uint256 id) view returns (uint256)',
+          ),
+        ],
+        functionName: 'nameExpires',
+        args: [fromHex(labelhash, 'bigint')],
+      })) as bigint
+      return ttl.toString()!
+    } catch {
+      return '0'
+    }
   }
 }

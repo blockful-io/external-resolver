@@ -18,6 +18,10 @@ import {
   bytecode as bytecodeRegistry,
 } from '@blockful/contracts/out/ENSRegistry.sol/ENSRegistry.json'
 import {
+  abi as abiRegistrar,
+  bytecode as bytecodeRegistrar,
+} from '@blockful/contracts/out/BaseRegistrarImplementation.sol/BaseRegistrarImplementation.json'
+import {
   abi as abiUniversalResolver,
   bytecode as bytecodeUniversalResolver,
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
@@ -40,7 +44,13 @@ import {
   PrivateKeyAccount,
   toHex,
 } from 'viem'
-import { expect } from 'chai'
+import { assert, expect } from 'chai'
+import { ApolloServer } from '@apollo/server'
+import {
+  generatePrivateKey,
+  privateKeyToAccount,
+  privateKeyToAddress,
+} from 'viem/accounts'
 
 import * as ccip from '@blockful/ccip-server'
 import {
@@ -52,7 +62,13 @@ import {
   withSetText,
   withRegisterDomain,
 } from '@blockful/gateway/src/handlers'
-import { DomainData, MessageData } from '@blockful/gateway/src/types'
+import {
+  DomainData,
+  MessageData,
+  typeDefs,
+  DomainMetadata,
+} from '@blockful/gateway/src/types'
+import { domainResolver } from '@blockful/gateway/src/resolvers'
 import { PostgresRepository } from '@blockful/gateway/src/repositories'
 import { Text, Domain, Address } from '@blockful/gateway/src/entities'
 import { withSigner } from '@blockful/gateway/src/middlewares'
@@ -61,16 +77,15 @@ import {
   OwnershipValidator,
   SignatureRecover,
 } from '@blockful/gateway/src/services'
-import {
-  generatePrivateKey,
-  privateKeyToAccount,
-  privateKeyToAddress,
-} from 'viem/accounts'
 import { getRevertErrorData, handleDBStorage } from '../src/client'
 
 const GATEWAY_URL = 'http://127.0.0.1:3000/{sender}/{data}.json'
+const GRAPHQL_URL = 'http://127.0.0.1:4000'
 
-let universalResolverAddress: Hash, registryAddr: Hash, dbResolverAddr: Hash
+let universalResolverAddress: Hash,
+  registryAddr: Hash,
+  dbResolverAddr: Hash,
+  registrarAddr: Hash
 
 const client = createTestClient({
   chain: anvil,
@@ -128,11 +143,18 @@ async function deployContracts(signer: Hash) {
     args: [registryAddr, [GATEWAY_URL]],
   })
 
+  registrarAddr = await deployContract({
+    abi: abiRegistrar,
+    bytecode: bytecodeRegistrar.object as Hash,
+    account: signer,
+    args: [registryAddr, namehash('eth')],
+  })
+
   dbResolverAddr = await deployContract({
     abi: abiDBResolver,
     bytecode: bytecodeDBResolver.object as Hash,
     account: signer,
-    args: [GATEWAY_URL, 600, [signer]],
+    args: [GATEWAY_URL, GRAPHQL_URL, 600, [signer]],
   })
 
   await registry.write.setSubnodeRecord(
@@ -150,7 +172,7 @@ function setupGateway(
   { repo }: { repo: PostgresRepository },
 ) {
   const signatureRecover = new SignatureRecover()
-  const ethClient = new EthereumClient(client, registryAddr)
+  const ethClient = new EthereumClient(client, registryAddr, registrarAddr)
   const validator = new OwnershipValidator(anvil.id, signatureRecover, [
     ethClient,
     repo,
@@ -260,7 +282,7 @@ describe('DatabaseResolver', () => {
     const node = namehash(name)
 
     beforeEach(async () => {
-      const domain = new Domain()
+      let domain = new Domain()
       domain.node = node
       domain.name = name
       domain.parent = namehash('eth')
@@ -268,7 +290,7 @@ describe('DatabaseResolver', () => {
       domain.resolverVersion = '1'
       domain.owner = owner.address
       domain.ttl = 300
-      await datasource.manager.save(domain)
+      domain = await datasource.manager.save(domain)
     })
 
     it('should register new domain', async () => {
@@ -901,6 +923,171 @@ describe('DatabaseResolver', () => {
         universalResolverAddress,
       })
       expect(address).eq(null)
+    })
+
+    describe('Metadata API', async () => {
+      let server: ApolloServer
+
+      before(async () => {
+        const ethClient = new EthereumClient(
+          client,
+          registryAddr,
+          registrarAddr,
+        )
+        server = new ApolloServer({
+          typeDefs,
+          resolvers: {
+            Query: {
+              domain: async (_, name) =>
+                await domainResolver(name, repo, ethClient, dbResolverAddr),
+            },
+          },
+        })
+      })
+
+      it('should fetch 2LD properties with no subdomains', async () => {
+        const t1 = new Text()
+        t1.domain = node
+        t1.key = '1key'
+        t1.value = '1value'
+        t1.resolver = '0x1resolver'
+        t1.resolverVersion = '1'
+        await datasource.manager.save(t1)
+
+        const t2 = new Text()
+        t2.domain = node
+        t2.key = '2key'
+        t2.value = '2value'
+        t2.resolver = '0x2resolver'
+        t2.resolverVersion = '2'
+        await datasource.manager.save(t2)
+
+        const a1 = new Address()
+        a1.domain = node
+        a1.address = '0x1'
+        a1.coin = '1'
+        a1.resolver = '0x1resolver'
+        a1.resolverVersion = '1'
+        await datasource.manager.save(a1)
+
+        const a2 = new Address()
+        a2.domain = node
+        a2.address = '0x2'
+        a2.coin = '60'
+        a2.resolver = '0x2resolver'
+        a2.resolverVersion = '2'
+        await datasource.manager.save(a2)
+
+        const response = await server.executeOperation({
+          query: `query Domain($name: String!) {
+            domain(name: $name) {
+              id
+              context
+              owner
+              label
+              labelhash
+              parent
+              parentHash
+              name
+              namehash
+              resolvedAddress
+              subdomains
+              subdomainCount
+              resolver {
+                id
+                node
+                addr
+                address
+                contentHash
+                context
+                texts {
+                  key
+                  value
+                }
+                addresses {
+                  address
+                  coin
+                }
+              }
+            }
+          }`,
+          variables: {
+            name,
+          },
+        })
+        assert(response.body.kind === 'single')
+        const actual = response.body.singleResult.data?.domain as DomainMetadata
+
+        assert(actual !== null)
+        expect(actual.id).equal(`${owner.address}-${node}`)
+        expect(actual.context).equal(owner.address)
+        expect(actual.owner).equal(owner.address)
+        expect(actual.label).equal('l1domain')
+        expect(actual.labelhash).equal(labelhash('l1domain'))
+        expect(actual.parent).equal('eth')
+        expect(actual.parentHash).equal(namehash('eth'))
+        expect(actual.name).equal(name)
+        expect(actual.namehash).equal(node)
+        expect(actual.resolvedAddress).equal(dbResolverAddr)
+        expect(actual.subdomains).eql([])
+        expect(actual.subdomainCount).equal(0)
+        expect(actual.resolver.id).equal(`${owner.address}-${node}`)
+        expect(actual.resolver.node).equal(node)
+        expect(actual.resolver.context).equal(owner.address)
+        expect(actual.resolver.address).equal(dbResolverAddr)
+        expect(actual.resolver.addr).equal('0x2')
+        expect(actual.resolver.contentHash).equal(null)
+        expect(actual.resolver.texts).eql([
+          {
+            key: '1key',
+            value: '1value',
+          },
+          {
+            key: '2key',
+            value: '2value',
+          },
+        ])
+        expect(actual.resolver.addresses).eql([
+          {
+            address: '0x1',
+            coin: '1',
+          },
+          {
+            address: '0x2',
+            coin: '60',
+          },
+        ])
+      })
+
+      it('should fetch 2LD properties with subdomains', async () => {
+        const d = new Domain()
+        d.name = 'd1.public.eth'
+        d.node = namehash('d1')
+        d.ttl = 300
+        d.parent = node
+        d.resolver = '0xresolver'
+        d.resolverVersion = '1'
+        d.owner = privateKeyToAddress(generatePrivateKey())
+        await datasource.manager.save(d)
+
+        const response = await server.executeOperation({
+          query: `query Domain($name: String!) {
+            domain(name: $name) {
+              subdomains
+              subdomainCount
+            }
+          }`,
+          variables: {
+            name,
+          },
+        })
+        assert(response.body.kind === 'single')
+        const actual = response.body.singleResult.data?.domain as DomainMetadata
+
+        assert(actual !== null)
+        expect(actual.subdomains).eql([d.name])
+        expect(actual.subdomainCount).equal(1)
+      })
     })
   })
 })

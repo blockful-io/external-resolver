@@ -1,171 +1,95 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
       "type": "node",
       "request": "launch",
       "name": "read client",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/packages/client/src/read.ts",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register"
-      ],
+      "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
       "env": {
         "NODE_ENV": "development",
         "TS_NODE_PROJECT": "${workspaceFolder}/packages/client/tsconfig.json",
+        "ENV_FILE": "${workspaceFolder}/.env"
       },
       "console": "integratedTerminal",
-      "outFiles": [
-        "${workspaceFolder}/**/*.js",
-        "!**/node_modules/**"
-      ],
-      "args": [
-        "--resolver",
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-      ]
+      "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"]
     },
     {
       "type": "node",
       "request": "launch",
       "name": "db write client",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/packages/client/src/db.write.ts",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register"
-      ],
+      "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
       "env": {
         "NODE_ENV": "development",
         "TS_NODE_PROJECT": "${workspaceFolder}/packages/client/tsconfig.json",
+        "ENV_FILE": "${workspaceFolder}/.env"
       },
       "console": "integratedTerminal",
-      "outFiles": [
-        "${workspaceFolder}/**/*.js",
-        "!**/node_modules/**"
-      ],
-      "args": [
-        "--resolver",
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-      ]
+      "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"]
     },
     {
       "type": "node",
       "request": "launch",
       "name": "l2 write client",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/packages/client/src/l2.write.ts",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register"
-      ],
+      "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
       "env": {
         "NODE_ENV": "development",
         "TS_NODE_PROJECT": "${workspaceFolder}/packages/client/tsconfig.json",
+        "ENV_FILE": "${workspaceFolder}/.env"
       },
       "console": "integratedTerminal",
-      "outFiles": [
-        "${workspaceFolder}/**/*.js",
-        "!**/node_modules/**"
-      ],
-      "args": [
-        "--resolver",
-        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-        "--providerL2",
-        "http://127.0.0.1:8545",
-        "--l2resolver",
-        "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
-      ]
+      "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"]
     },
     {
       "type": "node",
       "request": "launch",
       "name": "gateway db",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/packages/gateway/cmd/database.ts",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register",
-      ],
+      "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
       "env": {
         "NODE_ENV": "development",
         "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
         "ENV_FILE": "${workspaceFolder}/.env"
       },
       "console": "integratedTerminal",
-      "outFiles": [
-        "${workspaceFolder}/**/*.js",
-        "!**/node_modules/**"
-      ]
+      "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"]
     },
     {
       "type": "node",
       "request": "launch",
       "name": "gateway arbitrum",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/packages/gateway/cmd/arbitrum.ts",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register",
-      ],
+      "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
       "env": {
         "NODE_ENV": "development",
         "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
         "ENV_FILE": "${workspaceFolder}/.env"
       },
       "console": "integratedTerminal",
-      "outFiles": [
-        "${workspaceFolder}/**/*.js",
-        "!**/node_modules/**"
-      ]
+      "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"]
     },
     {
       "type": "node",
       "request": "launch",
       "name": "gateway eth",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/packages/gateway/cmd/ethereum.ts",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register",
-      ],
+      "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
       "env": {
         "NODE_ENV": "development",
         "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
         "ENV_FILE": "${workspaceFolder}/.env"
       },
       "console": "integratedTerminal",
-      "outFiles": [
-        "${workspaceFolder}/**/*.js",
-        "!**/node_modules/**"
-      ]
+      "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"]
     },
     {
       "type": "node",
@@ -180,13 +104,27 @@
         "--timeout",
         "999999",
         "--colors",
-        "${relativeFile}",
+        "${relativeFile}"
       ],
       "env": {
-        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json"
       },
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
+      "internalConsoleOptions": "neverOpen"
     },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "metadata api",
+      "program": "${workspaceFolder}/packages/gateway/cmd/metadata.ts",
+      "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
+      "env": {
+        "NODE_ENV": "development",
+        "TS_NODE_PROJECT": "${workspaceFolder}/packages/gateway/tsconfig.json",
+        "ENV_FILE": "${workspaceFolder}/.env"
+      },
+      "console": "integratedTerminal",
+      "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"]
+    }
   ]
 }

@@ -42,6 +42,7 @@ contract DatabaseResolver is
     //////// CONTRACT STATE ////////
 
     string public gatewayUrl;
+    string public graphqlUrl;
     // Expiration timestamp for an offchain signature
     uint256 public gatewayDatabaseTimeoutDuration;
     EnumerableSetUpgradeable.AddressSet private _signers;
@@ -54,6 +55,7 @@ contract DatabaseResolver is
     event SignerAdded(address indexed addedSigner);
     event SignerRemoved(address indexed removedSigner);
     event GatewayUrlSet(string indexed previousUrl, string indexed newUrl);
+    event GraphqlUrlSet(string indexed previousUrl, string indexed newUrl);
     event OffChainDatabaseTimeoutDurationSet(
         uint256 previousDuration, uint256 newDuration
     );
@@ -71,12 +73,14 @@ contract DatabaseResolver is
 
     /**
      * @notice Initializes the contract with the initial parameters.
-     * @param newGatewayUrl Gateway URL.
+     * @param newGatewayUrl Gateway URL
+     * @param newGraphqlUrl GraphQL URL
      * @param newOffChainDatabaseTimeoutDuration how long an offchain signature will last
-     * @param newSigners Signer addresses.
+     * @param newSigners Signer addresses
      */
     constructor(
         string memory newGatewayUrl,
+        string memory newGraphqlUrl,
         uint256 newOffChainDatabaseTimeoutDuration,
         address[] memory newSigners
     ) {
@@ -84,6 +88,7 @@ contract DatabaseResolver is
 
         _addSigners(newSigners);
         _setGatewayUrl(newGatewayUrl);
+        _setGraphqlUrl(newGraphqlUrl);
         _setOffChainDatabaseTimeoutDuration(newOffChainDatabaseTimeoutDuration);
     }
 
@@ -152,7 +157,23 @@ contract DatabaseResolver is
         override
         returns (bytes memory)
     {
+        if (bytes4(data[:4]) == this.name.selector) {
+            // name(bytes32) should be handled on-chain
+            (, bytes memory result) = address(this).staticcall(data);
+            return result;
+        }
+
         _offChainLookup(data);
+    }
+
+    //////// ENSIP-16 ////////
+
+    /**
+     * @dev Returns the metadata of the resolver on L2
+     * @return graphqlUrl url of graphql endpoint that provides additional information about the offchain name and its subdomains
+     */
+    function metadata() external view returns (string memory) {
+        return (graphqlUrl);
     }
 
     //////// ENS ERC-137 ////////
@@ -491,6 +512,17 @@ contract DatabaseResolver is
     }
 
     /**
+     * @notice Sets the new graphQL URL and emits a GraphqlUrlSet event.
+     * @param newUrl New URL to be set.
+     */
+    function _setGraphqlUrl(string memory newUrl) private {
+        string memory previousUrl = graphqlUrl;
+        graphqlUrl = newUrl;
+
+        emit GraphqlUrlSet(previousUrl, newUrl);
+    }
+
+    /**
      * @notice Sets the new off-chain database timout duration and emits an OffChainDatabaseTimeoutDurationSet event.
      * @param newDuration New timout duration to be set.
      */
@@ -502,9 +534,8 @@ contract DatabaseResolver is
     }
 
     /**
-     * //  * @notice Adds new signers and emits a SignersAdded event.
-     * //  * @param signersToAdd List of addresses to add as signers.
-     * //
+     * @notice Adds new signers and emits a SignersAdded event.
+     * @param signersToAdd List of addresses to add as signers.
      */
     function _addSigners(address[] memory signersToAdd) private {
         uint256 length = signersToAdd.length;

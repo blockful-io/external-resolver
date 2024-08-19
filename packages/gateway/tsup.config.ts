@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: ['./cmd/database.ts', './cmd/arbitrum.ts'],
+  entry: ['./cmd/database.ts', './cmd/arbitrum.ts', './cmd/metadata.ts'],
   noExternal: [/@blockful/],
   splitting: true,
   bundle: true,

@@ -8,6 +8,8 @@ import {ReverseRegistrar} from
     "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 import {IBaseRegistrar} from "@ens-contracts/ethregistrar/IBaseRegistrar.sol";
+import {BaseRegistrarImplementation} from
+    "@ens-contracts/ethregistrar/BaseRegistrarImplementation.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 
@@ -19,6 +21,7 @@ contract DatabaseConfig is Script, ENSHelper {
 
     struct NetworkConfig {
         string gatewayUrl;
+        string graphqlUrl;
         uint32 gatewayTimestamp;
         address[] signers;
         ENSRegistry registry;
@@ -35,6 +38,7 @@ contract DatabaseConfig is Script, ENSHelper {
         view
         returns (
             string memory gatewayUrl,
+            string memory graphqlUrl,
             uint32 gatewayTimestamp,
             address[] memory signers,
             ENSRegistry registry
@@ -42,6 +46,7 @@ contract DatabaseConfig is Script, ENSHelper {
     {
         return (
             _activeNetworkConfig.gatewayUrl,
+            _activeNetworkConfig.graphqlUrl,
             _activeNetworkConfig.gatewayTimestamp,
             _activeNetworkConfig.signers,
             _activeNetworkConfig.registry
@@ -49,9 +54,11 @@ contract DatabaseConfig is Script, ENSHelper {
     }
 
     function _getMainnetConfig() private view returns (NetworkConfig memory) {
-        address[] memory signers = new address[](0);
+        address[] memory signers = new address[](1);
+        signers[0] = vm.envAddress("GATEWAY_ADDRESS");
         return NetworkConfig({
             gatewayUrl: vm.envString("GATEWAY_URL"),
+            graphqlUrl: vm.envString("GRAPHQL_URL"),
             gatewayTimestamp: 600,
             signers: signers,
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e)
@@ -59,9 +66,11 @@ contract DatabaseConfig is Script, ENSHelper {
     }
 
     function _getSepoliaConfig() private view returns (NetworkConfig memory) {
-        address[] memory signers = new address[](0);
+        address[] memory signers = new address[](1);
+        signers[0] = vm.envAddress("GATEWAY_ADDRESS");
         return NetworkConfig({
             gatewayUrl: vm.envString("GATEWAY_URL"),
+            graphqlUrl: vm.envString("GRAPHQL_URL"),
             gatewayTimestamp: 600,
             signers: signers,
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e)
@@ -84,6 +93,7 @@ contract DatabaseConfig is Script, ENSHelper {
         vm.startBroadcast(sender);
         ENSRegistry registry = new ENSRegistry();
         new UniversalResolver(address(registry), urls);
+        new BaseRegistrarImplementation(registry, namehash("eth"));
 
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
@@ -99,6 +109,7 @@ contract DatabaseConfig is Script, ENSHelper {
 
         return NetworkConfig({
             gatewayUrl: urls[0],
+            graphqlUrl: "https://127.0.0.1:3000",
             gatewayTimestamp: 600,
             signers: signers,
             registry: registry

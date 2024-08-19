@@ -27,6 +27,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
         DatabaseConfig config = new DatabaseConfig(block.chainid, owner);
         (
             string memory gatewayUrl,
+            string memory graphqlUrl,
             uint256 gatewayTimestamp,
             address[] memory signers,
             ENSRegistry _registry
@@ -35,14 +36,20 @@ contract DatabaseResolverTest is Test, ENSHelper {
         string[] memory urls = new string[](1);
         urls[0] = gatewayUrl;
 
-        resolver = new DatabaseResolver(gatewayUrl, gatewayTimestamp, signers);
+        resolver = new DatabaseResolver(
+            gatewayUrl, graphqlUrl, gatewayTimestamp, signers
+        );
     }
 
     // Test the resolver setup from the constructor
     function testResolverSetupFromConstructor() public {
         DatabaseConfig config = new DatabaseConfig(block.chainid, owner);
-        ( /* gatewayUrl */
-            , /* gatewayTimestamp */, address[] memory signers, /* registry */
+        (
+            , // gatewayUrl
+            , // graphqlUrl
+            , // gatewayTimestamp
+            address[] memory signers,
+            // registry
         ) = config.activeNetworkConfig();
         assertTrue(resolver.isSigner(signers[0]));
         assertEq(
@@ -77,8 +84,11 @@ contract DatabaseResolverTest is Test, ENSHelper {
         resolver.addSigners(new_signers);
 
         DatabaseConfig config = new DatabaseConfig(block.chainid, owner);
-        ( /* gatewayUrl */
-            , /* gatewayTimestamp */, address[] memory signers, /* registry */
+        (
+            , // gatewayUrl
+            , // graphqlUrl
+            , // gatewayTimestamp
+            address[] memory signers, /* registry */
         ) = config.activeNetworkConfig();
 
         assertTrue(resolver.isSigner(signers[0]));
@@ -96,8 +106,12 @@ contract DatabaseResolverTest is Test, ENSHelper {
         resolver.addSigners(new_signers);
 
         DatabaseConfig config = new DatabaseConfig(block.chainid, owner);
-        ( /* gatewayUrl */
-            , /* gatewayTimestamp */, address[] memory signers, /* registry */
+        (
+            , // gatewayUrl
+            , // graphqlUrl
+            , // gatewayTimestamp
+            address[] memory signers,
+            // registry
         ) = config.activeNetworkConfig();
 
         assertTrue(resolver.isSigner(signers[0]));
