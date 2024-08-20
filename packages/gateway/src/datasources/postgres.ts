@@ -1,4 +1,3 @@
-import path from 'path'
 import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 
@@ -10,9 +9,9 @@ export function NewDataSource(
   return new DataSource({
     type: 'postgres',
     url: dbUrl,
-    entities: [path.resolve(__dirname, '../entities/*.ts')],
+    entities: ['../entities/*.ts'],
     synchronize,
     logging: false,
-    migrations: [path.resolve(__dirname, '../migrations/*.ts')],
+    migrations: ['./migrations/*.ts'],
   })
 }

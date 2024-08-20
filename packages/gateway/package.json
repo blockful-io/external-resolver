@@ -17,11 +17,11 @@
     "dev:metadata": "ENV_FILE=../../.env ts-node ./cmd/metadata.ts --watch",
     "lint": "eslint . --ext .ts --fix",
     "build": "tsup-node",
-    "typeorm": "ts-node -r tsconfig-paths/register ../../node_modules/typeorm/cli -d ./src/datasources/migration.config.ts",
-    "migration:create": "ENV_FILE=../../.env cross-var ts-node -r tsconfig-paths/register ../../node_modules/typeorm/cli migration:create ./src/datasources/migrations/$npm_config_name",
+    "typeorm": "ts-node -r tsconfig-paths/register --project ./tsconfig.json ../../node_modules/typeorm/cli -d ./src/datasources/migration.config.ts",
+    "migration:create": "ENV_FILE=../../.env cross-var npm run typeorm -- migration:create ./src/datasources/migrations/$npm_config_name",
     "migration:generate": "ENV_FILE=../../.env cross-var npm run typeorm -- migration:generate ./src/datasources/migrations/$npm_config_name",
-    "migration:up": "ENV_FILE=../../.env npm run typeorm -- migration:run -d ./src/datasources/migration.config.ts",
-    "migration:down": "ENV_FILE=../../.env npm run typeorm -- migration:revert -d ./src/datasources/migration.config.ts"
+    "migration:up": "ENV_FILE=../../.env npm run typeorm -- migration:run",
+    "migration:down": "ENV_FILE=../../.env npm run typeorm -- migration:revert"
   },
   "keywords": [],
   "author": "",
