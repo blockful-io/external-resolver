@@ -45,8 +45,13 @@ const _ = (async () => {
 
   const resolvers = {
     Query: {
-      domain: async (_, name) =>
-        await domainResolver(name, repo, ethClient, resolverAddress),
+      domain: async (_, { name }) =>
+        await domainResolver({
+          name,
+          repo,
+          client: ethClient,
+          resolverAddress,
+        }),
     },
   }
 

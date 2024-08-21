@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm'
+
+import { Domain } from '../entities'
 
 /**
  * Represents an Text entity on the database.
@@ -19,6 +22,9 @@ export class Text {
   value: string
 
   @PrimaryColumn()
+  @ManyToOne(() => Domain, (domain) => domain.texts, {
+    createForeignKeyConstraints: false,
+  })
   domain: string
 
   @Column()
@@ -28,8 +34,8 @@ export class Text {
   resolverVersion: string
 
   @CreateDateColumn()
-  createdAt?: Date
+  createdAt: Date
 
   @UpdateDateColumn()
-  updatedAt?: Date
+  updatedAt: Date
 }

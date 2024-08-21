@@ -14,6 +14,7 @@ import {
   TransferDomainProps,
   RegisterDomainProps,
   NodeProps,
+  GetDomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -67,21 +68,51 @@ export class PostgresRepository {
     await this.client.getRepository(Domain).update({ node }, { owner })
   }
 
-  async getDomain({ node }: NodeProps): Promise<Domain | null> {
-    return await this.client.getRepository(Domain).findOneBy({
-      node,
-    })
+  async getDomain({
+    node,
+    includeRelations: includeEntities = false,
+  }: GetDomainProps): Promise<Domain | null> {
+    const query = this.client
+      .getRepository(Domain)
+      .createQueryBuilder('domain')
+      .where('domain.node = :node', { node })
+
+    if (includeEntities) {
+      query
+        .leftJoinAndMapMany(
+          'domain.addresses',
+          Address,
+          'addr',
+          'addr.domain = domain.node',
+        )
+        .leftJoinAndMapMany(
+          'domain.texts',
+          Text,
+          'text',
+          'text.domain = domain.node',
+        )
+    }
+    return await query.getOne()
   }
 
-  async getSubdomains({ node }: NodeProps): Promise<string[]> {
-    const names = await this.client
+  async getSubdomains({ node }: NodeProps): Promise<Domain[]> {
+    return await this.client
       .getRepository(Domain)
       .createQueryBuilder('domain')
       .where('parent = :node', { node })
-      .select(['domain.name'])
+      .leftJoinAndMapMany(
+        'domain.addresses',
+        Address,
+        'addr',
+        'addr.domain = domain.node',
+      )
+      .leftJoinAndMapMany(
+        'domain.texts',
+        Text,
+        'text',
+        'text.domain = domain.node',
+      )
       .getMany()
-
-    return names.map((n) => n.name)
   }
 
   async setContentHash({ node, contenthash }: SetContentHashProps) {

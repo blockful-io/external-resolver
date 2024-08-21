@@ -1,9 +1,11 @@
+import { Domain } from '../entities'
 import {
   Entity,
   Column,
   PrimaryColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm'
 
 /**
@@ -19,6 +21,9 @@ export class Address {
   address: string
 
   @PrimaryColumn()
+  @ManyToOne(() => Domain, (domain) => domain.addresses, {
+    createForeignKeyConstraints: false,
+  })
   domain: string
 
   @Column()
@@ -28,8 +33,8 @@ export class Address {
   resolverVersion: string
 
   @CreateDateColumn()
-  createdAt?: Date
+  createdAt: Date
 
   @UpdateDateColumn()
-  updatedAt?: Date
+  updatedAt: Date
 }

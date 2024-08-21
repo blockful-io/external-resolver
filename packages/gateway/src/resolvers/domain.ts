@@ -1,14 +1,12 @@
 import { Hex, labelhash, namehash } from 'viem'
 import { normalize } from 'viem/ens'
 
-import { Text, Address, DomainMetadata, NodeProps } from '../types'
+import { DomainMetadata, NodeProps, GetDomainProps } from '../types'
 import { Domain } from '../entities'
 
 interface ReadRepository {
-  getDomain(params: NodeProps): Promise<Domain | null>
-  getSubdomains({ node }: NodeProps): Promise<string[]>
-  getTexts({ node }: NodeProps): Promise<Text[]>
-  getAddresses({ node }: NodeProps): Promise<Address[]>
+  getDomain(params: GetDomainProps): Promise<Domain | null>
+  getSubdomains({ node }: NodeProps): Promise<Domain[]>
 }
 
 interface Client {
@@ -17,30 +15,63 @@ interface Client {
   getResolver(node: Hex): Promise<Hex | undefined>
 }
 
-export async function domainResolver(
-  { name }: { name: string },
-  repo: ReadRepository,
-  client: Client,
-  resolverAddress: Hex,
-): Promise<DomainMetadata | undefined> {
+interface DomainResolverProps {
+  name: string
+  repo: ReadRepository
+  client: Client
+  resolverAddress: Hex
+}
+
+export async function domainResolver({
+  name,
+  repo,
+  client,
+  resolverAddress,
+}: DomainResolverProps): Promise<DomainMetadata | undefined> {
   name = normalize(name)
   const node = namehash(name)
-  const domain = await repo.getDomain({ node })
+  const domain = await repo.getDomain({ node, includeRelations: true })
   const resolver = domain?.resolver || (await client.getResolver(node))
   if (resolver !== resolverAddress) return
 
-  // gather the first part of the domain (e.g. lucas.blockful.eth -> lucas)
-  const [, label] = /^(\w+)/.exec(name) || []
-  // gather the last part of the domain (e.g. lucas.blockful.eth -> blockful.eth)
-  const [, parent] = /\w*\.(.*)$/.exec(name) || []
-
-  const subdomains = await repo.getSubdomains({ node })
-  const texts = await repo.getTexts({ node })
-  const addresses = await repo.getAddresses({ node })
-  const addr = addresses.find((addr) => addr.coin === '60') // ETH
-  const owner = domain?.owner || (await client.getOwner(node))
+  const label = extractLabelFromName(name)
+  const parent = extractParentFromName(name)
   const expiryDate = await client.getExpireDate(labelhash(label))
 
+  const subdomains = await repo.getSubdomains({ node })
+  const subdomainsMetadata = subdomains.map((sd) => {
+    const label = extractLabelFromName(sd.name)
+    const parent = extractParentFromName(sd.name)
+    return {
+      id: `${sd.owner}-${sd.node}`,
+      context: sd.owner,
+      name: sd.name,
+      node: sd.node,
+      owner: sd.owner,
+      label,
+      labelhash: labelhash(label),
+      resolvedAddress: resolver,
+      parent,
+      parentNode: namehash(parent),
+      expiryDate,
+      registerDate: BigInt(sd.createdAt.getTime()),
+      resolver: {
+        id: `${sd.owner}-${sd.node}`,
+        node: sd.node,
+        context: sd.owner,
+        address: sd.resolver,
+        addr: sd.addresses.find((addr) => addr.coin === '60')?.address,
+        contentHash: sd.contenthash,
+        texts: sd.texts.map((t) => ({ key: t.key, value: t.value })),
+        addresses: sd.addresses.map((addr) => ({
+          address: addr.address,
+          coin: addr.coin,
+        })),
+      },
+    } as DomainMetadata
+  })
+
+  const owner = domain?.owner || (await client.getOwner(node))
   return {
     id: `${owner}-${node}`,
     context: owner,
@@ -52,7 +83,7 @@ export async function domainResolver(
     resolvedAddress: resolver,
     parent,
     parentNode: namehash(parent),
-    subdomains,
+    subdomains: subdomainsMetadata,
     subdomainCount: subdomains.length,
     expiryDate,
     registerDate: domain?.createdAt && BigInt(domain?.createdAt.getTime()),
@@ -61,12 +92,28 @@ export async function domainResolver(
       node,
       context: owner,
       address: resolver,
-      addr: addr?.address,
+      addr: domain?.addresses.find((addr) => addr.coin === '60')?.address, // ETH
       contentHash: domain?.contenthash,
-      texts,
-      addresses,
+      texts: domain?.texts.map((t) => ({ key: t.key, value: t.value })) || [],
+      addresses:
+        domain?.addresses.map((addr) => ({
+          address: addr.address,
+          coin: addr.coin,
+        })) || [],
     },
   }
+}
+
+// gather the first part of the domain (e.g. floripa.blockful.eth -> floripa)
+const extractLabelFromName = (name: string): string => {
+  const [, label] = /^(\w+)/.exec(name) || []
+  return label
+}
+
+// gather the last part of the domain (e.g. floripa.blockful.eth -> blockful.eth)
+const extractParentFromName = (name: string): string => {
+  const [, parent] = /\w*\.(.*)$/.exec(name) || []
+  return parent
 }
 
 // eslint-disable-next-line  @typescript-eslint/no-explicit-any
