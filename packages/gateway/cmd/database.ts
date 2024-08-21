@@ -45,7 +45,7 @@ const {
     privateKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
   RPC_URL: rpcURL = 'http://localhost:8545',
   CHAIN_ID: chainId = '31337',
-  ENS_REGISTRY: registryAddress,
+  REGISTRY_ADDRESS: registryAddress,
   REGISTRAR_ADDRESS: registrarAddress,
   DEBUG,
   PORT: port = 3000,
