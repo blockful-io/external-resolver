@@ -10,7 +10,7 @@ export const typeDefs = `#graphql
     node: Bytes
     label: String
     labelhash: Bytes
-    resolvedAddress: Bytes
+    resolverAddress: Bytes
     parent: String
     parentNode: Bytes
     subdomains: [Domain!]
@@ -75,7 +75,7 @@ export interface DomainMetadata {
   node: `0x${string}`
   label: string
   labelhash: `0x${string}`
-  resolvedAddress: `0x${string}`
+  resolverAddress: `0x${string}`
   parent: string
   parentNode: `0x${string}`
   subdomains?: DomainMetadata[]

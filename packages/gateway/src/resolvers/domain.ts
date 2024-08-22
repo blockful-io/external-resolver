@@ -18,14 +18,14 @@ interface Client {
 }
 
 interface DomainResolverProps {
-  name: string
+  name: { name: string }
   repo: ReadRepository
   client: Client
   resolverAddress: Hex
 }
 
 export async function domainResolver({
-  name,
+  name: { name },
   repo,
   client,
   resolverAddress,
@@ -52,7 +52,7 @@ export async function domainResolver({
       owner: sd.owner,
       label,
       labelhash: labelhash(label),
-      resolvedAddress: resolver,
+      resolverAddress: resolver,
       parent,
       parentNode: namehash(parent),
       expiryDate,
@@ -87,7 +87,7 @@ export async function domainResolver({
     owner,
     label,
     labelhash: labelhash(label),
-    resolvedAddress: resolver,
+    resolverAddress: resolver,
     parent,
     parentNode: namehash(parent),
     subdomains: subdomainsMetadata,

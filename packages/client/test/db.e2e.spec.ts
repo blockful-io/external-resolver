@@ -996,7 +996,7 @@ describe('DatabaseResolver', () => {
               parentNode
               name
               node
-              resolvedAddress
+              resolverAddress
               subdomains
               subdomainCount
               resolver {
@@ -1034,7 +1034,7 @@ describe('DatabaseResolver', () => {
         expect(actual.parentNode).equal(namehash('eth'))
         expect(actual.name).equal(name)
         expect(actual.node).equal(node)
-        expect(actual.resolvedAddress).equal(dbResolverAddr)
+        expect(actual.resolverAddress).equal(dbResolverAddr)
         expect(actual.subdomains).eql([])
         expect(actual.subdomainCount).equal(0)
         expect(actual.resolver.id).equal(`${owner.address}-${node}`)

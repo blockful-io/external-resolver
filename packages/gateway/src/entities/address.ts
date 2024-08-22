@@ -1,11 +1,9 @@
-import { Domain } from '../entities'
 import {
   Entity,
   Column,
   PrimaryColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
 } from 'typeorm'
 
 /**
@@ -21,9 +19,6 @@ export class Address {
   address: string
 
   @PrimaryColumn()
-  @ManyToOne(() => Domain, (domain) => domain.addresses, {
-    createForeignKeyConstraints: false,
-  })
   domain: string
 
   @Column()
