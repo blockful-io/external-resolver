@@ -33,14 +33,12 @@ export class Domain {
 
   @OneToMany(() => Address, (addr) => addr.domain, {
     cascade: true,
-    eager: true,
     createForeignKeyConstraints: false,
   })
   addresses: Address[]
 
   @OneToMany(() => Text, (text) => text.domain, {
     cascade: true,
-    eager: true,
     createForeignKeyConstraints: false,
   })
   texts: Text[]

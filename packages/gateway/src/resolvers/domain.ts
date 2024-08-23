@@ -52,7 +52,7 @@ export async function domainResolver({
       owner: sd.owner,
       label,
       labelhash: labelhash(label),
-      resolverAddress: resolver,
+      resolverAddress: sd.resolver,
       parent,
       parentNode: namehash(parent),
       expiryDate,
