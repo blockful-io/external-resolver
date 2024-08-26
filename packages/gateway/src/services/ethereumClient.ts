@@ -3,29 +3,23 @@ import {
   HttpTransport,
   PublicClient,
   fromHex,
-  getChainContractAddress,
   parseAbiItem,
   Hex,
 } from 'viem'
 
 export class EthereumClient<chain extends Chain> {
   private registryAddress: Hex
-  private registrarAddress?: Hex
+  private registrarAddress: Hex
   private client: PublicClient<HttpTransport, chain>
 
   constructor(
     client: PublicClient<HttpTransport, chain>,
-    registryAddress?: Hex,
-    registrarAddress?: Hex,
+    registryAddress: Hex,
+    registrarAddress: Hex,
   ) {
     this.client = client
+    this.registryAddress = registryAddress
     this.registrarAddress = registrarAddress
-    this.registryAddress =
-      registryAddress ||
-      getChainContractAddress({
-        chain: client.chain!,
-        contract: 'ensRegistry',
-      })
   }
 
   async getOwner(node: Hex): Promise<Hex> {
@@ -72,10 +66,9 @@ export class EthereumClient<chain extends Chain> {
     } catch {}
   }
 
-  async getExpireDate(labelhash: Hex): Promise<string> {
-    if (!this.registrarAddress) return '0'
+  async getExpireDate(labelhash: Hex): Promise<bigint> {
     try {
-      const ttl = (await this.client.readContract({
+      return (await this.client.readContract({
         address: this.registrarAddress,
         abi: [
           parseAbiItem(
@@ -85,9 +78,8 @@ export class EthereumClient<chain extends Chain> {
         functionName: 'nameExpires',
         args: [fromHex(labelhash, 'bigint')],
       })) as bigint
-      return ttl.toString()!
     } catch {
-      return '0'
+      return 0n
     }
   }
 }

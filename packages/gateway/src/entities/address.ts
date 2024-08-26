@@ -28,8 +28,8 @@ export class Address {
   resolverVersion: string
 
   @CreateDateColumn()
-  createdAt?: Date
+  createdAt: Date
 
   @UpdateDateColumn()
-  updatedAt?: Date
+  updatedAt: Date
 }

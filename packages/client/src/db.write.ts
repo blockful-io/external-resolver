@@ -23,11 +23,11 @@ import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/Unive
 import { getRevertErrorData, handleDBStorage, getChain } from './client'
 
 config({
-  path: process.env.ENV_FILE || '../.env',
+  path: process.env.ENV_FILE || '../../../.env',
 })
 
 let {
-  UNIVERSAL_RESOLVER: resolver,
+  UNIVERSAL_RESOLVER_ADDRESS: resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   PRIVATE_KEY:
