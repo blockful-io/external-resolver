@@ -13,7 +13,7 @@ export const typeDefs = `#graphql
     resolvedAddress: Bytes
     parent: String
     parentNode: Bytes
-    subdomains: [String]
+    subdomains: [Domain!]
     subdomainCount: Int!
     resolver: Resolver!
     expiryDate: BigInt!
@@ -78,8 +78,8 @@ export interface DomainMetadata {
   resolvedAddress: `0x${string}`
   parent: string
   parentNode: `0x${string}`
-  subdomains: string[]
-  subdomainCount: number
+  subdomains?: DomainMetadata[]
+  subdomainCount?: number
   resolver: Resolver
   expiryDate: bigint
   registerDate?: bigint

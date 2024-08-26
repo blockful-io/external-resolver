@@ -78,6 +78,8 @@ export class InMemoryRepository {
       owner,
       resolver,
       resolverVersion,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     })
   }
 
@@ -130,6 +132,8 @@ export class InMemoryRepository {
       coin,
       resolver,
       resolverVersion,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     })
   }
 
@@ -163,6 +167,8 @@ export class InMemoryRepository {
       domain: node,
       resolver,
       resolverVersion,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     })
   }
 

@@ -80,6 +80,8 @@ describe('Gateway API', () => {
       texts: [],
       resolver: TEST_ADDRESS,
       resolverVersion: '1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }
     const domains = new Map()
     domains.set(domain.node, domain)
@@ -99,7 +101,7 @@ describe('Gateway API', () => {
         server.add(serverAbi, withRegisterDomain(repo))
         const app = server.makeApp('/')
 
-        const domain: Domain = {
+        const domain: Omit<Domain, 'createdAt' | 'updatedAt'> = {
           name: 'newdomain.eth',
           node: namehash('newdomain.eth'),
           parent: namehash('eth'),
@@ -140,7 +142,7 @@ describe('Gateway API', () => {
         const response = await repo.getDomain({
           node: domain.node,
         })
-        expect(response).toEqual(domain)
+        expect(response).toMatchObject(domain)
       })
 
       it('should block registering existing domain', async () => {
@@ -189,7 +191,7 @@ describe('Gateway API', () => {
         const app = server.makeApp('/')
 
         const newOwner = privateKeyToAddress(generatePrivateKey())
-        const domain: Domain = {
+        const domain: Omit<Domain, 'createdAt' | 'updatedAt'> = {
           name: 'newdomain.eth',
           node: namehash('newdomain.eth'),
           parent: namehash('eth'),
@@ -232,7 +234,7 @@ describe('Gateway API', () => {
         const actual = await repo.getDomain({
           node: domain.node,
         })
-        expect(actual).toEqual(domain)
+        expect(actual).toMatchObject(domain)
       })
     })
 
@@ -459,6 +461,8 @@ describe('Gateway API', () => {
           value: 'blockful',
           resolver: TEST_ADDRESS,
           resolverVersion: '1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ])
       const server = new ccip.Server()
@@ -509,6 +513,8 @@ describe('Gateway API', () => {
           value,
           resolver: TEST_ADDRESS,
           resolverVersion: '1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ])
       const server = new ccip.Server()
@@ -621,6 +627,8 @@ describe('Gateway API', () => {
           address: TEST_ADDRESS,
           resolver: TEST_ADDRESS,
           resolverVersion: '1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ])
       const address = privateKeyToAddress(pvtKey)
@@ -715,6 +723,8 @@ describe('Gateway API', () => {
           address: expected,
           resolver: expected,
           resolverVersion: '1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ])
       const server = new ccip.Server()
@@ -767,6 +777,8 @@ describe('Gateway API', () => {
           address: expected,
           resolver: TEST_ADDRESS,
           resolverVersion: '1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ])
       const server = new ccip.Server()
@@ -820,6 +832,8 @@ describe('Gateway API', () => {
           address,
           resolver: TEST_ADDRESS,
           resolverVersion: '1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ])
       const server = new ccip.Server()

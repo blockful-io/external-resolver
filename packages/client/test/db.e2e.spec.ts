@@ -945,7 +945,12 @@ describe('DatabaseResolver', () => {
           resolvers: {
             Query: {
               domain: async (_, name) =>
-                await domainResolver(name, repo, ethClient, dbResolverAddr),
+                await domainResolver({
+                  name,
+                  repo,
+                  client: ethClient,
+                  resolverAddress: dbResolverAddr,
+                }),
             },
           },
         })
@@ -997,7 +1002,6 @@ describe('DatabaseResolver', () => {
               name
               node
               resolvedAddress
-              subdomains
               subdomainCount
               resolver {
                 id
@@ -1034,8 +1038,7 @@ describe('DatabaseResolver', () => {
         expect(actual.parentNode).equal(namehash('eth'))
         expect(actual.name).equal(name)
         expect(actual.node).equal(node)
-        expect(actual.resolvedAddress).equal(dbResolverAddr)
-        expect(actual.subdomains).eql([])
+        expect(actual.resolvedAddress).equal('0x2')
         expect(actual.subdomainCount).equal(0)
         expect(actual.resolver.id).equal(`${owner.address}-${node}`)
         expect(actual.resolver.node).equal(node)
@@ -1076,10 +1079,59 @@ describe('DatabaseResolver', () => {
         d.owner = privateKeyToAddress(generatePrivateKey())
         await datasource.manager.save(d)
 
+        const t = new Text()
+        t.key = '1key'
+        t.value = '1value'
+        t.domain = d.node
+        t.resolver = '0x1resolver'
+        t.resolverVersion = '1'
+        t.createdAt = new Date()
+        t.updatedAt = new Date()
+        await datasource.manager.save(t)
+
+        const a = new Address()
+        a.address = '0x1'
+        a.coin = '60'
+        a.domain = d.node
+        a.resolver = '0x1resolver'
+        a.resolverVersion = '1'
+        a.createdAt = new Date()
+        a.updatedAt = new Date()
+        await datasource.manager.save(a)
+
         const response = await server.executeOperation({
           query: `query Domain($name: String!) {
             domain(name: $name) {
-              subdomains
+              subdomains {
+                id
+                context
+                owner
+                name
+                node
+                label
+                labelhash
+                parent
+                parentNode
+                resolvedAddress
+                resolver {
+                  id
+                  node
+                  context
+                  address
+                  addr
+                  contentHash
+                  texts {
+                    key
+                    value
+                  }
+                  addresses {
+                    address
+                    coin
+                  }
+                }
+                expiryDate
+                registerDate
+              }
               subdomainCount
             }
           }`,
@@ -1091,8 +1143,37 @@ describe('DatabaseResolver', () => {
         const actual = response.body.singleResult.data?.domain as DomainMetadata
 
         assert(actual !== null)
-        expect(actual.subdomains).eql([d.name])
         expect(actual.subdomainCount).equal(1)
+        assert(actual.subdomains != null)
+        const subdomain = actual.subdomains[0]
+        expect(subdomain).to.have.property('id', `${d.owner}-${d.node}`)
+        expect(subdomain).to.have.property('context', d.owner)
+        expect(subdomain).to.have.property('owner', d.owner)
+        expect(subdomain).to.have.property('name', d.name)
+        expect(subdomain).to.have.property('label', 'd1')
+        expect(subdomain).to.have.property('labelhash', labelhash('d1'))
+        expect(subdomain).to.have.property('parent', 'public.eth')
+        expect(subdomain).to.have.property('parentNode', namehash('public.eth'))
+        expect(subdomain).to.have.property('node', d.node)
+        expect(subdomain).to.have.property('resolvedAddress', '0x1')
+        expect(subdomain.resolver).to.have.property(
+          'id',
+          `${d.owner}-${d.node}`,
+        )
+        expect(subdomain.resolver).to.have.property('node', d.node)
+        expect(subdomain.resolver).to.have.property('context', d.owner)
+        expect(subdomain.resolver).to.have.property('address', d.resolver)
+        expect(subdomain.resolver).to.have.property('addr', '0x1')
+        expect(subdomain.resolver).to.have.property(
+          'contentHash',
+          d.contenthash,
+        )
+        expect(subdomain.resolver.texts).to.eql([
+          { key: t.key, value: t.value },
+        ])
+        expect(subdomain.resolver.addresses).to.eql([
+          { address: a.address, coin: a.coin },
+        ])
       })
     })
   })

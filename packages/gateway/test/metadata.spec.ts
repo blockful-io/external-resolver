@@ -46,7 +46,12 @@ describe('Metadata API', () => {
       resolvers: {
         Query: {
           domain: async (_, name) =>
-            await domainResolver(name, repo, client, '0xresolver'),
+            await domainResolver({
+              name,
+              repo,
+              client,
+              resolverAddress: '0xresolver',
+            }),
         },
       },
     })
@@ -71,6 +76,8 @@ describe('Metadata API', () => {
         value: '1value',
         resolver: '0x1resolver',
         resolverVersion: '1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
         domain: node,
@@ -78,6 +85,8 @@ describe('Metadata API', () => {
         value: '2value',
         resolver: '0x2resolver',
         resolverVersion: '2',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ]
     domain.addresses = [
@@ -87,6 +96,8 @@ describe('Metadata API', () => {
         domain: node,
         resolver: '0x1resolver',
         resolverVersion: '1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
         address: '0x2',
@@ -94,9 +105,11 @@ describe('Metadata API', () => {
         domain: node,
         resolver: '0x2resolver',
         resolverVersion: '2',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ]
-    domain = await datasource.manager.save(domain)
+    await datasource.manager.save(domain)
   })
 
   afterEach(async () => {
@@ -119,7 +132,9 @@ describe('Metadata API', () => {
             parent
             parentNode
             resolvedAddress
-            subdomains
+            subdomains {
+              id
+            }
             subdomainCount
             resolver {
               id
@@ -156,7 +171,7 @@ describe('Metadata API', () => {
     expect(actual.node).toEqual(domain.node)
     expect(actual.parent).toEqual('eth')
     expect(actual.parentNode).toEqual(namehash('eth'))
-    expect(actual.resolvedAddress).toEqual(domain.resolver)
+    expect(actual.resolvedAddress).toEqual('0x2')
     expect(actual.subdomains).toEqual([])
     expect(actual.subdomainCount).toEqual(0)
     expect(actual.resolver.id).toEqual(`${domain.owner}-${domain.node}`)
@@ -189,7 +204,7 @@ describe('Metadata API', () => {
 
   it('should read domain from db with 1 subdomain', async () => {
     const node = namehash('d1.public.eth')
-    let d = new Domain()
+    const d = new Domain()
     d.name = 'd1.public.eth'
     d.node = node
     d.ttl = 300
@@ -197,12 +212,45 @@ describe('Metadata API', () => {
     d.resolver = '0xresolver'
     d.resolverVersion = '1'
     d.owner = privateKeyToAddress(generatePrivateKey())
-    d = await datasource.manager.save(d)
+    d.createdAt = new Date()
+    d.updatedAt = new Date()
+    d.texts = domain.texts.map((t) => ({ ...t, domain: node }))
+    d.addresses = domain.addresses.map((t) => ({ ...t, domain: node }))
+    await datasource.manager.save(d)
 
     const response = await server.executeOperation({
       query: `query Domain($name: String!) {
           domain(name: $name) {
-            subdomains
+            subdomains {
+              id
+              context
+              owner
+              name
+              node
+              label
+              labelhash
+              parent
+              parentNode
+              resolvedAddress
+              resolver {
+                id
+                node
+                context
+                address
+                addr
+                contentHash
+                texts {
+                  key
+                  value
+                }
+                addresses {
+                  address
+                  coin
+                }
+              }
+              expiryDate
+              registerDate
+            }
             subdomainCount
           }
         }`,
@@ -213,10 +261,53 @@ describe('Metadata API', () => {
     assert(response.body.kind === 'single')
     expect(response.body.singleResult.errors).toBeUndefined()
     const actual = response.body.singleResult.data?.domain as DomainMetadata
+    const expected: Omit<DomainMetadata, 'createdAt' | 'updatedAt'> = {
+      id: `${d.owner}-${d.node}`,
+      context: d.owner,
+      owner: d.owner,
+      name: d.name,
+      label: 'd1',
+      labelhash: labelhash('d1'),
+      parent: domain.name,
+      parentNode: domain.node,
+      node: d.node,
+      resolvedAddress: '0x2',
+      resolver: {
+        id: `${d.owner}-${d.node}`,
+        node: d.node,
+        context: d.owner,
+        address: d.resolver,
+        addr: '0x2',
+        contentHash: d.contenthash,
+        texts: [
+          {
+            key: '1key',
+            value: '1value',
+          },
+          {
+            key: '2key',
+            value: '2value',
+          },
+        ],
+        addresses: [
+          {
+            address: '0x1',
+            coin: '1',
+          },
+          {
+            address: '0x2',
+            coin: '60',
+          },
+        ],
+      },
+      expiryDate: 0n,
+      registerDate: BigInt(d.createdAt.getTime()),
+    }
 
     assert(actual != null)
-    expect(actual.subdomainCount).toEqual(1)
-    expect(actual.subdomains).toEqual([d.name])
+    assert(actual.subdomainCount === 1)
+    assert(actual.subdomains != null)
+    expect(actual.subdomains[0]).toMatchObject(expected)
   })
 })
 
@@ -229,7 +320,7 @@ class DummyClient {
     return '0x'
   }
 
-  async getExpireDate(_: Hex): Promise<string> {
-    return '0'
+  async getExpireDate(_: Hex): Promise<bigint> {
+    return 0n
   }
 }
