@@ -3,7 +3,7 @@
  */
 import 'reflect-metadata'
 import { config } from 'dotenv'
-import { Hex, createPublicClient, http } from 'viem'
+import { Hex, createPublicClient, getChainContractAddress, http } from 'viem'
 
 import * as ccip from '@blockful/ccip-server'
 
@@ -65,8 +65,16 @@ const _ = (async () => {
   })
   const ethClient = new EthereumClient(
     client,
-    registryAddress as Hex,
-    registrarAddress as Hex,
+    (registryAddress as Hex) ||
+      getChainContractAddress({
+        chain: client.chain!,
+        contract: 'ensRegistry',
+      }),
+    (registrarAddress as Hex) ||
+      getChainContractAddress({
+        chain: client.chain!,
+        contract: 'ensBaseRegistrarImplementation',
+      }),
   )
 
   const dbclient = await NewDataSource(dbUrl).initialize()
