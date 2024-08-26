@@ -1,4 +1,4 @@
-import { Hex, labelhash, namehash } from 'viem'
+import { Hex, labelhash, namehash, zeroAddress } from 'viem'
 import { normalize } from 'viem/ens'
 
 import { DomainMetadata, NodeProps, GetDomainProps } from '../types'
@@ -44,6 +44,7 @@ export async function domainResolver({
   const subdomainsMetadata = subdomains.map((sd) => {
     const label = extractLabelFromName(sd.name)
     const parent = extractParentFromName(sd.name)
+    const ethAddr = sd.addresses.find((addr) => addr.coin === '60')?.address
     return {
       id: `${sd.owner}-${sd.node}`,
       context: sd.owner,
@@ -52,7 +53,7 @@ export async function domainResolver({
       owner: sd.owner,
       label,
       labelhash: labelhash(label),
-      resolverAddress: sd.resolver,
+      resolvedAddress: (ethAddr as Hex) || zeroAddress,
       parent,
       parentNode: namehash(parent),
       expiryDate,
@@ -62,7 +63,7 @@ export async function domainResolver({
         node: sd.node,
         context: sd.owner,
         address: sd.resolver,
-        addr: sd.addresses.find((addr) => addr.coin === '60')?.address,
+        addr: ethAddr,
         contentHash: sd.contenthash,
         texts: sd.texts.map((t) => ({ key: t.key, value: t.value })),
         addresses: sd.addresses.map((addr) => ({
@@ -77,6 +78,7 @@ export async function domainResolver({
   const addresses = domain
     ? domain.addresses
     : await repo.getAddresses({ node })
+  const ethAddr = addresses.find((addr) => addr.coin === '60')?.address
 
   const owner = domain?.owner || (await client.getOwner(node))
   return {
@@ -87,7 +89,7 @@ export async function domainResolver({
     owner,
     label,
     labelhash: labelhash(label),
-    resolverAddress: resolver,
+    resolvedAddress: (ethAddr as Hex) || zeroAddress,
     parent,
     parentNode: namehash(parent),
     subdomains: subdomainsMetadata,
@@ -99,7 +101,7 @@ export async function domainResolver({
       node,
       context: owner,
       address: resolver,
-      addr: addresses.find((addr) => addr.coin === '60')?.address, // ETH
+      addr: ethAddr,
       contentHash: domain?.contenthash,
       texts: texts.map((t) => ({ key: t.key, value: t.value })),
       addresses: addresses.map((addr) => ({

@@ -131,7 +131,7 @@ describe('Metadata API', () => {
             node
             parent
             parentNode
-            resolverAddress
+            resolvedAddress
             subdomains {
               id
             }
@@ -171,7 +171,7 @@ describe('Metadata API', () => {
     expect(actual.node).toEqual(domain.node)
     expect(actual.parent).toEqual('eth')
     expect(actual.parentNode).toEqual(namehash('eth'))
-    expect(actual.resolverAddress).toEqual(domain.resolver)
+    expect(actual.resolvedAddress).toEqual('0x2')
     expect(actual.subdomains).toEqual([])
     expect(actual.subdomainCount).toEqual(0)
     expect(actual.resolver.id).toEqual(`${domain.owner}-${domain.node}`)
@@ -231,7 +231,7 @@ describe('Metadata API', () => {
               labelhash
               parent
               parentNode
-              resolverAddress
+              resolvedAddress
               resolver {
                 id
                 node
@@ -271,7 +271,7 @@ describe('Metadata API', () => {
       parent: domain.name,
       parentNode: domain.node,
       node: d.node,
-      resolverAddress: d.resolver,
+      resolvedAddress: '0x2',
       resolver: {
         id: `${d.owner}-${d.node}`,
         node: d.node,
