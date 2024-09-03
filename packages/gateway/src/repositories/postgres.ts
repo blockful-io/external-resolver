@@ -14,6 +14,7 @@ import {
   TransferDomainProps,
   RegisterDomainProps,
   NodeProps,
+  GetDomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -67,21 +68,51 @@ export class PostgresRepository {
     await this.client.getRepository(Domain).update({ node }, { owner })
   }
 
-  async getDomain({ node }: NodeProps): Promise<Domain | null> {
-    return await this.client.getRepository(Domain).findOneBy({
-      node,
-    })
+  async getDomain({
+    node,
+    includeRelations: includeEntities = false,
+  }: GetDomainProps): Promise<Domain | null> {
+    const query = this.client
+      .getRepository(Domain)
+      .createQueryBuilder('domain')
+      .where('domain.node = :node', { node })
+
+    if (includeEntities) {
+      query
+        .leftJoinAndMapMany(
+          'domain.addresses',
+          Address,
+          'addr',
+          'addr.domain = domain.node',
+        )
+        .leftJoinAndMapMany(
+          'domain.texts',
+          Text,
+          'text',
+          'text.domain = domain.node',
+        )
+    }
+    return await query.getOne()
   }
 
-  async getSubdomains({ node }: NodeProps): Promise<string[]> {
-    const names = await this.client
+  async getSubdomains({ node }: NodeProps): Promise<Domain[]> {
+    return await this.client
       .getRepository(Domain)
       .createQueryBuilder('domain')
       .where('parent = :node', { node })
-      .select(['domain.name'])
+      .leftJoinAndMapMany(
+        'domain.addresses',
+        Address,
+        'addr',
+        'addr.domain = domain.node',
+      )
+      .leftJoinAndMapMany(
+        'domain.texts',
+        Text,
+        'text',
+        'text.domain = domain.node',
+      )
       .getMany()
-
-    return names.map((n) => n.name)
   }
 
   async setContentHash({ node, contenthash }: SetContentHashProps) {
@@ -149,32 +180,24 @@ export class PostgresRepository {
     if (addr) return { value: addr.addr_address, ttl: addr.domain_ttl || 300 } // default ttl value
   }
 
-  async getAddresses({
-    node,
-  }: NodeProps): Promise<Pick<Address, 'address' | 'coin'>[]> {
-    const addrs = await this.client
+  async getAddresses({ node }: NodeProps): Promise<Address[]> {
+    return await this.client
       .getRepository(Address)
       .createQueryBuilder('address')
-      .select(['address.coin', 'address.address'])
       .where('address.domain = :node ', { node })
       .andWhere('length(address.address) > 0')
       .getMany()
-
-    return addrs.map(({ coin, address }) => ({ address, coin }))
   }
 
-  async getTexts({ node }: NodeProps): Promise<Pick<Text, 'key' | 'value'>[]> {
-    const texts = await this.client
+  async getTexts({ node }: NodeProps): Promise<Text[]> {
+    return await this.client
       .getRepository(Text)
       .createQueryBuilder('text')
-      .select(['text.key', 'text.value'])
       .where('text.domain = :node ', { node })
       .andWhere('text.key != :key', { key: 'pubkey' })
       .andWhere('text.key != :key', { key: 'ABI' })
       .andWhere('length(text.value) > 0')
       .getMany()
-
-    return texts.map(({ key, value }) => ({ key, value }))
   }
 
   async setText({ node, key, value, resolver, resolverVersion }: SetTextProps) {

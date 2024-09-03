@@ -130,4 +130,8 @@ contract DatabaseResolverTest is Test, ENSHelper {
         assertFalse(resolver.isSigner(address(0x69420)));
     }
 
+    function test_SupportENSIP16Interface() public view {
+        assertTrue(resolver.supportsInterface(resolver.metadata.selector));
+    }
+
 }

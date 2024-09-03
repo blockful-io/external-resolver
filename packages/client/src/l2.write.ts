@@ -27,7 +27,7 @@ config({
 })
 
 let {
-  UNIVERSAL_RESOLVER: resolver,
+  UNIVERSAL_RESOLVER_ADDRESS: resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   LAYER2_RPC: providerL2 = 'http://127.0.0.1:8547',

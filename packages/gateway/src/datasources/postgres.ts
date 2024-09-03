@@ -1,17 +1,19 @@
+import path from 'path'
 import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 
-import { Address, Domain, Text } from '../entities'
-
 // to initialize the initial connection with the database, register all entities
-// and "synchronize" database schema, call "initialize()" method of a newly created database
-// once in your application bootstrap
-export function NewDataSource(dbUrl: string): DataSource {
+export function NewDataSource(
+  dbUrl: string,
+  synchronize: boolean = false,
+): DataSource {
   return new DataSource({
     type: 'postgres',
     url: dbUrl,
-    entities: [Address, Domain, Text],
-    synchronize: true,
+    synchronize,
     logging: false,
+    entities: [path.resolve(__dirname, '..', 'entities/*.ts')],
+    migrations: [path.resolve(__dirname, 'migrations/*.ts')],
+    migrationsRun: true,
   })
 }

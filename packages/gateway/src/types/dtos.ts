@@ -24,6 +24,10 @@ export type ResolverProps = {
   resolverVersion: string
 }
 
+export type GetDomainProps = Pick<Domain, 'node'> & {
+  includeRelations?: boolean
+}
+
 export type SetAddressProps = NodeProps &
   ResolverProps & {
     addr: string

@@ -1,7 +1,7 @@
 import { config } from 'dotenv'
 import { ApolloServer } from '@apollo/server'
 import { startStandaloneServer } from '@apollo/server/standalone'
-import { Hex, createPublicClient, http } from 'viem'
+import { Hex, createPublicClient, getChainContractAddress, http } from 'viem'
 
 import { getChain } from '../src/chain'
 import { NewDataSource } from '../src/datasources/postgres'
@@ -33,20 +33,34 @@ const _ = (async () => {
   const chain = getChain(parseInt(chainId))
   if (!chain) throw new Error(`invalid chain: ${chainId}`)
   console.log(`Connected to chain: ${chain.name}`)
+
   const client = createPublicClient({
     chain,
     transport: http(rpcURL),
   })
   const ethClient = new EthereumClient(
     client,
-    process.env.REGISTRY_ADDRESS as Hex,
-    process.env.REGISTRAR_ADDRESS as Hex,
+    (process.env.REGISTRY_ADDRESS as Hex) ||
+      getChainContractAddress({
+        chain: client.chain!,
+        contract: 'ensRegistry',
+      }),
+    (process.env.REGISTRAR_ADDRESS as Hex) ||
+      getChainContractAddress({
+        chain: client.chain!,
+        contract: 'ensBaseRegistrarImplementation',
+      }),
   )
 
   const resolvers = {
     Query: {
       domain: async (_, name) =>
-        await domainResolver(name, repo, ethClient, resolverAddress),
+        await domainResolver({
+          name,
+          repo,
+          client: ethClient,
+          resolverAddress,
+        }),
     },
   }
 

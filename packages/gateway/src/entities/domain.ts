@@ -31,10 +31,16 @@ export class Domain {
   @Column()
   ttl: number
 
-  @OneToMany(() => Address, (addr) => addr.domain, { cascade: true })
+  @OneToMany(() => Address, (addr) => addr.domain, {
+    cascade: true,
+    createForeignKeyConstraints: false,
+  })
   addresses: Address[]
 
-  @OneToMany(() => Text, (text) => text.domain, { cascade: true })
+  @OneToMany(() => Text, (text) => text.domain, {
+    cascade: true,
+    createForeignKeyConstraints: false,
+  })
   texts: Text[]
 
   @PrimaryColumn()
@@ -47,8 +53,8 @@ export class Domain {
   resolverVersion: string
 
   @CreateDateColumn()
-  createdAt?: Date
+  createdAt: Date
 
   @UpdateDateColumn()
-  updatedAt?: Date
+  updatedAt: Date
 }

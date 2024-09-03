@@ -7,16 +7,17 @@ export const typeDefs = `#graphql
     context: Bytes
     owner: Bytes
     name: String
-    namehash: Bytes
+    node: Bytes
     label: String
     labelhash: Bytes
     resolvedAddress: Bytes
     parent: String
-    parentHash: Bytes
-    subdomains: [String]
+    parentNode: Bytes
+    subdomains: [Domain!]
     subdomainCount: Int!
     resolver: Resolver!
-    expiryDate: String
+    expiryDate: BigInt!
+    registerDate: BigInt
   }
 
   type Text {
@@ -71,14 +72,15 @@ export interface DomainMetadata {
   context: string
   owner: `0x${string}`
   name: string
-  namehash: `0x${string}`
+  node: `0x${string}`
   label: string
   labelhash: `0x${string}`
   resolvedAddress: `0x${string}`
   parent: string
-  parentHash: `0x${string}`
-  subdomains: string[]
-  subdomainCount: number
+  parentNode: `0x${string}`
+  subdomains?: DomainMetadata[]
+  subdomainCount?: number
   resolver: Resolver
-  expiryDate: string
+  expiryDate: bigint
+  registerDate?: bigint
 }
