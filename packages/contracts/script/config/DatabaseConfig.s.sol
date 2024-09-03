@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
 
 import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
 import {ReverseRegistrar} from
@@ -92,8 +92,10 @@ contract DatabaseConfig is Script, ENSHelper {
 
         vm.startBroadcast(sender);
         ENSRegistry registry = new ENSRegistry();
-        new UniversalResolver(address(registry), urls);
-        new BaseRegistrarImplementation(registry, namehash("eth"));
+        UniversalResolver universalResolver =
+            new UniversalResolver(address(registry), urls);
+        BaseRegistrarImplementation baseRegistar =
+            new BaseRegistrarImplementation(registry, namehash("eth"));
 
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
@@ -106,6 +108,10 @@ contract DatabaseConfig is Script, ENSHelper {
         );
 
         vm.stopBroadcast();
+
+        console.log("Registry deployed at", address(registry));
+        console.log("UniversalResolver deployed at", address(universalResolver));
+        console.log("BaseRegistrar deployed at", address(baseRegistar));
 
         return NetworkConfig({
             gatewayUrl: urls[0],

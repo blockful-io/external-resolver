@@ -114,7 +114,8 @@ contract DatabaseResolver is
     function register(
         bytes memory, /* name */
         uint32, /* ttl */
-        address /* owner */
+        address, /* owner */
+        bytes[] calldata /* data */
     )
         external
         view

@@ -15,7 +15,8 @@ export type NodeProps = Pick<Domain, 'node'>
 export type RegisterDomainProps = Omit<
   Domain,
   'addresses' | 'texts' | 'createdAt' | 'updatedAt'
->
+> &
+  Partial<Pick<Domain, 'addresses' | 'texts'>>
 export type TransferDomainProps = Pick<Domain, 'node' | 'owner'>
 export type SetContentHashProps = Pick<Domain, 'node' | 'contenthash'>
 
