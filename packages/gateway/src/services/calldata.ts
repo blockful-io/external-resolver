@@ -38,7 +38,7 @@ export function parseEncodedAddressCalls(
         const [domain, address] = args as [Hex, string]
         return {
           domain,
-          address,
+          address: address.toLowerCase(),
           coin: '60',
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,

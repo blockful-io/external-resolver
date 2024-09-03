@@ -17,7 +17,7 @@ import {
   getAbiItem,
   AbiFunction,
   toHex,
-  Address,
+  Address as viemAddress,
   stringToHex,
 } from 'viem'
 import { namehash } from 'viem/ens'
@@ -48,6 +48,7 @@ import {
   SignatureRecover,
   formatTTL,
 } from '../src/services'
+import { RegisterDomainProps } from '../src/types'
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890'
 const abi = parseAbi(serverAbi)
@@ -56,7 +57,7 @@ describe('Gateway API', () => {
   let repo: InMemoryRepository,
     domain: Domain,
     pvtKey: Hex,
-    owner: Address,
+    owner: viemAddress,
     validator: OwnershipValidator,
     signatureRecover: SignatureRecover
 
@@ -113,7 +114,7 @@ describe('Gateway API', () => {
           texts: [],
         }
 
-        const args = [toHex(domain.name), domain.ttl, owner]
+        const args = [toHex(domain.name), domain.ttl, owner, []]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -122,7 +123,6 @@ describe('Gateway API', () => {
 
         const signature = await signData({
           pvtKey,
-          args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
             abi,
@@ -150,7 +150,7 @@ describe('Gateway API', () => {
         server.add(serverAbi, withRegisterDomain(repo))
         const app = server.makeApp('/')
 
-        const args = [toHex(domain.name), domain.ttl, owner]
+        const args = [toHex(domain.name), domain.ttl, owner, []]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -159,7 +159,6 @@ describe('Gateway API', () => {
 
         const signature = await signData({
           pvtKey,
-          args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
             abi,
@@ -203,7 +202,7 @@ describe('Gateway API', () => {
           texts: [],
         }
 
-        const args = [toHex(domain.name), domain.ttl, newOwner]
+        const args = [toHex(domain.name), domain.ttl, newOwner, []]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -212,7 +211,6 @@ describe('Gateway API', () => {
 
         const signature = await signData({
           pvtKey, // different signer
-          args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
             abi,
@@ -236,6 +234,100 @@ describe('Gateway API', () => {
         })
         expect(actual).toMatchObject(domain)
       })
+
+      it('should register new domain with records', async () => {
+        const server = new ccip.Server()
+        server.add(serverAbi, withRegisterDomain(repo))
+        const app = server.makeApp('/')
+
+        const node = namehash('newdomain.eth')
+        const domain: RegisterDomainProps = {
+          name: 'newdomain.eth',
+          node,
+          parent: namehash('eth'),
+          resolver: TEST_ADDRESS,
+          resolverVersion: '1',
+          owner,
+          ttl: 300,
+          addresses: [
+            {
+              address: '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0',
+              coin: '60',
+              domain: node,
+              resolver: TEST_ADDRESS,
+              resolverVersion: '1',
+            },
+            {
+              address: '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2',
+              coin: '1',
+              domain: node,
+              resolver: TEST_ADDRESS,
+              resolverVersion: '1',
+            },
+          ],
+          texts: [
+            {
+              key: 'com.twitter',
+              value: '@blockful.eth',
+              domain: node,
+              resolver: TEST_ADDRESS,
+              resolverVersion: '1',
+            },
+          ],
+        }
+
+        const calldata = [
+          encodeFunctionData({
+            abi,
+            functionName: 'setText',
+            args: [domain.node, 'com.twitter', '@blockful.eth'],
+          }),
+          encodeFunctionData({
+            functionName: 'setAddr',
+            abi,
+            args: [domain.node, '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0'],
+          }),
+          encodeFunctionData({
+            functionName: 'setAddr',
+            abi,
+            args: [
+              domain.node,
+              1n,
+              '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2',
+            ],
+          }),
+        ]
+        const args = [toHex(domain.name), domain.ttl, owner, calldata]
+        const data = encodeFunctionData({
+          abi,
+          functionName: 'register',
+          args,
+        })
+
+        const signature = await signData({
+          pvtKey,
+          sender: TEST_ADDRESS,
+          func: getAbiItem({
+            abi,
+            name: 'register',
+          }) as AbiFunction,
+        })
+        await request(app)
+          .post('/')
+          .set('Content-Type', 'application/json')
+          .set('Accept', 'application/json')
+          .send({
+            data,
+            signature: serializeTypedSignature(signature),
+            sender: TEST_ADDRESS,
+          })
+
+        const response = await repo.getDomain({
+          node: domain.node,
+          includeRelations: true,
+        })
+        expect(response).toMatchObject(domain)
+      })
     })
 
     describe('Transfer domain', () => {
@@ -254,7 +346,6 @@ describe('Gateway API', () => {
 
         const signature = await signData({
           pvtKey,
-          args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
             abi,
@@ -292,7 +383,6 @@ describe('Gateway API', () => {
 
         const signature = await signData({
           pvtKey,
-          args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
             abi,
@@ -337,7 +427,6 @@ describe('Gateway API', () => {
 
         const signature = await signData({
           pvtKey,
-          args,
           sender: TEST_ADDRESS,
           func: getAbiItem({
             abi,
@@ -425,7 +514,6 @@ describe('Gateway API', () => {
 
       const signature = await signData({
         pvtKey,
-        args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
           abi,
@@ -478,7 +566,6 @@ describe('Gateway API', () => {
 
       const signature = await signData({
         pvtKey,
-        args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
           abi,
@@ -594,7 +681,6 @@ describe('Gateway API', () => {
 
       const signature = await signData({
         pvtKey,
-        args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
           abi,
@@ -615,7 +701,7 @@ describe('Gateway API', () => {
         node: domain.node as `0x${string}`,
         coin: '60',
       })
-      expect(response?.value).toEqual(address)
+      expect(response?.value).toEqual(address.toLowerCase())
       expect(response?.ttl).toEqual(domain.ttl)
     })
 
@@ -646,7 +732,6 @@ describe('Gateway API', () => {
 
       const signature = await signData({
         pvtKey,
-        args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
           abi,
@@ -667,7 +752,7 @@ describe('Gateway API', () => {
         node: domain.node as `0x${string}`,
         coin: '60',
       })
-      expect(response?.value).toEqual(address)
+      expect(response?.value).toEqual(address.toLowerCase())
       expect(response?.ttl).toEqual(domain.ttl)
     })
 
@@ -687,7 +772,6 @@ describe('Gateway API', () => {
 
       const signature = await signData({
         pvtKey,
-        args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
           abi,
@@ -741,7 +825,6 @@ describe('Gateway API', () => {
 
       const signature = await signData({
         pvtKey,
-        args,
         sender: TEST_ADDRESS,
         func: getAbiItem({
           abi,

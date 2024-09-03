@@ -73,14 +73,14 @@ export class PostgresRepository {
 
   async getDomain({
     node,
-    includeRelations: includeEntities = false,
+    includeRelations = false,
   }: GetDomainProps): Promise<Domain | null> {
     const query = this.client
       .getRepository(Domain)
       .createQueryBuilder('domain')
       .where('domain.node = :node', { node })
 
-    if (includeEntities) {
+    if (includeRelations) {
       query
         .leftJoinAndMapMany(
           'domain.addresses',
