@@ -10,6 +10,7 @@ import {
   walletActions,
   http,
   Account,
+  parseEther,
 } from 'viem'
 import * as chains from 'viem/chains'
 
@@ -19,6 +20,7 @@ import {
   TypedSignature,
 } from '@blockful/gateway/src/types'
 import { abi as dbABI } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
+import { abi as registerAbi } from '@blockful/contracts/out/ETHRegistrarController.sol/ETHRegistrarController.json'
 
 export function getRevertErrorData(err: unknown) {
   if (!(err instanceof BaseError)) return undefined
@@ -69,7 +71,12 @@ export async function handleL2Storage({
   }).extend(walletActions)
 
   try {
-    const { request } = await l2Client.simulateContract(args)
+    const { request } = await l2Client.simulateContract({
+      ...args,
+      abi: registerAbi,
+      functionName: 'register',
+      value: parseEther('0.01'),
+    })
     await l2Client.writeContract(request)
   } catch (err) {
     console.log('error while trying to make the request: ', { err })
