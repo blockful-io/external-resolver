@@ -2,6 +2,8 @@ import path from 'path'
 import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 
+import * as entities from '../entities'
+
 // to initialize the initial connection with the database, register all entities
 export function NewDataSource(
   dbUrl: string,
@@ -13,7 +15,7 @@ export function NewDataSource(
     url: dbUrl,
     synchronize,
     logging: debug,
-    entities: [path.resolve(__dirname, '..', 'entities/*.ts')],
+    entities,
     migrations: [path.resolve(__dirname, 'migrations/*.ts')],
     migrationsRun: true,
   })
