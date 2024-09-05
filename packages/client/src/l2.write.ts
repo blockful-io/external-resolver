@@ -8,11 +8,11 @@ import {
   Hash,
   Hex,
   createPublicClient,
+  defineChain,
   encodeFunctionData,
   getChainContractAddress,
   http,
   namehash,
-  parseEther,
   toHex,
   walletActions,
 } from 'viem'
@@ -20,7 +20,6 @@ import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
-import { abi } from '@blockful/contracts/out/OffchainDomains.sol/OffchainDomains.json'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
 import { getRevertErrorData, getChain } from './client'
 
@@ -102,7 +101,7 @@ const _ = (async () => {
   try {
     await client.simulateContract({
       functionName: 'register',
-      abi,
+      abi: l1Abi,
       args,
       address: resolverAddr,
       account: signer,
@@ -112,7 +111,21 @@ const _ = (async () => {
     if (data?.errorName === 'StorageHandledByL2') {
       const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-      const chain = getChain(Number(chainId))
+      const chain = defineChain({
+        id: Number(chainId),
+        name: 'Arbitrum Local',
+        nativeCurrency: {
+          name: 'Arbitrum Sepolia Ether',
+          symbol: 'ETH',
+          decimals: 18,
+        },
+        rpcUrls: {
+          default: {
+            http: [providerL2],
+          },
+        },
+      })
+      // const chain = getChain(Number(chainId))
       const l2Client = createPublicClient({
         chain,
         transport: http(providerL2),
@@ -120,11 +133,11 @@ const _ = (async () => {
 
       try {
         const { request } = await l2Client.simulateContract({
-          abi,
+          abi: l1Abi,
           functionName: 'register',
           address: contractAddress,
           account: signer,
-          value: parseEther('0.01'),
+          args,
         })
         await l2Client.writeContract(request)
       } catch (err) {

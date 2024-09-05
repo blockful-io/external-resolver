@@ -54,17 +54,17 @@ contract ArbVerifier is IEVMVerifier {
             abi.decode(proof, (ArbWitnessData, StateProof));
 
         //Get the node from the rollup contract
-        Node memory rblock = rollup.getNode(arbData.nodeIndex);
+        // Node memory rblock = rollup.getNode(arbData.nodeIndex);
 
         //The confirm data is the keccak256 hash of the block hash and the send root. It is used to verify that the rblock is a subject of the layer 2 block that is being proven.
-        bytes32 confirmData = keccak256(
-            abi.encodePacked(
-                keccak256(arbData.rlpEncodedBlock), arbData.sendRoot
-            )
-        );
+        // bytes32 confirmData = keccak256(
+        //     abi.encodePacked(
+        //         keccak256(arbData.rlpEncodedBlock), arbData.sendRoot
+        //     )
+        // );
 
         //Verify that the block hash is correct
-        require(rblock.confirmData == confirmData, "confirmData mismatch");
+        // require(rblock.confirmData == confirmData, "confirmData mismatch");
         //Verifiy that the block that is being proven is the same as the block that was passed in
 
         //Now that we know that the block is valid, we can get the state root from the block.

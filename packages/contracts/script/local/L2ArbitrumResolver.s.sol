@@ -31,60 +31,45 @@ contract L2ArbitrumResolver is Script, ENSHelper {
 
         ENSRegistry registry = new ENSRegistry();
         ReverseRegistrar reverseRegistrar = new ReverseRegistrar(registry);
-        BaseRegistrarImplementation baseRegistrar =
-            new BaseRegistrarImplementation(registry, namehash("arb.eth"));
-
         // .reverse
         registry.setSubnodeOwner(rootNode, labelhash("reverse"), msg.sender);
         // addr.reverse
         registry.setSubnodeOwner(
             namehash("reverse"), labelhash("addr"), address(reverseRegistrar)
         );
-        // .eth
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), msg.sender, address(0), 100000
-        );
+
+        BaseRegistrarImplementation baseRegistrar =
+            new BaseRegistrarImplementation(registry, namehash("eth"));
+        baseRegistrar.addController(msg.sender);
 
         StaticMetadataService metadata =
             new StaticMetadataService("http://localhost:8080");
         NameWrapper nameWrapper = new NameWrapper(
             registry, baseRegistrar, IMetadataService(address(metadata))
         );
-        NameWrapperProxy nameWrapperProxy =
-            new NameWrapperProxy(namehash("arb.eth"), address(nameWrapper));
         L2Resolver arbResolver =
             new L2Resolver(registry, address(baseRegistrar), nameWrapper);
 
+        baseRegistrar.addController(address(nameWrapper));
         nameWrapper.setController(msg.sender, true);
+
+        // .eth
+        registry.setSubnodeRecord(
+            rootNode,
+            labelhash("eth"),
+            address(baseRegistrar),
+            address(0),
+            100000
+        );
+
         // arb.eth
         nameWrapper.registerAndWrapETH2LD(
             "arb", msg.sender, 31556952000, address(arbResolver), 0
         );
 
-        // nameWrapper.setApprovalForAll(msg.sender, true);
-        // registry.setApprovalForAll(x, true);
-
-        // vm.startBroadcast();
-        bytes[] memory data = new bytes[](0);
-        nameWrapperProxy.register{value: 0.01 ether}(
-            "lucas",
-            msg.sender,
-            31556952000,
-            keccak256("0x"),
-            address(arbResolver),
-            data,
-            false,
-            0
-        );
-
-        // bytes32 node = namehash("blockful.arb.eth");
-        // arbResolver.setAddr(node, msg.sender);
-        // arbResolver.setText(
-        //     node,
-        //     "avatar",
-        //     "ipfs://QmdzG4h3KZjcyLsDaVxuFGAjYi7MYN4xxGpU9hwSj1c3CQ" // blockful.jpeg
-        // );
-        // arbResolver.setText(node, "com.twitter", "@blockful");
+        NameWrapperProxy nameWrapperProxy =
+            new NameWrapperProxy(namehash("arb.eth"), address(nameWrapper));
+        nameWrapper.setApprovalForAll(address(nameWrapperProxy), true);
 
         vm.stopBroadcast();
 
