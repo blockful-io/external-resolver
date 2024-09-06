@@ -201,7 +201,6 @@ async function offchainWriting({
   signer,
   abi,
   universalResolverAddress,
-  multicall,
   chainId,
 }: {
   name: string
@@ -210,7 +209,6 @@ async function offchainWriting({
   abi: unknown[]
   args: unknown[]
   universalResolverAddress: Hex
-  multicall?: boolean
   chainId?: number
 }): Promise<Response | void> {
   const [resolverAddr] = (await client.readContract({
@@ -239,7 +237,7 @@ async function offchainWriting({
       if (chainId) {
         domain.chainId = chainId
       }
-      return await handleDBStorage({ domain, url, message, signer, multicall })
+      return await handleDBStorage({ domain, url, message, signer })
     }
   }
 }
@@ -595,7 +593,6 @@ describe('DatabaseResolver', () => {
         args: [calls],
         universalResolverAddress,
         signer: owner,
-        multicall: true,
       })
 
       expect(response?.status).eq(200)
@@ -638,7 +635,6 @@ describe('DatabaseResolver', () => {
         args: [calls],
         universalResolverAddress,
         signer: owner,
-        multicall: true,
       })
 
       expect(response?.status).eq(200)
@@ -869,7 +865,6 @@ describe('DatabaseResolver', () => {
         args: [calls],
         universalResolverAddress,
         signer: owner,
-        multicall: true,
       })
 
       expect(response?.status).eq(200)
@@ -912,7 +907,6 @@ describe('DatabaseResolver', () => {
         args: [calls],
         universalResolverAddress,
         signer: owner,
-        multicall: true,
       })
 
       expect(response?.status).eq(200)

@@ -44,25 +44,13 @@ interface IWriteDeferral {
     /**
      * @notice Struct used to define the message context used to construct a typed data signature, defined in EIP-712,
      * to authorize and define the deferred mutation being performed.
-     * @param functionSelector The function selector of the corresponding mutation.
+     * @param callData The encoded function call
      * @param sender The address of the user performing the mutation (msg.sender).
-     * @param parameter[] A list of <key, value> pairs defining the inputs used to perform the deferred mutation.
      */
     struct messageData {
-        bytes4 functionSelector;
+        bytes callData;
         address sender;
-        parameter[] parameters;
         uint256 expirationTimestamp;
-    }
-
-    /**
-     * @notice Struct used to define a parameter for off-chain Database Handler deferral.
-     * @param name The variable name of the parameter.
-     * @param value The string encoded value representation of the parameter.
-     */
-    struct parameter {
-        string name;
-        string value;
     }
 
     /*//////////////////////////////////////////////////////////////

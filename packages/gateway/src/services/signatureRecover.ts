@@ -13,14 +13,9 @@ export class SignatureRecover {
       message,
       types: {
         Message: [
-          { name: 'functionSelector', type: 'bytes4' },
+          { name: 'callData', type: 'bytes' },
           { name: 'sender', type: 'address' },
-          { name: 'parameters', type: 'Parameter[]' },
           { name: 'expirationTimestamp', type: 'uint256' },
-        ],
-        Parameter: [
-          { name: 'name', type: 'string' },
-          { name: 'value', type: 'string' },
         ],
       },
       primaryType: 'Message',

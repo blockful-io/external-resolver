@@ -8,23 +8,17 @@ import {
   AbiFunction,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { TypedSignature } from '../src/types'
+import { MessageData, TypedSignature } from '../src/types'
 
 export async function signData({
   func,
   sender,
   pvtKey,
-  args,
 }: {
   func: AbiFunction
   sender: `0x${string}`
   pvtKey: `0x${string}`
-  args: unknown[]
 }): Promise<TypedSignature> {
-  const parameters = args.map((arg, i) => ({
-    name: func.inputs[i].name!,
-    value: typeof arg === 'string' ? arg : String(arg),
-  }))
   const signer = privateKeyToAccount(pvtKey)
   const domain = {
     name: 'DatabaseResolver',
@@ -32,10 +26,9 @@ export async function signData({
     chainId: 1,
     verifyingContract: sender,
   }
-  const message = {
-    functionSelector: toFunctionHash(func).slice(0, 10) as `0x${string}`,
+  const message: MessageData = {
+    callData: toFunctionHash(func),
     sender,
-    parameters,
     expirationTimestamp: 9999999n,
   }
   return {
@@ -46,14 +39,9 @@ export async function signData({
       message,
       types: {
         Message: [
-          { name: 'functionSelector', type: 'bytes4' },
+          { name: 'callData', type: 'bytes' },
           { name: 'sender', type: 'address' },
-          { name: 'parameters', type: 'Parameter[]' },
           { name: 'expirationTimestamp', type: 'uint256' },
-        ],
-        Parameter: [
-          { name: 'name', type: 'string' },
-          { name: 'value', type: 'string' },
         ],
       },
       primaryType: 'Message',
@@ -112,7 +100,7 @@ export async function doCall({
     args,
   })
 
-  const signature = pvtKey && (await signData({ pvtKey, func, args, sender }))
+  const signature = pvtKey && (await signData({ pvtKey, func, sender }))
 
   // Make a server call with encoded function data
   const result = await server.call({ to: sender, data: calldata, signature })
