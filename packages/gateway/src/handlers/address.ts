@@ -33,7 +33,7 @@ export function withSetAddr(
         }
         await repo.setAddr({
           node,
-          addr,
+          addr: addr.toLowerCase(),
           coin: '60', // default ether
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
@@ -66,7 +66,7 @@ export function withSetAddrByCoin(
         await repo.setAddr({
           node,
           coin: coin.toString(),
-          addr,
+          addr: addr.toLowerCase(),
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
         })

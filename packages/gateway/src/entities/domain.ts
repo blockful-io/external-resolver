@@ -5,6 +5,7 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm'
 
 import { Address } from './address'
@@ -43,7 +44,8 @@ export class Domain {
   })
   texts: Text[]
 
-  @PrimaryColumn()
+  @Index()
+  @Column()
   owner: `0x${string}`
 
   @Column()
