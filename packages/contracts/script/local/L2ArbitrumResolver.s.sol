@@ -69,12 +69,13 @@ contract L2ArbitrumResolver is Script, ENSHelper {
 
         NameWrapperProxy nameWrapperProxy =
             new NameWrapperProxy(namehash("arb.eth"), address(nameWrapper));
-        nameWrapper.setApprovalForAll(address(nameWrapperProxy), true);
+        nameWrapper.setApprovalForAll(address(nameWrapperProxy), true); // todo investigate
 
         vm.stopBroadcast();
 
         console.log("nameWrapperProxy deployed at", address(nameWrapperProxy));
         console.log("L2Resolver deployed at", address(arbResolver));
+        console.log("registry deployed at", address(registry));
     }
 
 }

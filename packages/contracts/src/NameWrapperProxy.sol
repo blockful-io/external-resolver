@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "forge-std/console.sol";
 
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
+import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 
 import {ENSHelper} from "../script/Helper.sol";
 import {OffchainDomains} from "./interfaces/OffchainDomains.sol";
@@ -24,7 +25,7 @@ contract NameWrapperProxy is OffchainDomains, ENSHelper {
         uint256 duration,
         bytes32, /* secret */
         address resolver,
-        bytes[] calldata, /* data */
+        bytes[] calldata data,
         bool, /* reverseRecord */
         uint16 fuses
     )
@@ -32,22 +33,16 @@ contract NameWrapperProxy is OffchainDomains, ENSHelper {
         payable
         override
     {
-        // (bytes32 labelhash,) = keccak256(name).readLabel(0);
-        // bytes32 parentNode = name.namehash(offset);
-        // bytes32 node = makeNode(baseNode, labelhash);
-
-        // bytes32 node = keccak256("2");
-        // bytes32 subnameNode = keccak256(bytes(name));
-        // console.log("subnameNode");
-        // console.logBytes32(subnameNode);
-        // require(
-        //     nameWrapper.ownerOf(uint256(subnameNode)) == address(0),
-        //     "Subname is not available"
-        // );
-
         nameWrapper.setSubnodeRecord(
-            baseNode, name, owner, resolver, uint64(duration), fuses, 0
+            baseNode, name, owner, resolver, 0, fuses, uint64(duration)
         );
+
+        if (data.length > 0) {
+            bytes32 nodehash =
+                keccak256(abi.encodePacked(baseNode, labelhash(name)));
+            console.logBytes32(nodehash);
+            Resolver(resolver).multicallWithNodeCheck(nodehash, data);
+        }
     }
 
 }
