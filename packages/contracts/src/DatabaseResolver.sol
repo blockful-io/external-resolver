@@ -458,6 +458,14 @@ contract DatabaseResolver is
     //////// PUBLIC WRITE FUNCTIONS ////////
 
     /**
+     * @notice Sets the new graphQL URL and emits a GraphqlUrlSet event
+     * @param newUrl New URL to be set.
+     */
+    function setGraphqlUrl(string memory newUrl) external override onlyOwner {
+        graphqlUrl = newUrl;
+    }
+
+    /**
      * @notice Set the gateway URL.
      * @dev Can only be called by the gateway manager.
      * @param newUrl New gateway URL.
