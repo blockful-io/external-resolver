@@ -47,12 +47,26 @@ export class EthereumClient<chain extends Chain> {
     } catch {
       /** error is expected when it isn't a contract */
     }
+
     return owner
   }
 
+  async getNFTOwner(node: Hex): Promise<Hex> {
+    return this.client.readContract({
+      address: this.registrarAddress,
+      abi: [
+        parseAbiItem('function ownerOf(uint256 id) view returns (address)'),
+      ],
+      functionName: 'ownerOf',
+      args: [fromHex(node, 'bigint')],
+    })
+  }
+
   async verifyOwnership(node: Hex, address: Hex): Promise<boolean> {
-    if (!this.registryAddress) return false
-    return (await this.getOwner(node)) === address
+    return (
+      (await this.getOwner(node)) === address ||
+      (await this.getNFTOwner(node)) === address
+    )
   }
 
   async getResolver(node: Hex): Promise<Hex | undefined> {
