@@ -20,7 +20,7 @@ import {IWriteDeferral} from "./IWriteDeferral.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
-import {OffchainDomains} from "./interfaces/OffchainDomains.sol";
+import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
@@ -28,7 +28,7 @@ contract L1Resolver is
     IERC165,
     IWriteDeferral,
     Ownable,
-    OffchainDomains
+    OffchainResolver
 {
 
     using EVMFetcher for EVMFetcher.EVMFetchRequest;

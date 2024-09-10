@@ -7,9 +7,9 @@ import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 
 import {ENSHelper} from "../script/Helper.sol";
-import {OffchainDomains} from "./interfaces/OffchainDomains.sol";
+import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
 
-contract NameWrapperProxy is OffchainDomains, ENSHelper {
+contract NameWrapperProxy is OffchainResolver, ENSHelper {
 
     bytes32 baseNode;
     INameWrapper nameWrapper;
