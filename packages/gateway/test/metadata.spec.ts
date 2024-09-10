@@ -16,7 +16,7 @@ import {
   assert,
 } from 'vitest'
 import { namehash } from 'viem/ens'
-import { Hex, labelhash } from 'viem'
+import { Hex, labelhash, zeroAddress } from 'viem'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
 import { PostgresRepository } from '../src/repositories'
@@ -88,6 +88,15 @@ describe('Metadata API', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
+      {
+        domain: node,
+        key: '3key',
+        value: '',
+        resolver: '0x2resolver',
+        resolverVersion: '2',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]
     domain.addresses = [
       {
@@ -101,6 +110,24 @@ describe('Metadata API', () => {
       },
       {
         address: '0x2',
+        coin: '60',
+        domain: node,
+        resolver: '0x2resolver',
+        resolverVersion: '2',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        address: '0x',
+        coin: '60',
+        domain: node,
+        resolver: '0x2resolver',
+        resolverVersion: '2',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        address: zeroAddress,
         coin: '60',
         domain: node,
         resolver: '0x2resolver',

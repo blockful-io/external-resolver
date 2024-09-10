@@ -17,6 +17,7 @@ import {
   GetDomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
+import { zeroAddress } from 'viem'
 
 /* The PostgresRepository class provides methods for setting and getting content
 hash, address, and text data in a PostgreSQL database. */
@@ -86,13 +87,15 @@ export class PostgresRepository {
           'domain.addresses',
           Address,
           'addr',
-          'addr.domain = domain.node',
+          `addr.domain = domain.node AND 
+          addr.address != :zeroAddress AND length(addr.address) > 0 AND addr.address != '0x'`,
+          { zeroAddress },
         )
         .leftJoinAndMapMany(
           'domain.texts',
           Text,
           'text',
-          'text.domain = domain.node',
+          'text.domain = domain.node AND length(text.value) > 0',
         )
     }
     return await query.getOne()
@@ -107,13 +110,15 @@ export class PostgresRepository {
         'domain.addresses',
         Address,
         'addr',
-        'addr.domain = domain.node',
+        `addr.domain = domain.node AND 
+         addr.address != :zeroAddress AND length(addr.address) > 0 AND addr.address != '0x'`,
+        { zeroAddress },
       )
       .leftJoinAndMapMany(
         'domain.texts',
         Text,
         'text',
-        'text.domain = domain.node',
+        'text.domain = domain.node AND length(text.value) > 0',
       )
       .getMany()
   }
