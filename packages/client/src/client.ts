@@ -11,6 +11,7 @@ import {
   http,
   Account,
   parseEther,
+  defineChain,
 } from 'viem'
 import * as chains from 'viem/chains'
 
@@ -135,5 +136,21 @@ export async function handleDBStorage({
 }
 
 export function getChain(chainId: number) {
-  return Object.values(chains).find((chain) => chain.id === chainId)
+  return Object.values({
+    ...chains,
+    '': defineChain({
+      id: Number(chainId),
+      name: 'Arbitrum Local',
+      nativeCurrency: {
+        name: 'Arbitrum Sepolia Ether',
+        symbol: 'ETH',
+        decimals: 18,
+      },
+      rpcUrls: {
+        default: {
+          http: ['http://127.0.0.1:8547'],
+        },
+      },
+    }),
+  }).find((chain) => chain.id === chainId)
 }

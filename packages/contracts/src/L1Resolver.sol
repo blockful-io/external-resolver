@@ -94,29 +94,32 @@ contract L1Resolver is
         setTargetRegistrar(_target_registrar);
     }
 
-    //////// OFFCHAIN STORAGE REGISTER DOMAIN ////////
+    //////// OFFCHAIN STORAGE REGISTER SUBDOMAIN ////////
 
     /**
-     * Forwards the registering of a domain to the L2 contracts
-     * @param -name The DNS-encoded name to resolve.
-     * @param -owner Owner of the domain
-     * @param -duration duration The duration in seconds of the registration.
-     * @param -resolver The address of the resolver to set for this name.
-     * @param -data Multicallable data bytes for setting records in the associated resolver upon reigstration.
-     * @param -fuses The fuses to set for this name.
+     * @notice Sets the subdomain owner in the registry with records and then wraps the subdomain
+     * @param -parentNode parent namehash of the subdomain
+     * @param -label label of the subdomain as a string
+     * @param -owner new owner in the wrapper
+     * @param -resolver resolver contract in the registry
+     * @param -ttl ttl in the registry
+     * @param -fuses initial fuses for the wrapped subdomain
+     * @param -expiry When the name will expire in seconds since the Unix epoch
+     * @return node Namehash of the subdomain
      */
-    function register(
-        string calldata, /* name */
-        address, /* owner */
-        uint256, /* duration */
-        bytes32, /* secret */
-        address, /* resolver */
-        bytes[] calldata, /* data */
-        bool, /* reverseRecord */
-        uint16 /* fuses */
+    function setSubnodeRecord(
+        bytes32, /*parentNode */
+        string memory, /*label */
+        address, /*owner */
+        address, /*resolver */
+        uint64, /*ttl */
+        uint32, /*fuses */
+        uint64 /*expiry */
     )
         external
-        payable
+        view
+        override
+        returns (bytes32)
     {
         _offChainStorage(target_registrar);
     }

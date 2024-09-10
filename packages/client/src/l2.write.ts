@@ -8,8 +8,6 @@ import {
   Hash,
   Hex,
   createPublicClient,
-  defineChain,
-  encodeFunctionData,
   getChainContractAddress,
   http,
   namehash,
@@ -47,7 +45,6 @@ const client = createPublicClient({
 // eslint-disable-next-line
 const _ = (async () => {
   const publicAddress = normalize('lucas.arb.eth')
-  const node = namehash(publicAddress)
   const signer = privateKeyToAccount(privateKey as Hex)
 
   if (!resolver) {
@@ -64,68 +61,31 @@ const _ = (async () => {
     args: [toHex(packetToBytes(publicAddress))],
   })) as Hash[]
 
-  const secret = `0x${'a'.repeat(64)}` as Hex
-  const l2Account = privateKeyToAccount(
-    '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659',
-  )
-
-  const data: Hex[] = [
-    encodeFunctionData({
-      functionName: 'setText',
-      abi: l1Abi,
-      args: [node, 'com.twitter', '@blockful.eth'],
-    }),
-    encodeFunctionData({
-      functionName: 'setAddr',
-      abi: l1Abi,
-      args: [node, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
-    }),
-    encodeFunctionData({
-      functionName: 'setAddr',
-      abi: l1Abi,
-      args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
-    }),
-  ]
-  const args = [
-    publicAddress, // name
-    l2Account.address, // owner
-    31556952000n, // duration
-    secret, // secret
-    resolverAddr, // resolver
-    data, // calldata
-    false, // primaryName
-    0, // fuses
-  ]
+  const args = {
+    functionName: 'setSubnodeRecord',
+    abi: l1Abi,
+    args: [
+      namehash('arb.eth'), // parentNode
+      'lucas', // name
+      signer.address, // owner
+      resolverAddr, // resolver
+      600,
+      0, // fuses
+      31556952000n,
+    ],
+    address: resolverAddr,
+    account: signer,
+  }
 
   // REGISTER NEW DOMAIN
   try {
-    await client.simulateContract({
-      functionName: 'register',
-      abi: l1Abi,
-      args,
-      address: resolverAddr,
-      account: signer,
-    })
+    await client.simulateContract(args)
   } catch (err) {
     const data = getRevertErrorData(err)
     if (data?.errorName === 'StorageHandledByL2') {
       const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-      const chain = defineChain({
-        id: Number(chainId),
-        name: 'Arbitrum Local',
-        nativeCurrency: {
-          name: 'Arbitrum Sepolia Ether',
-          symbol: 'ETH',
-          decimals: 18,
-        },
-        rpcUrls: {
-          default: {
-            http: [providerL2],
-          },
-        },
-      })
-      // const chain = getChain(Number(chainId))
+      const chain = getChain(Number(chainId))
       const l2Client = createPublicClient({
         chain,
         transport: http(providerL2),
@@ -133,11 +93,8 @@ const _ = (async () => {
 
       try {
         const { request } = await l2Client.simulateContract({
-          abi: l1Abi,
-          functionName: 'register',
+          ...args,
           address: contractAddress,
-          account: signer,
-          args,
         })
         await l2Client.writeContract(request)
       } catch (err) {
