@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/console.sol";
-
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 
@@ -30,7 +28,6 @@ contract NameWrapperProxy is OffchainResolver, ENSHelper {
         uint16 fuses
     )
         external
-        payable
         override
     {
         nameWrapper.setSubnodeRecord(
@@ -40,7 +37,6 @@ contract NameWrapperProxy is OffchainResolver, ENSHelper {
         if (data.length > 0) {
             bytes32 nodehash =
                 keccak256(abi.encodePacked(baseNode, labelhash(name)));
-            console.logBytes32(nodehash);
             Resolver(resolver).multicallWithNodeCheck(nodehash, data);
         }
     }

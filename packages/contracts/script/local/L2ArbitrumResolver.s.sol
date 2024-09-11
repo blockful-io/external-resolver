@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
 
+import {TextResolver} from "@ens-contracts/resolvers/profiles/TextResolver.sol";
 import {ReverseRegistrar} from
     "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
@@ -21,6 +22,7 @@ import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {ENSHelper} from "../Helper.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
 import {L2RegistrarController} from "../../src/L2RegistrarController.sol";
+import {NameWrapperProxy} from "../../src/NameWrapperProxy.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper {
 
@@ -67,6 +69,7 @@ contract L2ArbitrumResolver is Script, ENSHelper {
             baseRegistrar, priceOracle, reverseRegistrar, nameWrapper, registry
         );
         nameWrapper.setController(address(registrarController), true);
+        nameWrapper.setController(msg.sender, true);
 
         L2Resolver arbResolver =
             new L2Resolver(registry, address(registrarController), nameWrapper);
@@ -74,13 +77,29 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         reverseRegistrar.setDefaultResolver(address(arbResolver));
 
         // arb.eth
-        registrarController.register{value: 6 gwei}(
-            "arb",
+        nameWrapper.registerAndWrapETH2LD(
+            "arb", msg.sender, 31556952000, address(arbResolver), 1
+        );
+
+        NameWrapperProxy nameWrapperProxy =
+            new NameWrapperProxy(namehash("arb.eth"), address(nameWrapper));
+        nameWrapper.setApprovalForAll(address(nameWrapperProxy), true);
+        arbResolver.setApprovalForAll(address(nameWrapperProxy), true);
+
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodeWithSelector(
+            TextResolver.setText.selector,
+            namehash("blockful.arb.eth"),
+            "com.twitter",
+            "@blockfu"
+        );
+        nameWrapperProxy.register(
+            "blockful",
             msg.sender,
             31556952000,
             keccak256("secret"),
             address(arbResolver),
-            new bytes[](0),
+            data,
             false,
             0
         );
@@ -90,6 +109,7 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         console.log("Registry deployed at", address(registry));
         console.log("NameWrapper deployed at", address(nameWrapper));
         console.log("L2Resolver deployed at", address(arbResolver));
+        console.log("NameWrapperProxy deployed at", address(nameWrapperProxy));
     }
 
 }

@@ -8,6 +8,7 @@ import {
   Hash,
   Hex,
   createPublicClient,
+  encodeFunctionData,
   getChainContractAddress,
   http,
   namehash,
@@ -27,6 +28,7 @@ config({
 
 let {
   UNIVERSAL_RESOLVER_ADDRESS: resolver,
+  L2_RESOLVER_ADDRESS: l2Resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   LAYER2_RPC: providerL2 = 'http://127.0.0.1:8547',
@@ -44,7 +46,12 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
+  if (!l2Resolver) {
+    throw new Error('L2_RESOLVER_ADDRESS is required')
+  }
+
   const publicAddress = normalize('lucas.arb.eth')
+  const node = namehash(publicAddress)
   const signer = privateKeyToAccount(privateKey as Hex)
 
   if (!resolver) {
@@ -61,25 +68,44 @@ const _ = (async () => {
     args: [toHex(packetToBytes(publicAddress))],
   })) as Hash[]
 
-  const args = {
-    functionName: 'setSubnodeRecord',
+  const data: Hex[] = [
+    encodeFunctionData({
+      functionName: 'setText',
+      abi: l1Abi,
+      args: [node, 'com.twitter', '@lucas'],
+    }),
+    encodeFunctionData({
+      functionName: 'setAddr',
+      abi: l1Abi,
+      args: [node, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
+    }),
+    encodeFunctionData({
+      functionName: 'setAddr',
+      abi: l1Abi,
+      args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
+    }),
+  ]
+
+  const calldata = {
+    functionName: 'register',
     abi: l1Abi,
     args: [
-      namehash('arb.eth'), // parentNode
       'lucas', // name
       signer.address, // owner
-      resolverAddr, // resolver
-      600,
+      31556952000n, // duration
+      `0x${'a'.repeat(64)}` as Hex, // secret
+      l2Resolver, // resolver
+      data, // calldata
+      false, // primaryName
       0, // fuses
-      31556952000n,
     ],
     address: resolverAddr,
     account: signer,
   }
 
-  // REGISTER NEW DOMAIN
+  // REGISTER NEW SUBDOMAIN
   try {
-    await client.simulateContract(args)
+    await client.simulateContract(calldata)
   } catch (err) {
     const data = getRevertErrorData(err)
     if (data?.errorName === 'StorageHandledByL2') {
@@ -93,7 +119,7 @@ const _ = (async () => {
 
       try {
         const { request } = await l2Client.simulateContract({
-          ...args,
+          ...calldata,
           address: contractAddress,
         })
         await l2Client.writeContract(request)

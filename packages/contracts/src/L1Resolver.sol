@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/console.sol";
-
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IExtendedResolver} from
     "@ens-contracts/resolvers/profiles/IExtendedResolver.sol";
@@ -97,29 +95,26 @@ contract L1Resolver is
     //////// OFFCHAIN STORAGE REGISTER SUBDOMAIN ////////
 
     /**
-     * @notice Sets the subdomain owner in the registry with records and then wraps the subdomain
-     * @param -parentNode parent namehash of the subdomain
-     * @param -label label of the subdomain as a string
-     * @param -owner new owner in the wrapper
-     * @param -resolver resolver contract in the registry
-     * @param -ttl ttl in the registry
-     * @param -fuses initial fuses for the wrapped subdomain
-     * @param -expiry When the name will expire in seconds since the Unix epoch
-     * @return node Namehash of the subdomain
+     * Forwards the registering of a subdomain to the L2 contracts
+     * @param -name The DNS-encoded name to resolve.
+     * @param -owner Owner of the domain
+     * @param -duration duration The duration in seconds of the registration.
+     * @param -resolver The address of the resolver to set for this name.
+     * @param -data Multicallable data bytes for setting records in the associated resolver upon reigstration.
+     * @param -fuses The fuses to set for this name.
      */
-    function setSubnodeRecord(
-        bytes32, /*parentNode */
-        string memory, /*label */
-        address, /*owner */
-        address, /*resolver */
-        uint64, /*ttl */
-        uint32, /*fuses */
-        uint64 /*expiry */
+    function register(
+        string calldata, /* name */
+        address, /* owner */
+        uint256, /* duration */
+        bytes32, /* secret */
+        address, /* resolver */
+        bytes[] calldata, /* data */
+        bool, /* reverseRecord */
+        uint16 /* fuses */
     )
         external
         view
-        override
-        returns (bytes32)
     {
         _offChainStorage(target_registrar);
     }
@@ -170,13 +165,7 @@ contract L1Resolver is
      * @param -name The DNS encoded node to update.
      * @param -a The address to set.
      */
-    function setAddr(
-        bytes calldata, /* name */
-        address /* a */
-    )
-        external
-        view
-    {
+    function setAddr(bytes32, /* name */ address /* a */ ) external view {
         _offChainStorage(target_resolver);
     }
 
@@ -209,7 +198,7 @@ contract L1Resolver is
      * @param -a The address to set.
      */
     function setAddr(
-        bytes calldata, /* name */
+        bytes32, /* name */
         uint256, /* coinType */
         bytes memory /* a */
     )
@@ -255,7 +244,7 @@ contract L1Resolver is
      * @param -value The text data value to set.
      */
     function setText(
-        bytes calldata, /* name */
+        bytes32, /* name */
         string calldata, /* key */
         string calldata /* value */
     )
@@ -284,11 +273,9 @@ contract L1Resolver is
         bytes memory
     )
         public
-        view
+        pure
         returns (bytes memory)
     {
-        console.log(string(values[0]));
-        console.log(string(values[1]));
         return abi.encode(string(values[1]));
     }
 
@@ -301,7 +288,7 @@ contract L1Resolver is
      * @param -hash The contenthash to set
      */
     function setContenthash(
-        bytes calldata, /* name */
+        bytes32, /* name */
         bytes calldata /* hash */
     )
         external
@@ -341,6 +328,7 @@ contract L1Resolver is
 
     function supportsInterface(bytes4 interfaceID) public pure returns (bool) {
         return interfaceID == type(IExtendedResolver).interfaceId
+            || interfaceID == type(IWriteDeferral).interfaceId
             || interfaceID == type(IERC165).interfaceId
             || interfaceID == type(EVMFetchTarget).interfaceId;
     }
