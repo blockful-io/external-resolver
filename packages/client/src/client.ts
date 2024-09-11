@@ -3,13 +3,7 @@ import {
   RawContractError,
   Hex,
   Address,
-  Abi,
-  createPublicClient,
   PrivateKeyAccount,
-  walletActions,
-  http,
-  Account,
-  parseEther,
   defineChain,
 } from 'viem'
 import * as chains from 'viem/chains'
@@ -19,7 +13,6 @@ import {
   MessageData,
   TypedSignature,
 } from '@blockful/gateway/src/types'
-import { abi as registerAbi } from '@blockful/contracts/out/OffchainResolver.sol/OffchainResolver.json'
 
 export function getRevertErrorData(err: unknown) {
   if (!(err instanceof BaseError)) return undefined
@@ -45,41 +38,6 @@ export async function ccipRequest({
       'Content-Type': 'application/json',
     },
   })
-}
-
-export async function handleL2Storage({
-  chainId,
-  l2Url,
-  args,
-}: {
-  chainId: bigint
-  l2Url: string
-  args: {
-    abi: Abi | unknown[]
-    address: Address
-    account: Account
-    functionName: string
-    args: unknown[]
-  }
-}) {
-  const chain = getChain(Number(chainId))
-
-  const l2Client = createPublicClient({
-    chain,
-    transport: http(l2Url),
-  }).extend(walletActions)
-
-  try {
-    const { request } = await l2Client.simulateContract({
-      ...args,
-      abi: registerAbi,
-      functionName: 'register',
-      value: parseEther('0.01'),
-    })
-    await l2Client.writeContract(request)
-  } catch (err) {
-    console.log('error while trying to make the request: ', { err })
-  }
 }
 
 export async function handleDBStorage({
