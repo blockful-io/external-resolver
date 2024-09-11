@@ -14,7 +14,7 @@ export const abi: string[] = [
   'function setPubkey(bytes32 node,bytes32 x, bytes32 y)',
   'function pubkey(bytes32 node) external view returns (bytes32 x, bytes32 y)',
   'function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory) external view returns(bytes memory witness)',
-  'function register(bytes memory name, uint32 ttl, address owner)',
+  'function register(bytes memory name, uint32 ttl, address owner, bytes[] calldata data)',
   'function transfer(bytes32 node, address owner)',
   'function multicall(bytes[] calldata data) external returns (bytes[] memory results)',
 ]

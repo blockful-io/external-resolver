@@ -5,7 +5,6 @@ import {
   Address,
   Abi,
   createPublicClient,
-  encodeFunctionData,
   PrivateKeyAccount,
   walletActions,
   http,
@@ -20,8 +19,7 @@ import {
   MessageData,
   TypedSignature,
 } from '@blockful/gateway/src/types'
-import { abi as dbABI } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
-import { abi as registerAbi } from '@blockful/contracts/out/ETHRegistrarController.sol/ETHRegistrarController.json'
+import { abi as registerAbi } from '@blockful/contracts/out/OffchainResolver.sol/OffchainResolver.json'
 
 export function getRevertErrorData(err: unknown) {
   if (!(err instanceof BaseError)) return undefined
@@ -89,45 +87,27 @@ export async function handleDBStorage({
   url,
   message,
   signer,
-  multicall,
 }: {
   domain: DomainData
   url: string
   message: MessageData
   signer: PrivateKeyAccount
-  multicall?: boolean
 }) {
   const signature = await signer.signTypedData({
     domain,
     message,
     types: {
       Message: [
-        { name: 'functionSelector', type: 'bytes4' },
+        { name: 'callData', type: 'bytes' },
         { name: 'sender', type: 'address' },
-        { name: 'parameters', type: 'Parameter[]' },
         { name: 'expirationTimestamp', type: 'uint256' },
-      ],
-      Parameter: [
-        { name: 'name', type: 'string' },
-        { name: 'value', type: 'string' },
       ],
     },
     primaryType: 'Message',
   })
-
-  let callData
-  if (multicall) {
-    callData = message.parameters[0].value as `0x${string}`
-  } else {
-    callData = encodeFunctionData({
-      abi: dbABI,
-      functionName: message.functionSelector,
-      args: message.parameters.map((arg) => arg.value),
-    })
-  }
   return await ccipRequest({
     body: {
-      data: callData,
+      data: message.callData,
       signature: { message, domain, signature },
       sender: message.sender,
     },

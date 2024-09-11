@@ -24,26 +24,14 @@ export type DomainData = {
 }
 
 /**
- * @notice Struct used to define a parameter for off-chain Database Handler deferral.
- * @param name The variable name of the parameter.
- * @param value The string encoded value representation of the parameter.
- */
-export type Parameter = {
-  name: string
-  value: string
-}
-
-/**
  * @notice Struct used to define the message context used to construct a typed data signature, defined in EIP-712,
  * to authorize and define the deferred mutation being performed.
- * @param functionSelector The function selector of the corresponding mutation.
+ * @param callData The encoded function to be called
  * @param sender The address of the user performing the mutation (msg.sender).
- * @param parameter[] A list of <key, value> pairs defining the inputs used to perform the deferred mutation.
  */
 export type MessageData = {
-  functionSelector: `0x${string}`
+  callData: `0x${string}`
   sender: `0x${string}`
-  parameters: Parameter[]
   expirationTimestamp: bigint
 }
 

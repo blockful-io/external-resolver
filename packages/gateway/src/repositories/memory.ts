@@ -11,6 +11,7 @@ import {
   GetPubkeyResponse,
   SetPubkeyProps,
   NodeProps,
+  GetDomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
 
@@ -67,6 +68,8 @@ export class InMemoryRepository {
     owner,
     resolver,
     resolverVersion,
+    addresses,
+    texts,
   }: RegisterDomainProps) {
     this.domains.set(node, {
       name,
@@ -81,6 +84,26 @@ export class InMemoryRepository {
       createdAt: new Date(),
       updatedAt: new Date(),
     })
+    if (addresses.length > 0) {
+      addresses.forEach((addr) => {
+        this.addresses.set(`${node}-${addr.coin}`, {
+          ...addr,
+          coin: addr.coin.toString(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+      })
+    }
+
+    if (texts.length > 0) {
+      texts.forEach((text) => {
+        this.texts.set(`${node}-${text.key}`, {
+          ...text,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+      })
+    }
   }
 
   async transfer({ node, owner }: TransferDomainProps) {
@@ -94,8 +117,34 @@ export class InMemoryRepository {
     })
   }
 
-  async getDomain({ node }: NodeProps): Promise<Domain | null> {
-    return this.domains.get(node) || null
+  async getDomain({
+    node,
+    includeRelations = false,
+  }: GetDomainProps): Promise<Domain | null> {
+    const dbNode = this.domains.get(node)
+    if (!dbNode) return null
+    if (!includeRelations) return dbNode
+
+    const addresses = await this.getAddresses({ node })
+    const texts = await this.getTexts({ node })
+
+    return {
+      ...dbNode,
+      addresses,
+      texts,
+    }
+  }
+
+  async getAddresses({ node }: NodeProps): Promise<Address[]> {
+    return Array.from(this.addresses.values()).filter(
+      (addr) => addr.domain === node,
+    )
+  }
+
+  async getTexts({ node }: NodeProps): Promise<Text[]> {
+    return Array.from(this.texts.values()).filter(
+      (text) => text.domain === node,
+    )
   }
 
   async setContentHash({ node, contenthash }: SetContentHashProps) {

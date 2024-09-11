@@ -62,32 +62,7 @@ const _ = (async () => {
     args: [toHex(packetToBytes(name))],
   })) as Hash[]
 
-  // REGISTER NEW DOMAIN
-  try {
-    await client.simulateContract({
-      functionName: 'register',
-      abi: dbAbi,
-      args: [toHex(name), 300, signer.address],
-      account: signer.address,
-      address: resolverAddr,
-    })
-  } catch (err) {
-    const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [domain, url, message] = data.args as [
-        DomainData,
-        string,
-        MessageData,
-      ]
-      await handleDBStorage({ domain, url, message, signer })
-    } else {
-      console.error('writing failed: ', { err })
-    }
-  }
-
-  // WRITING CALLS IN BATCH
-
-  const calls: Hash[] = [
+  const data: Hash[] = [
     encodeFunctionData({
       functionName: 'setText',
       abi: dbAbi,
@@ -105,11 +80,12 @@ const _ = (async () => {
     }),
   ]
 
+  // REGISTER NEW DOMAIN
   try {
     await client.simulateContract({
-      functionName: 'multicall',
+      functionName: 'register',
       abi: dbAbi,
-      args: [calls],
+      args: [toHex(name), 300, signer.address, data],
       account: signer.address,
       address: resolverAddr,
     })
@@ -121,7 +97,7 @@ const _ = (async () => {
         string,
         MessageData,
       ]
-      await handleDBStorage({ domain, url, message, signer, multicall: true })
+      await handleDBStorage({ domain, url, message, signer })
     } else {
       console.error('writing failed: ', { err })
     }

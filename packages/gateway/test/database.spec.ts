@@ -6,9 +6,17 @@
  */
 import 'reflect-metadata'
 import { DataSource } from 'typeorm'
-import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest'
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterEach,
+  beforeEach,
+  assert,
+} from 'vitest'
 import * as ccip from '@blockful/ccip-server'
-import { Hex, pad, toHex } from 'viem'
+import { Hex, encodeFunctionData, pad, parseAbi, toHex } from 'viem'
 import { namehash } from 'viem/ens'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
@@ -78,17 +86,17 @@ describe('Gateway Database', () => {
           sender: TEST_ADDRESS,
           method: 'register',
           pvtKey,
-          args: [toHex(name), 300, owner],
+          args: [toHex(name), 300, owner, []],
         })
 
         const d = await datasource.getRepository(Domain).findOneBy({
           node,
           owner,
         })
-        expect(d).not.toBeNull()
-        expect(d!.name).toEqual(name)
-        expect(d!.parent).toEqual(namehash('eth'))
-        expect(d!.ttl).toEqual(300)
+        assert(d !== null)
+        expect(d.name).toEqual(name)
+        expect(d.parent).toEqual(namehash('eth'))
+        expect(d.ttl).toEqual(300)
       })
 
       // Register a domain 'public.eth' with a given TTL, then attempt to register the same domain with a different TTL
@@ -113,7 +121,7 @@ describe('Gateway Database', () => {
           sender: TEST_ADDRESS,
           method: 'register',
           pvtKey,
-          args: [toHex(domain.name), 400, owner],
+          args: [toHex(domain.name), 400, owner, []],
         })
 
         expect(result.data.length).toEqual(0)
@@ -124,6 +132,69 @@ describe('Gateway Database', () => {
           owner,
         })
         expect(d).toEqual(1)
+      })
+
+      it('should create new domain with records', async () => {
+        const pvtKey = generatePrivateKey()
+        const owner = privateKeyToAddress(pvtKey)
+        const name = 'blockful.eth'
+        const node = namehash(name)
+        const server = new ccip.Server()
+        server.add(abi, withRegisterDomain(repo))
+        const calldata = [
+          encodeFunctionData({
+            abi: parseAbi(abi),
+            functionName: 'setText',
+            args: [node, 'com.twitter', '@blockful.eth'],
+          }),
+          encodeFunctionData({
+            functionName: 'setAddr',
+            abi: parseAbi(abi),
+            args: [node, '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0'],
+          }),
+          encodeFunctionData({
+            functionName: 'setAddr',
+            abi: parseAbi(abi),
+            args: [node, 1n, '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2'],
+          }),
+        ]
+        await doCall({
+          server,
+          abi,
+          sender: TEST_ADDRESS,
+          method: 'register',
+          pvtKey,
+          args: [toHex(name), 300, owner, calldata],
+        })
+
+        const actual = await datasource.getRepository(Domain).findOneBy({
+          node,
+          owner,
+        })
+        assert(actual !== null)
+        expect(actual.name).toEqual(name)
+        expect(actual.parent).toEqual(namehash('eth'))
+        expect(actual.ttl).toEqual(300)
+
+        const actualText = await datasource.getRepository(Text).existsBy({
+          domain: node,
+          key: 'com.twitter',
+        })
+        expect(actualText).toBe(true)
+        const actualAddress = await datasource.getRepository(Address).existsBy({
+          domain: node,
+          address: '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0',
+          coin: '60',
+        })
+        expect(actualAddress).toBe(true)
+        const actualAddressWithCoin = await datasource
+          .getRepository(Address)
+          .existsBy({
+            domain: node,
+            address: '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2',
+            coin: '1',
+          })
+        expect(actualAddressWithCoin).toBe(true)
       })
     })
 
@@ -226,9 +297,9 @@ describe('Gateway Database', () => {
           node: domain.node,
           contenthash,
         })
-        expect(d).not.toBeNull()
-        expect(d?.node).toEqual(domain.node)
-        expect(d?.contenthash).toEqual(contenthash)
+        assert(d !== null)
+        expect(d.node).toEqual(domain.node)
+        expect(d.contenthash).toEqual(contenthash)
       })
 
       // Register a domain 'public.eth' with a content hash, then query for it

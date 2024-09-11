@@ -17,6 +17,7 @@ import {
   GetDomainProps,
 } from '../types'
 import { Address, Text, Domain } from '../entities'
+import { zeroAddress } from 'viem'
 
 /* The PostgresRepository class provides methods for setting and getting content
 hash, address, and text data in a PostgreSQL database. */
@@ -44,24 +45,27 @@ export class PostgresRepository {
     owner,
     resolver,
     resolverVersion,
+    addresses,
+    texts,
   }: RegisterDomainProps) {
-    await this.client.getRepository(Domain).upsert(
-      [
-        {
-          name,
-          node,
-          parent,
-          ttl,
-          owner,
-          resolver,
-          resolverVersion,
-        },
-      ],
-      {
-        conflictPaths: ['node', 'owner'],
-        skipUpdateIfNoValuesChanged: true,
-      },
-    )
+    await this.client.getRepository(Domain).insert({
+      name,
+      node,
+      parent,
+      ttl,
+      owner,
+      resolver,
+      resolverVersion,
+    })
+
+    // TODO: Find a way to insert the relations in a single query relying on cascade
+    if (addresses) {
+      await this.client.getRepository(Address).insert(addresses)
+    }
+
+    if (texts) {
+      await this.client.getRepository(Text).insert(texts)
+    }
   }
 
   async transfer({ node, owner }: TransferDomainProps) {
@@ -70,26 +74,28 @@ export class PostgresRepository {
 
   async getDomain({
     node,
-    includeRelations: includeEntities = false,
+    includeRelations = false,
   }: GetDomainProps): Promise<Domain | null> {
     const query = this.client
       .getRepository(Domain)
       .createQueryBuilder('domain')
       .where('domain.node = :node', { node })
 
-    if (includeEntities) {
+    if (includeRelations) {
       query
         .leftJoinAndMapMany(
           'domain.addresses',
           Address,
           'addr',
-          'addr.domain = domain.node',
+          `addr.domain = domain.node AND 
+          addr.address != :zeroAddress AND length(addr.address) > 0 AND addr.address != '0x'`,
+          { zeroAddress },
         )
         .leftJoinAndMapMany(
           'domain.texts',
           Text,
           'text',
-          'text.domain = domain.node',
+          'text.domain = domain.node AND length(text.value) > 0',
         )
     }
     return await query.getOne()
@@ -104,13 +110,15 @@ export class PostgresRepository {
         'domain.addresses',
         Address,
         'addr',
-        'addr.domain = domain.node',
+        `addr.domain = domain.node AND 
+         addr.address != :zeroAddress AND length(addr.address) > 0 AND addr.address != '0x'`,
+        { zeroAddress },
       )
       .leftJoinAndMapMany(
         'domain.texts',
         Text,
         'text',
-        'text.domain = domain.node',
+        'text.domain = domain.node AND length(text.value) > 0',
       )
       .getMany()
   }

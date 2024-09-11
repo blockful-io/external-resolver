@@ -11,7 +11,11 @@ import {
   TypedSignature,
   TransferDomainProps,
 } from '../types'
-import { formatTTL } from '../services'
+import {
+  formatTTL,
+  parseEncodedAddressCalls,
+  parseEncodedTextCalls,
+} from '../services'
 import { Domain } from '../entities'
 
 interface WriteRepository {
@@ -29,9 +33,9 @@ export function withRegisterDomain(
   repo: WriteRepository & ReadRepository,
 ): ccip.HandlerDescription {
   return {
-    type: 'register(bytes memory name, uint32 ttl, address owner)',
+    type: 'register(bytes memory name, uint32 ttl, address owner, bytes[] calldata data)',
     func: async (
-      { name, ttl, owner },
+      { name, ttl, owner, data },
       { signature }: { signature: TypedSignature },
     ) => {
       try {
@@ -46,6 +50,9 @@ export function withRegisterDomain(
         const [, parent] = /\w*\.(.*)$/.exec(name) || []
         const parentHash = namehash(parent)
 
+        const addresses = parseEncodedAddressCalls(data, signature)
+        const texts = parseEncodedTextCalls(data, signature)
+
         await repo.register({
           name,
           node,
@@ -54,6 +61,8 @@ export function withRegisterDomain(
           parent: parentHash,
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
+          addresses,
+          texts,
         })
       } catch (err) {
         return {
