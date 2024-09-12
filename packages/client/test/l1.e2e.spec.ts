@@ -11,7 +11,7 @@
 import {
   abi as abiL2Resolver,
   bytecode as bytecodeL2Resolver,
-} from '@blockful/contracts/out/L2Resolver.sol/L2Resolver.json'
+} from '@blockful/contracts/out/PublicResolver.sol/PublicResolver.json'
 import {
   abi as abiL1Resolver,
   bytecode as bytecodeL1Resolver,
@@ -258,7 +258,9 @@ describe('L1Resolver', () => {
   it('should read ETH address', async () => {
     await l2Resolver.write.setAddr(
       [node, '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
-      { account },
+      {
+        account,
+      },
     )
     const addr = await client.getEnsAddress({
       name: normalize(rawNode),

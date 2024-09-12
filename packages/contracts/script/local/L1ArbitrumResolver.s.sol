@@ -17,7 +17,6 @@ import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {ENSHelper} from "../Helper.sol";
 import {L1Verifier} from "@evmgateway/L1Verifier.sol";
 import {ArbitrumVerifier} from "../../src/ArbitrumVerifier.sol";
-import {L2Resolver} from "../../src/L2Resolver.sol";
 import {L1Resolver} from "../../src/L1Resolver.sol";
 import {L1ArbitrumConfig} from "../config/L1ArbitrumConfig.s.sol";
 
@@ -36,18 +35,17 @@ contract L1ArbitrumResolverScript is Script, ENSHelper {
         string[] memory urls = new string[](1);
         urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
 
+        string memory metadataUrl = "https://localhost:3000";
+
         vm.startBroadcast();
 
         ArbitrumVerifier verifier = new ArbitrumVerifier(urls, rollup);
-        L1Resolver l1resolver =
-            new L1Resolver(targetChainId, l2Resolver, l2Registrar, verifier);
-
-        console.log("L1Resolver deployed at", address(l1resolver));
+        L1Resolver l1resolver = new L1Resolver(
+            targetChainId, l2Resolver, l2Registrar, verifier, metadataUrl
+        );
 
         // .eth
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), msg.sender, address(0x123), 1000000
-        );
+        registry.setSubnodeOwner(rootNode, labelhash("eth"), msg.sender);
         // arb.eth
         registry.setSubnodeRecord(
             namehash("eth"),
@@ -58,6 +56,8 @@ contract L1ArbitrumResolverScript is Script, ENSHelper {
         );
 
         vm.stopBroadcast();
+
+        console.log("L1Resolver deployed at", address(l1resolver));
     }
 
 }

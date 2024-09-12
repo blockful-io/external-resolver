@@ -14,6 +14,7 @@ import {IContentHashResolver} from
     "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
+import {ENSIP16} from "./ENSIP16.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
@@ -26,7 +27,8 @@ contract L1Resolver is
     IERC165,
     IWriteDeferral,
     Ownable,
-    OffchainResolver
+    OffchainResolver,
+    ENSIP16
 {
 
     using EVMFetcher for EVMFetcher.EVMFetchRequest;
@@ -73,8 +75,11 @@ contract L1Resolver is
         uint256 _chainId,
         address _target_resolver,
         address _target_registrar,
-        IEVMVerifier _verifier
-    ) {
+        IEVMVerifier _verifier,
+        string memory _metadataUrl
+    )
+        ENSIP16(_metadataUrl)
+    {
         require(
             address(_verifier) != address(0), "Verifier address must be set"
         );
@@ -326,14 +331,28 @@ contract L1Resolver is
 
     //////// ENS ERC-165 ////////
 
-    function supportsInterface(bytes4 interfaceID) public pure returns (bool) {
+    function supportsInterface(bytes4 interfaceID)
+        public
+        view
+        override(ENSIP16, IERC165)
+        returns (bool)
+    {
         return interfaceID == type(IExtendedResolver).interfaceId
             || interfaceID == type(IWriteDeferral).interfaceId
             || interfaceID == type(IERC165).interfaceId
-            || interfaceID == type(EVMFetchTarget).interfaceId;
+            || interfaceID == type(EVMFetchTarget).interfaceId
+            || super.supportsInterface(interfaceID);
     }
 
     //////// PUBLIC WRITE FUNCTIONS ////////
+
+    /**
+     * @notice Sets the new metadata URL and emits a MetadataUrlSet event.
+     * @param newUrl New URL to be set.
+     */
+    function setMetadataUrl(string memory newUrl) external override onlyOwner {
+        _setMetadataUrl(newUrl);
+    }
 
     /**
      * Set target address to verify against

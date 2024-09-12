@@ -119,8 +119,8 @@ contract L2ArbitrumResolver is Script, ENSHelper {
 
         console.log("Registry deployed at", address(registry));
         console.log("NameWrapper deployed at", address(nameWrapper));
-        console.log("L2Resolver deployed at", address(arbResolver));
         console.log("NameWrapperProxy deployed at", address(nameWrapperProxy));
+        console.log("L2Resolver deployed at", address(arbResolver));
     }
 
 }

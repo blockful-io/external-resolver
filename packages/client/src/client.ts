@@ -74,9 +74,9 @@ export async function handleDBStorage({
 }
 
 export function getChain(chainId: number) {
-  return Object.values({
-    ...chains,
-    '': defineChain({
+  return [
+    ...Object.values(chains),
+    defineChain({
       id: Number(chainId),
       name: 'Arbitrum Local',
       nativeCurrency: {
@@ -90,5 +90,5 @@ export function getChain(chainId: number) {
         },
       },
     }),
-  }).find((chain) => chain.id === chainId)
+  ].find((chain) => chain.id === chainId)
 }
