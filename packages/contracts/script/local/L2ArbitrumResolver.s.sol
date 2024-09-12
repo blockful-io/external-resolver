@@ -20,9 +20,9 @@ import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 import {StaticMetadataService} from
     "@ens-contracts/wrapper/StaticMetadataService.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
+import {PublicResolver} from "@ens-contracts/resolvers/PublicResolver.sol";
 
 import {ENSHelper} from "../Helper.sol";
-import {L2Resolver} from "../../src/L2Resolver.sol";
 import {NameWrapperProxy} from "../../src/NameWrapperProxy.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper {
@@ -78,8 +78,12 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         nameWrapper.setController(address(registrarController), true);
         nameWrapper.setController(msg.sender, true);
 
-        L2Resolver arbResolver =
-            new L2Resolver(registry, address(registrarController), nameWrapper);
+        PublicResolver arbResolver = new PublicResolver(
+            registry,
+            nameWrapper,
+            address(registrarController),
+            address(reverseRegistrar)
+        );
 
         reverseRegistrar.setDefaultResolver(address(arbResolver));
 

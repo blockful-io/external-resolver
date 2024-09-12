@@ -28,6 +28,7 @@ contract NameWrapperProxy is OffchainResolver, ENSHelper {
         uint16 fuses
     )
         external
+        payable
         override
     {
         nameWrapper.setSubnodeRecord(

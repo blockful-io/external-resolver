@@ -114,7 +114,7 @@ contract L1Resolver is
         uint16 /* fuses */
     )
         external
-        view
+        payable
     {
         _offChainStorage(target_registrar);
     }

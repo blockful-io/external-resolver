@@ -22,6 +22,7 @@ interface OffchainResolver {
         bool, /* reverseRecord */
         uint16 /* fuses */
     )
-        external;
+        external
+        payable;
 
 }
