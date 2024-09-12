@@ -14,10 +14,10 @@ import {IContentHashResolver} from
     "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-import {IWriteDeferral} from "./IWriteDeferral.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
+import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
 import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
 
 contract L1Resolver is

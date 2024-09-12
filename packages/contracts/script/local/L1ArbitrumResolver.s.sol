@@ -16,7 +16,7 @@ import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 
 import {ENSHelper} from "../Helper.sol";
 import {L1Verifier} from "@evmgateway/L1Verifier.sol";
-import {ArbVerifier} from "../../src/ArbVerifier.sol";
+import {ArbitrumVerifier} from "../../src/ArbitrumVerifier.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
 import {L1Resolver} from "../../src/L1Resolver.sol";
 import {L1ArbitrumConfig} from "../config/L1ArbitrumConfig.s.sol";
@@ -38,7 +38,7 @@ contract L1ArbitrumResolverScript is Script, ENSHelper {
 
         vm.startBroadcast();
 
-        ArbVerifier verifier = new ArbVerifier(urls, rollup);
+        ArbitrumVerifier verifier = new ArbitrumVerifier(urls, rollup);
         L1Resolver l1resolver =
             new L1Resolver(targetChainId, l2Resolver, l2Registrar, verifier);
 

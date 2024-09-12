@@ -14,7 +14,7 @@ struct ArbWitnessData {
     bytes rlpEncodedBlock;
 }
 
-contract ArbVerifier is IEVMVerifier {
+contract ArbitrumVerifier is IEVMVerifier {
 
     IRollupCore public immutable rollup;
     string[] _gatewayURLs;

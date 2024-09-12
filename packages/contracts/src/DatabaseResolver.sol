@@ -17,8 +17,8 @@ import {ContentHashResolver} from
     "@ens-contracts/resolvers/profiles/ContentHashResolver.sol";
 
 import {ENSIP16} from "./ENSIP16.sol";
-import {IWriteDeferral} from "./IWriteDeferral.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
+import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 /**

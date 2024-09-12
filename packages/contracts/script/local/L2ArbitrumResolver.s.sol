@@ -13,6 +13,8 @@ import {
     StablePriceOracle,
     AggregatorInterface
 } from "@ens-contracts/ethregistrar/StablePriceOracle.sol";
+import {ETHRegistrarController} from
+    "@ens-contracts/ethregistrar/ETHRegistrarController.sol";
 import {DummyOracle} from "@ens-contracts/ethregistrar/DummyOracle.sol";
 import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 import {StaticMetadataService} from
@@ -21,7 +23,6 @@ import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 
 import {ENSHelper} from "../Helper.sol";
 import {L2Resolver} from "../../src/L2Resolver.sol";
-import {L2RegistrarController} from "../../src/L2RegistrarController.sol";
 import {NameWrapperProxy} from "../../src/NameWrapperProxy.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper {
@@ -65,8 +66,14 @@ contract L2ArbitrumResolver is Script, ENSHelper {
             AggregatorInterface(address(dummyOracle)), rentPrices
         );
 
-        L2RegistrarController registrarController = new L2RegistrarController(
-            baseRegistrar, priceOracle, reverseRegistrar, nameWrapper, registry
+        ETHRegistrarController registrarController = new ETHRegistrarController(
+            baseRegistrar,
+            priceOracle,
+            60,
+            86400,
+            reverseRegistrar,
+            nameWrapper,
+            registry
         );
         nameWrapper.setController(address(registrarController), true);
         nameWrapper.setController(msg.sender, true);
