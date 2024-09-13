@@ -78,10 +78,14 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         nameWrapper.setController(address(registrarController), true);
         nameWrapper.setController(msg.sender, true);
 
+        NameWrapperProxy nameWrapperProxy =
+            new NameWrapperProxy(namehash("arb.eth"), address(nameWrapper));
+        nameWrapper.setApprovalForAll(address(nameWrapperProxy), true);
+
         PublicResolver arbResolver = new PublicResolver(
             registry,
             nameWrapper,
-            address(registrarController),
+            address(nameWrapperProxy),
             address(reverseRegistrar)
         );
 
@@ -91,11 +95,6 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         nameWrapper.registerAndWrapETH2LD(
             "arb", msg.sender, 31556952000, address(arbResolver), 1
         );
-
-        NameWrapperProxy nameWrapperProxy =
-            new NameWrapperProxy(namehash("arb.eth"), address(nameWrapper));
-        nameWrapper.setApprovalForAll(address(nameWrapperProxy), true);
-        arbResolver.setApprovalForAll(address(nameWrapperProxy), true);
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeWithSelector(
