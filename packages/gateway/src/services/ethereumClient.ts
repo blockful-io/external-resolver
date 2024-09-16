@@ -5,6 +5,7 @@ import {
   fromHex,
   parseAbiItem,
   Hex,
+  zeroAddress,
 } from 'viem'
 
 export class EthereumClient<chain extends Chain> {
@@ -52,14 +53,18 @@ export class EthereumClient<chain extends Chain> {
   }
 
   async getNFTOwner(node: Hex): Promise<Hex> {
-    return this.client.readContract({
-      address: this.registrarAddress,
-      abi: [
-        parseAbiItem('function ownerOf(uint256 id) view returns (address)'),
-      ],
-      functionName: 'ownerOf',
-      args: [fromHex(node, 'bigint')],
-    })
+    try {
+      return await this.client.readContract({
+        address: this.registrarAddress,
+        abi: [
+          parseAbiItem('function ownerOf(uint256 id) view returns (address)'),
+        ],
+        functionName: 'ownerOf',
+        args: [fromHex(node, 'bigint')],
+      })
+    } catch {
+      return zeroAddress
+    }
   }
 
   async verifyOwnership(node: Hex, address: Hex): Promise<boolean> {
