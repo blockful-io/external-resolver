@@ -33,21 +33,10 @@ contract L1Resolver is
 
     using EVMFetcher for EVMFetcher.EVMFetchRequest;
 
-    //////// EVENTS ////////
-
-    /// @notice Event raised when the registry contract address is changed
-    event L2HandlerRegistrarContractAddressChanged(
-        uint256 indexed chainId,
-        address indexed previousContractAddress,
-        address indexed newContractAddress
-    );
-
     //////// CONTRACT VARIABLE STATE ////////
 
-    // address of the target resolver contract
-    address public target_resolver;
-    // address of the target registry contract
-    address public target_registrar;
+    // address of each target contract
+    mapping(bytes32 => address) public targets;
 
     //////// CONTRACT IMMUTABLE STATE ////////
 
@@ -64,6 +53,10 @@ contract L1Resolver is
     uint256 constant VERSIONABLE_ADDRESSES_SLOT = 2;
     uint256 constant VERSIONABLE_HASHES_SLOT = 3;
     uint256 constant VERSIONABLE_TEXTS_SLOT = 10;
+
+    /// Contract targets
+    bytes32 constant TARGET_RESOLVER = keccak256("resolver");
+    bytes32 constant TARGET_REGISTRAR = keccak256("registrar");
 
     //////// INITIALIZER ////////
 
@@ -93,8 +86,8 @@ contract L1Resolver is
         );
         verifier = _verifier;
         chainId = _chainId;
-        setTargetResolver(_target_resolver);
-        setTargetRegistrar(_target_registrar);
+        setTarget(TARGET_RESOLVER, _target_resolver);
+        setTarget(TARGET_REGISTRAR, _target_registrar);
     }
 
     //////// OFFCHAIN STORAGE REGISTER SUBDOMAIN ////////
@@ -121,7 +114,7 @@ contract L1Resolver is
         external
         payable
     {
-        _offChainStorage(target_registrar);
+        _offChainStorage(targets[TARGET_REGISTRAR]);
     }
 
     //////// ENSIP 10 ////////
@@ -171,11 +164,11 @@ contract L1Resolver is
      * @param -a The address to set.
      */
     function setAddr(bytes32, /* name */ address /* a */ ) external view {
-        _offChainStorage(target_resolver);
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
     function _addr(bytes32 node) private view returns (bytes memory) {
-        EVMFetcher.newFetchRequest(verifier, target_resolver).getStatic(
+        EVMFetcher.newFetchRequest(verifier, targets[TARGET_RESOLVER]).getStatic(
             RECORD_VERSIONS_SLOT
         ).element(node).getDynamic(VERSIONABLE_ADDRESSES_SLOT).ref(0).element(
             node
@@ -210,7 +203,7 @@ contract L1Resolver is
         public
         view
     {
-        _offChainStorage(target_resolver);
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
     function _addr(
@@ -221,7 +214,7 @@ contract L1Resolver is
         view
         returns (bytes memory)
     {
-        EVMFetcher.newFetchRequest(verifier, target_resolver).getStatic(
+        EVMFetcher.newFetchRequest(verifier, targets[TARGET_RESOLVER]).getStatic(
             RECORD_VERSIONS_SLOT
         ).element(node).getDynamic(VERSIONABLE_ADDRESSES_SLOT).ref(0).element(
             node
@@ -256,7 +249,7 @@ contract L1Resolver is
         external
         view
     {
-        _offChainStorage(target_resolver);
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
     function _text(
@@ -267,7 +260,7 @@ contract L1Resolver is
         view
         returns (bytes memory)
     {
-        EVMFetcher.newFetchRequest(verifier, target_resolver).getStatic(
+        EVMFetcher.newFetchRequest(verifier, targets[TARGET_RESOLVER]).getStatic(
             RECORD_VERSIONS_SLOT
         ).element(node).getDynamic(VERSIONABLE_TEXTS_SLOT).ref(0).element(node)
             .element(key).fetch(this.textCallback.selector, "");
@@ -299,11 +292,11 @@ contract L1Resolver is
         external
         view
     {
-        _offChainStorage(target_resolver);
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
     function _contenthash(bytes32 node) private view returns (bytes memory) {
-        EVMFetcher.newFetchRequest(verifier, target_resolver).getStatic(
+        EVMFetcher.newFetchRequest(verifier, targets[TARGET_RESOLVER]).getStatic(
             RECORD_VERSIONS_SLOT
         ).element(node).getDynamic(VERSIONABLE_HASHES_SLOT).ref(0).element(node)
             .fetch(this.contenthashCallback.selector, "");
@@ -351,27 +344,17 @@ contract L1Resolver is
      * @param newUrl New URL to be set.
      */
     function setMetadataUrl(string memory newUrl) external override onlyOwner {
-        _setMetadataUrl(newUrl);
+        super._setMetadataUrl(newUrl);
     }
 
     /**
-     * Set target address to verify against
-     * @param target The L2 resolver address to verify against.
+     * Set target address to redirect request to
+     * @param target The L2 contract address
      */
-    function setTargetResolver(address target) public onlyOwner {
-        address prevAddr = target_resolver;
-        target_resolver = target;
+    function setTarget(bytes32 key, address target) public onlyOwner {
+        address prevAddr = targets[key];
+        targets[key] = target;
         emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
-    }
-
-    /**
-     * Set target address to verify against
-     * @param target The L2 registrar address.
-     */
-    function setTargetRegistrar(address target) public onlyOwner {
-        address prevAddr = target_registrar;
-        target_registrar = target;
-        emit L2HandlerRegistrarContractAddressChanged(chainId, prevAddr, target);
     }
 
 }
