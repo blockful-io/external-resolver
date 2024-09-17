@@ -19,7 +19,9 @@ import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
-import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
+import {
+    OffchainResolver, RegisterParams
+} from "./interfaces/OffchainResolver.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
@@ -53,6 +55,7 @@ contract L1Resolver is
     uint256 constant VERSIONABLE_ADDRESSES_SLOT = 2;
     uint256 constant VERSIONABLE_HASHES_SLOT = 3;
     uint256 constant VERSIONABLE_TEXTS_SLOT = 10;
+    uint256 constant PRICE_SLOT = 0;
 
     /// Contract targets
     bytes32 constant TARGET_RESOLVER = keccak256("resolver");
@@ -115,6 +118,22 @@ contract L1Resolver is
         payable
     {
         _offChainStorage(targets[TARGET_REGISTRAR]);
+    }
+
+    function registerParams() external view override returns (bytes memory) {
+        EVMFetcher.newFetchRequest(verifier, targets[TARGET_REGISTRAR])
+            .getStatic(PRICE_SLOT).fetch(this.registerParamsCallback.selector, ""); // recordVersions
+    }
+
+    function registerParamsCallback(
+        bytes[] memory values,
+        bytes memory
+    )
+        public
+        pure
+        returns (bytes memory)
+    {
+        return values[0];
     }
 
     //////// ENSIP 10 ////////

@@ -78,8 +78,10 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         nameWrapper.setController(address(registrarController), true);
         nameWrapper.setController(msg.sender, true);
 
-        NameWrapperProxy nameWrapperProxy =
-            new NameWrapperProxy(namehash("arb.eth"), address(nameWrapper));
+        uint256 subdomainPrice = 0.001 ether;
+        NameWrapperProxy nameWrapperProxy = new NameWrapperProxy(
+            namehash("arb.eth"), address(nameWrapper), subdomainPrice
+        );
         nameWrapper.setApprovalForAll(address(nameWrapperProxy), true);
 
         PublicResolver arbResolver = new PublicResolver(
@@ -103,7 +105,7 @@ contract L2ArbitrumResolver is Script, ENSHelper {
             "com.twitter",
             "@blockfu"
         );
-        nameWrapperProxy.register(
+        nameWrapperProxy.register{value: nameWrapperProxy.price()}(
             "blockful",
             msg.sender,
             31556952000,

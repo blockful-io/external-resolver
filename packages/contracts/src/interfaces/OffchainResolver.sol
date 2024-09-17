@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+struct RegisterParams {
+    uint256 price;
+}
+
 interface OffchainResolver {
 
     /**
@@ -24,5 +28,7 @@ interface OffchainResolver {
     )
         external
         payable;
+
+    function registerParams() external view returns (bytes memory);
 
 }
