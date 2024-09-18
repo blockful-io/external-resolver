@@ -5,9 +5,7 @@ import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 
 import {ENSHelper} from "../script/Helper.sol";
-import {
-    OffchainResolver, RegisterParams
-} from "./interfaces/OffchainResolver.sol";
+import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
 
 contract NameWrapperProxy is OffchainResolver, ENSHelper {
 
@@ -57,8 +55,16 @@ contract NameWrapperProxy is OffchainResolver, ENSHelper {
         }
     }
 
-    function registerParams() external view override returns (bytes memory) {
-        return abi.encode(RegisterParams(price));
+    function registerParams(
+        bytes memory, /* name */
+        uint256 /* duration */
+    )
+        external
+        view
+        override
+        returns (RegisterParams memory)
+    {
+        return RegisterParams(price);
     }
 
 }

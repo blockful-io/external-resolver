@@ -19,9 +19,7 @@ import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
-import {
-    OffchainResolver, RegisterParams
-} from "./interfaces/OffchainResolver.sol";
+import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
@@ -120,7 +118,21 @@ contract L1Resolver is
         _offChainStorage(targets[TARGET_REGISTRAR]);
     }
 
-    function registerParams() external view override returns (bytes memory) {
+    /**
+     * @notice Returns the registration parameters for a given name and duration
+     * @param -name The DNS-encoded name to query
+     * @param -duration The duration in seconds for the registration
+     * @return RegisterParams struct containing registration parameters
+     */
+    function registerParams(
+        bytes memory, /* name */
+        uint256 /* duration */
+    )
+        external
+        view
+        override
+        returns (RegisterParams memory)
+    {
         EVMFetcher.newFetchRequest(verifier, targets[TARGET_REGISTRAR])
             .getStatic(PRICE_SLOT).fetch(this.registerParamsCallback.selector, ""); // recordVersions
     }
@@ -131,9 +143,9 @@ contract L1Resolver is
     )
         public
         pure
-        returns (bytes memory)
+        returns (RegisterParams memory)
     {
-        return values[0];
+        return abi.decode(values[0], (RegisterParams));
     }
 
     //////// ENSIP 10 ////////

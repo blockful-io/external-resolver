@@ -93,7 +93,7 @@ const _ = (async () => {
 
   server.add(
     abi,
-    withQuery(), // required for Universal Resolver integration
+    withQuery(),
     withGetText(repo),
     withSetText(repo, ownershipValidator),
     withGetAbi(repo),

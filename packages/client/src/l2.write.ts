@@ -8,12 +8,10 @@ import {
   Hash,
   Hex,
   createPublicClient,
-  decodeAbiParameters,
   encodeFunctionData,
   getChainContractAddress,
   http,
   namehash,
-  parseAbiParameter,
   toHex,
   walletActions,
 } from 'viem'
@@ -22,7 +20,7 @@ import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
-import { getRevertErrorData, getChain } from './client'
+import { getRevertErrorData, getChain, RegisterParams } from './client'
 
 config({
   path: process.env.ENV_FILE || '../.env',
@@ -70,22 +68,20 @@ const _ = (async () => {
     args: [toHex(packetToBytes(publicAddress))],
   })) as Hash[]
 
+  const name = extractLabelFromName(publicAddress)
+  const duration = 31556952000n
+
   // SUBDOMAIN PRICING
-  const registerParamsRaw = await client.readContract({
+
+  const registerParams = (await client.readContract({
     address: resolverAddr,
     abi: l1Abi,
     functionName: 'registerParams',
-  })
-  const params = parseAbiParameter([
-    'RegisterParams params',
-    'struct RegisterParams {uint256 price;}',
-  ])
-  const [registerParams] = decodeAbiParameters(
-    [params],
-    registerParamsRaw as Hex,
-  )
+    args: [toHex(name), duration],
+  })) as RegisterParams
 
   // REGISTER NEW SUBDOMAIN
+
   const data: Hex[] = [
     encodeFunctionData({
       functionName: 'setText',
@@ -108,9 +104,9 @@ const _ = (async () => {
     functionName: 'register',
     abi: l1Abi,
     args: [
-      'lucas', // name
+      name,
       signer.address, // owner
-      31556952000n, // duration
+      duration,
       `0x${'a'.repeat(64)}` as Hex, // secret
       l2Resolver, // resolver
       data, // calldata
@@ -150,3 +146,9 @@ const _ = (async () => {
     }
   }
 })()
+
+// gather the first part of the domain (e.g. floripa.blockful.eth -> floripa)
+function extractLabelFromName(name: string): string {
+  const [, label] = /^(\w+)/.exec(name) || []
+  return label
+}

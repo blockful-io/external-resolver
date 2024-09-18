@@ -14,6 +14,10 @@ import {
   TypedSignature,
 } from '@blockful/gateway/src/types'
 
+export interface RegisterParams {
+  price: bigint
+}
+
 export function getRevertErrorData(err: unknown) {
   if (!(err instanceof BaseError)) return undefined
   const error = err.walk() as RawContractError

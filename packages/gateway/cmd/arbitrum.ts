@@ -60,11 +60,7 @@ const _ = (async () => {
   const server = new ccip.Server()
   server.app.use(withLogger({ abi, debug: DEBUG === 'true' }))
 
-  server.add(
-    abi,
-    withQuery(), // required for Universal Resolver integration
-    withGetStorageSlot(proofService),
-  )
+  server.add(abi, withQuery(), withGetStorageSlot(proofService))
 
   server.makeApp('/').listen(port, () => {
     console.log(`Gateway bound to port ${port}.`)
