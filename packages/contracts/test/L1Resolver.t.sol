@@ -28,7 +28,7 @@ import {L1Verifier} from "../src/evmgateway/L1Verifier.sol";
 import {IEVMVerifier} from "../src/evmgateway/IEVMVerifier.sol";
 import {EVMFetcher} from "../src/evmgateway/EVMFetcher.sol";
 import {IWriteDeferral} from "../src/interfaces/IWriteDeferral.sol";
-import {ENSHelper} from "../script/Helper.sol";
+import {ENSHelper} from "../script/ENSHelper.sol";
 
 contract L1ResolverTest is Test, ENSHelper, IWriteDeferral {
 // ENSRegistry registry;

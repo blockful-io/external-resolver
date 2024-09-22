@@ -14,7 +14,7 @@ import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 import {IRollupCore} from "@nitro-contracts/src/rollup/IRollupCore.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 
-import {ENSHelper} from "../Helper.sol";
+import {ENSHelper} from "../ENSHelper.sol";
 import {L1Verifier} from "@evmgateway/L1Verifier.sol";
 import {ArbitrumVerifier} from "../../src/ArbitrumVerifier.sol";
 import {L1Resolver} from "../../src/L1Resolver.sol";

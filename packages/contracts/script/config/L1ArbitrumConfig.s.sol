@@ -8,13 +8,12 @@ import {IRollupCore} from "@nitro-contracts/src/rollup/IRollupCore.sol";
 import {ReverseRegistrar} from
     "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
-import {IBaseRegistrar} from "@ens-contracts/ethregistrar/IBaseRegistrar.sol";
-import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 
-import {ENSHelper} from "../Helper.sol";
+import {ENSHelper} from "../ENSHelper.sol";
+import {DeployHelper} from "../DeployHelper.sol";
 
-contract L1ArbitrumConfig is Script, ENSHelper {
+contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
 
     NetworkConfig public activeNetworkConfig;
 
@@ -37,8 +36,8 @@ contract L1ArbitrumConfig is Script, ENSHelper {
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e),
             rollup: IRollupCore(0x5eF0D09d1E6204141B4d37530808eD19f60FBa35),
             targetChainId: 42161,
-            l2Resolver: vm.envAddress("L2_RESOLVER_ADDRESS"),
-            l2Registrar: vm.envAddress("L2_REGISTRAR_ADDRESS")
+            l2Resolver: getContractAddress("PublicResolver"),
+            l2Registrar: getContractAddress("NameWrapperProxy")
         });
     }
 
@@ -47,8 +46,8 @@ contract L1ArbitrumConfig is Script, ENSHelper {
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e),
             rollup: IRollupCore(0xd80810638dbDF9081b72C1B33c65375e807281C8),
             targetChainId: 421614,
-            l2Resolver: vm.envAddress("L2_RESOLVER_ADDRESS"),
-            l2Registrar: vm.envAddress("L2_REGISTRAR_ADDRESS")
+            l2Resolver: getContractAddress("PublicResolver"),
+            l2Registrar: getContractAddress("NameWrapperProxy")
         });
     }
 
@@ -88,8 +87,10 @@ contract L1ArbitrumConfig is Script, ENSHelper {
             registry: registry,
             rollup: IRollupCore(0x3fC2B5464aD073036fEA6e396eC2Ac0406A3b058),
             targetChainId: 412346,
-            l2Resolver: vm.envAddress("L2_RESOLVER_ADDRESS"),
-            l2Registrar: vm.envAddress("L2_REGISTRAR_ADDRESS")
+            l2Resolver: getContractAddress("PublicResolver", 412346),
+            l2Registrar: getContractAddress(
+                "PublicResolver", "NameWrapperProxy", 412346
+            )
         });
     }
 

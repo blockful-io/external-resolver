@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {Script, console} from "forge-std/Script.sol";
 import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
 
-import {ENSHelper} from "../Helper.sol";
+import {ENSHelper} from "../ENSHelper.sol";
 import {DatabaseConfig} from "../config/DatabaseConfig.s.sol";
 import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 

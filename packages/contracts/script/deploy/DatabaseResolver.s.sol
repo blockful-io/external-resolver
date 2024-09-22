@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Script} from "forge-std/Script.sol";
 
-import {ENSHelper} from "../Helper.sol";
+import {ENSHelper} from "../ENSHelper.sol";
 import {DatabaseConfig} from "../config/DatabaseConfig.s.sol";
 import {DatabaseResolver} from "../../src/DatabaseResolver.sol";
 

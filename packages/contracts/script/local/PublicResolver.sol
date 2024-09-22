@@ -22,7 +22,7 @@ import {StaticMetadataService} from
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {PublicResolver} from "@ens-contracts/resolvers/PublicResolver.sol";
 
-import {ENSHelper} from "../Helper.sol";
+import {ENSHelper} from "../ENSHelper.sol";
 import {NameWrapperProxy} from "../../src/NameWrapperProxy.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper {

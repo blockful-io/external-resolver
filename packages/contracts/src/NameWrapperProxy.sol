@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 
-import {ENSHelper} from "../script/Helper.sol";
+import {ENSHelper} from "../script/ENSHelper.sol";
 import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
 
 contract NameWrapperProxy is OffchainResolver, ENSHelper {

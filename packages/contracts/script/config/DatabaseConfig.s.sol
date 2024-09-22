@@ -13,7 +13,7 @@ import {BaseRegistrarImplementation} from
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 
-import {ENSHelper} from "../Helper.sol";
+import {ENSHelper} from "../ENSHelper.sol";
 
 contract DatabaseConfig is Script, ENSHelper {
 
