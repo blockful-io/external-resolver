@@ -10,6 +10,16 @@ ETHERSCAN_API_KEY?=VEJ7GISNRKFUESRPC4W4D3ZEM2P9B4J6C4
 
 include .env
 
+deploy-arb-resolver-l1:
+	@set -e; \
+	echo "Deploying L1ArbitrumResolver..." && \
+	forge script $(deploy_dir)/L1ArbitrumResolver.sol \
+		--rpc-url sepolia \
+		--broadcast \
+		-vvv \
+		--private-key $(PRIVATE_KEY) \
+		--verify;
+
 deploy-arb-resolver:
 	@set -e; \
 	echo "Deploying L2ArbitrumResolver..." && \
