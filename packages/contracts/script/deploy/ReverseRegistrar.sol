@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {console} from "forge-std/console.sol";
 import {ReverseRegistrar} from
     "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";

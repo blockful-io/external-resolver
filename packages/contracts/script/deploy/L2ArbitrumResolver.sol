@@ -39,9 +39,9 @@ contract L2ArbitrumResolver is Script, ENSHelper, DeployHelper {
 
         reverseRegistrar.setDefaultResolver(address(arbResolver));
 
-        // arbitrum2.eth
+        // arb.eth
         nameWrapper.registerAndWrapETH2LD(
-            "arbitrum2", msg.sender, 31556952000, address(arbResolver), 1
+            "arb", msg.sender, 94670778000, address(arbResolver), 1
         );
 
         vm.stopBroadcast();

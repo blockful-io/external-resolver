@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "forge-std/console.sol";
-
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 interface IENSIP16 {
