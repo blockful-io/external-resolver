@@ -36,8 +36,10 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e),
             rollup: IRollupCore(0x5eF0D09d1E6204141B4d37530808eD19f60FBa35),
             targetChainId: 42161,
-            l2Resolver: getContractAddress("PublicResolver"),
-            l2Registrar: getContractAddress("NameWrapperProxy")
+            l2Resolver: getContractAddress(
+                "L2ArbitrumResolver", "PublicResolver", 42161
+            ),
+            l2Registrar: getContractAddress("NameWrapperProxy", 42161)
         });
     }
 
@@ -46,8 +48,10 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e),
             rollup: IRollupCore(0xd80810638dbDF9081b72C1B33c65375e807281C8),
             targetChainId: 421614,
-            l2Resolver: getContractAddress("PublicResolver"),
-            l2Registrar: getContractAddress("NameWrapperProxy")
+            l2Resolver: getContractAddress(
+                "L2ArbitrumResolver", "PublicResolver", 421614
+            ),
+            l2Registrar: getContractAddress("NameWrapperProxy", 421614)
         });
     }
 
@@ -87,9 +91,11 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
             registry: registry,
             rollup: IRollupCore(0x3fC2B5464aD073036fEA6e396eC2Ac0406A3b058),
             targetChainId: 412346,
-            l2Resolver: getContractAddress("PublicResolver", 412346),
+            l2Resolver: getContractAddress(
+                "L2ArbitrumResolver", "PublicResolver", 412346
+            ),
             l2Registrar: getContractAddress(
-                "PublicResolver", "NameWrapperProxy", 412346
+                "NameWrapperProxy", "NameWrapperProxy", 412346
             )
         });
     }

@@ -31,7 +31,7 @@ let {
   L2_RESOLVER_ADDRESS: l2Resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
-  LAYER2_RPC: providerL2 = 'http://127.0.0.1:8547',
+  L2_RPC_URL: providerL2 = 'http://127.0.0.1:8547',
   PRIVATE_KEY:
     privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
 } = process.env

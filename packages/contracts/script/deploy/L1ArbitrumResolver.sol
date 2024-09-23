@@ -18,7 +18,7 @@ contract L1ArbitrumResolverScript is Script, ENSHelper {
 
     function run() external {
         (
-            ENSRegistry registry,
+            , /* ENSRegistry registry */
             IRollupCore rollup,
             uint256 targetChainId,
             address l2Resolver,
@@ -30,26 +30,15 @@ contract L1ArbitrumResolverScript is Script, ENSHelper {
         console.log("L2Resolver", l2Resolver);
 
         string[] memory urls = new string[](1);
-        urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
+        urls[0] = vm.envString("GATEWAY_URL");
+        string memory metadataUrl = vm.envString("METADATA_URL");
 
-        string memory metadataUrl = "https://localhost:3000";
-
-        vm.startBroadcast();
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(deployerPrivateKey);
 
         ArbitrumVerifier verifier = new ArbitrumVerifier(urls, rollup);
         L1Resolver l1resolver = new L1Resolver(
             targetChainId, l2Resolver, l2Registrar, verifier, metadataUrl
-        );
-
-        // .eth
-        registry.setSubnodeOwner(rootNode, labelhash("eth"), msg.sender);
-        // arb.eth
-        registry.setSubnodeRecord(
-            namehash("eth"),
-            labelhash("arb"),
-            msg.sender,
-            address(l1resolver),
-            100000
         );
 
         vm.stopBroadcast();
