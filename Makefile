@@ -41,7 +41,7 @@ deploy-arb-name-wrapper-proxy:
 		--verify;
 
 	
-CONTRACTS := ENSRegistry ReverseRegistrar BaseRegistrarImplementation NameWrapper ETHRegistrarController NameWrapperProxy L2ArbitrumResolver
+CONTRACTS := ENSRegistry ReverseRegistrar BaseRegistrarImplementation NameWrapper ETHRegistrarController NameWrapperProxy ArbitrumVerifier L2ArbitrumResolver
 deploy-arb-full:
 	@set -e; \
 	$(foreach contract,$(CONTRACTS),\
