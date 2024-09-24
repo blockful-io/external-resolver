@@ -6,7 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
-import {BytesUtils} from "@ens-contracts/dnssec-oracle/BytesUtils.sol";
+import {BytesUtils} from "@ens-contracts/utils/BytesUtils.sol";
 import {HexUtils} from "@ens-contracts/utils/HexUtils.sol";
 import {NameEncoder} from "@ens-contracts/utils/NameEncoder.sol";
 import {IAddrResolver} from

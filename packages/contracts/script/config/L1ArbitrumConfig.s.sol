@@ -95,7 +95,7 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
                 "L2ArbitrumResolver", "PublicResolver", 412346
             ),
             l2Registrar: getContractAddress(
-                "NameWrapperProxy", "NameWrapperProxy", 412346
+                "L2ArbitrumResolver", "NameWrapperProxy", 412346
             )
         });
     }
