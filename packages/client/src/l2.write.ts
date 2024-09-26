@@ -20,7 +20,7 @@ import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
-import { getRevertErrorData, getChain, RegisterParams } from './client'
+import { getRevertErrorData, getChain } from './client'
 
 config({
   path: process.env.ENV_FILE || '../.env',
@@ -73,12 +73,12 @@ const _ = (async () => {
 
   // SUBDOMAIN PRICING
 
-  const registerParams = (await client.readContract({
+  const value = (await client.readContract({
     address: resolverAddr,
     abi: l1Abi,
     functionName: 'registerParams',
     args: [toHex(name), duration],
-  })) as RegisterParams
+  })) as bigint
 
   // REGISTER NEW SUBDOMAIN
 
@@ -115,7 +115,7 @@ const _ = (async () => {
     ],
     address: resolverAddr,
     account: signer,
-    value: registerParams.price,
+    value,
   }
 
   try {

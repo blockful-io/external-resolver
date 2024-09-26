@@ -5,9 +5,9 @@ import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 
 import {ENSHelper} from "../script/ENSHelper.sol";
-import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
+import {OffchainRegister} from "./interfaces/OffchainResolver.sol";
 
-contract NameWrapperProxy is OffchainResolver, ENSHelper {
+contract NameWrapperProxy is OffchainRegister, ENSHelper {
 
     uint256 public price;
     bytes32 public baseNode;
@@ -53,18 +53,6 @@ contract NameWrapperProxy is OffchainResolver, ENSHelper {
         if (data.length > 0) {
             Resolver(resolver).multicallWithNodeCheck(nodehash, data);
         }
-    }
-
-    function registerParams(
-        bytes memory, /* name */
-        uint256 /* duration */
-    )
-        external
-        view
-        override
-        returns (RegisterParams memory)
-    {
-        return RegisterParams(price);
     }
 
 }

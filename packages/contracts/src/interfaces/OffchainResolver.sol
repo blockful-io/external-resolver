@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-interface OffchainResolver {
+interface OffchainRegister {
 
     /**
      * Forwards the registering of a domain to the L2 contracts
@@ -25,18 +25,15 @@ interface OffchainResolver {
         external
         payable;
 
-    /**
-     * @dev Struct to hold registration parameters
-     */
-    struct RegisterParams {
-        uint256 price;
-    }
+}
+
+interface OffchainRegisterParams {
 
     /**
      * @notice Returns the registration parameters for a given name and duration
      * @param name The DNS-encoded name to query
      * @param duration The duration in seconds for the registration
-     * @return RegisterParams struct containing registration parameters
+     * @return price The price of the registration in wei per second
      */
     function registerParams(
         bytes memory name,
@@ -44,6 +41,18 @@ interface OffchainResolver {
     )
         external
         view
-        returns (RegisterParams memory);
+        returns (uint256 price);
+
+}
+
+interface OffchainMulticallable {
+
+    /**
+     * @notice Executes multiple calls in a single transaction.
+     * @param data An array of encoded function call data.
+     */
+    function multicall(bytes[] calldata data)
+        external
+        returns (bytes[] memory);
 
 }

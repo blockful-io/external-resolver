@@ -19,7 +19,11 @@ import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
-import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
+import {
+    OffchainRegister,
+    OffchainMulticallable,
+    OffchainRegisterParams
+} from "./interfaces/OffchainResolver.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
@@ -27,7 +31,9 @@ contract L1Resolver is
     IERC165,
     IWriteDeferral,
     Ownable,
-    OffchainResolver,
+    OffchainRegister,
+    OffchainMulticallable,
+    OffchainRegisterParams,
     ENSIP16
 {
 
@@ -122,7 +128,7 @@ contract L1Resolver is
      * @notice Returns the registration parameters for a given name and duration
      * @param -name The DNS-encoded name to query
      * @param -duration The duration in seconds for the registration
-     * @return RegisterParams struct containing registration parameters
+     * @return price The price of the registration in wei per second
      */
     function registerParams(
         bytes memory, /* name */
@@ -131,7 +137,7 @@ contract L1Resolver is
         external
         view
         override
-        returns (RegisterParams memory)
+        returns (uint256)
     {
         EVMFetcher.newFetchRequest(verifier, targets[TARGET_REGISTRAR])
             .getStatic(PRICE_SLOT).fetch(this.registerParamsCallback.selector, ""); // recordVersions
@@ -143,9 +149,22 @@ contract L1Resolver is
     )
         public
         pure
-        returns (RegisterParams memory)
+        returns (uint256)
     {
-        return abi.decode(values[0], (RegisterParams));
+        return abi.decode(values[0], (uint256));
+    }
+
+    /**
+     * @notice Executes multiple calls in a single transaction.
+     * @param -data An array of encoded function call data.
+     */
+    function multicall(bytes[] calldata /* data */ )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
     //////// ENSIP 10 ////////
