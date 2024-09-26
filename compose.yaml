@@ -41,8 +41,21 @@ services:
       POSTGRES_PASSWORD: ensdomains
       POSTGRES_DB: ensdomains
 
+  db-arb:
+    image: postgres:16.2
+    ports:
+      - '5433:5432'
+    volumes:
+      - arb_db_data:/data/db
+    restart: always
+    environment:
+      POSTGRES_USER: blockful
+      POSTGRES_PASSWORD: ensdomains
+      POSTGRES_DB: ensdomains
+
 networks:
   local:
 
 volumes:
   db_data:
+  arb_db_data:

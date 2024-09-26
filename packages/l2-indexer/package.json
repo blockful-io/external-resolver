@@ -1,0 +1,25 @@
+{
+  "name": "@blockful/l2-indexer",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "rm -rf ./.ponder && ponder dev",
+    "start": "ponder start",
+    "codegen": "ponder codegen",
+    "lint": "eslint . --ext .ts --fix",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@ponder/core": "^0.6.2",
+    "hono": "^4.5.0",
+    "viem": "^2.21.14"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.14"
+  }
+}
