@@ -1,5 +1,3 @@
-# ENSIP - Wildcard writing
-
 ---
 
 > ensip: <TBD>
@@ -14,7 +12,7 @@
 > category: ERC
 > created: 2024-08-14
 > requires: 5559
-> 
+>
 
 ## Abstract
 
@@ -48,29 +46,27 @@ Given that this step relies on the CCIP-Read standard, this interface SHALL only
 The function has the following signature:
 
 ```solidity
-struct RegisterParams {
-    uint256 price;
-    bytes extraData;
-}
-
 function registerParams(
     bytes memory name,
     uint256 duration
 )
     external
     view
-    returns (RegisterParams memory);
+    returns (uint256 price, uint256 commitTime, bytes extraData);
 ```
 
 Parameters:
 
-- `name`: The DNS-encoded name to query
+- `name`: DNS-encoded name to be registered
 - `duration`: The duration in seconds for the registration
 
 Return:
 
 - `price`: the amount of ETH charger per second
+- `commitTime`: the amount of time the commit should wait before being revealed
 - `extraData`: any given structure in an ABI encoded format
+
+Since that CCIP-Read relies on storage direct access, the L2 contract is unable to run any function before sending the data. Therefore, any required logic has to be run on the function callback using the data gathered from the L2.
 
 Sample of callback function used to validate and handle the response returned by the L2 contract:
 
@@ -81,9 +77,9 @@ function registerParamsCallback(
 )
     public
     pure
-    returns (RegisterParams memory)
+    returns (uint256, uint256, bytes)
 {
-    return abi.decode(values[0], (RegisterParams));
+    return abi.decode(values, (uint256, uint256, bytes));
 }
 ```
 
@@ -100,19 +96,21 @@ function register(
     address resolver,
     bytes[] calldata data,
     bool reverseRecord,
-    uint16 fuses
+    uint16 fuses,
+    bytes memory extraData
 ) external payable;
 ```
 
 Parameters:
 
-- `name`: DNS-encoded domain
+- `name`: DNS-encoded name to be registered
 - `owner`: subdomain owner's address
 - `duration`: the duration in miliseconds of the registration
 - `secret`: random seed to be used for commit/reveal
 - `resolver`: the address of the resolver to set for this name.
 - `data`: multicallable data bytes for setting records in the associated resolver upon registration
 - `fuses`: the nameWrapper fuses to set for this name
+- `extraData`: any additional data (e.g. signatures from an external source)
 
 Behavior:
 
@@ -130,13 +128,13 @@ The interface for enabling domain transfers MUST be implemented by both the reso
 The transfer function MUST have the following signature:
 
 ```solidity
-function transfer(bytes32 node, address owner) external;
+function transfer(bytes32 node, address to) external;
 ```
 
 With the arguments being:
 
-1. `node`: a valid ENS node (namehash).
-2. `owner`: an Ethereum address.
+1. `node`: a valid ENS node (namehash)
+2. `to`: the Ethereum address to receive the domain
 
 Security Considerations
 
@@ -274,22 +272,19 @@ Even though the recently proposed offchain writing strategy specified in [EIP-77
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.17;
 
-/**
- * @title IOffchainResolver Interface
- * @dev Interface for a resolver that supports text and address records management, with additional functions for registration, ownership transfer, and multicall.
- */
-interface IOffchainResolver {
+interface OffchainRegister {
 
     /**
      * Forwards the registering of a domain to the L2 contracts
      * @param name The DNS-encoded name to resolve.
      * @param owner Owner of the domain
-     * @param duration The duration in seconds of the registration.
+     * @param duration duration The duration in seconds of the registration.
      * @param resolver The address of the resolver to set for this name.
      * @param data Multicallable data bytes for setting records in the associated resolver upon reigstration.
      * @param fuses The fuses to set for this name.
+     * @param extraData any encoded additional data
      */
     function register(
         string calldata name,
@@ -299,44 +294,69 @@ interface IOffchainResolver {
         address resolver,
         bytes[] calldata data,
         bool reverseRecord,
-        uint16 fuses
+        uint16 fuses,
+        bytes memory extraData
     )
         external
         payable;
 
-	  /**
-	   * @dev Struct to hold registration parameters
-	   */
-	  struct RegisterParams {
-	      uint256 price;
-	      bytes extraData;
-	  }
-	
-	  /**
-	   * @notice Returns the registration parameters for a given name and duration
-	   * @param name The DNS-encoded name to query
-	   * @param duration The duration in seconds for the registration
-	   * @return RegisterParams struct containing registration parameters
-	   */
-	  function registerParams(
-	      bytes memory name,
-	      uint256 duration
-	  )
-	      external
-	      view
-	      returns (RegisterParams memory);
+}
+
+interface OffchainRegisterParams {
 
     /**
-     * @notice Transfers ownership of an ENS node to a new owner.
-     * @param node The ENS node to transfer.
-     * @param owner The address of the new owner.
+     * @notice Returns the registration parameters for a given name and duration
+     * @param name The DNS-encoded name to query
+     * @param duration The duration in seconds for the registration
+     * @return price The price of the registration in wei per second
+     * @return commitTime the amount of time the commit should wait before being revealed
+     * @return extraData any given structure in an ABI encoded format
      */
-    function transfer(bytes32 node, address owner) external;
+    function registerParams(
+        bytes memory name,
+        uint256 duration
+    )
+        external
+        view
+        returns (uint256 price, uint256 commitTime, bytes memory extraData);
+
+}
+
+interface OffchainMulticallable {
 
     /**
      * @notice Executes multiple calls in a single transaction.
      * @param data An array of encoded function call data.
      */
-    function multicall(bytes[] calldata data) external returns (bytes[] memory);
+    function multicall(bytes[] calldata data)
+        external
+        returns (bytes[] memory);
+
+}
+
+interface OffchainCommitable {
+
+		/**
+		 * @notice produces the commit hash from the register calldata
+		 * @returns the hash of the commit to be used
+		 */
+    function makeCommitment(
+        string calldata name,
+        address owner,
+        uint256 duration,
+        bytes32 secret,
+        address resolver,
+        bytes[] calldata data,
+        bool reverseRecord,
+        uint16 fuses,
+        bytes memory extraData
+    ) external pure returns (bytes32);
+    
+    /**
+     * @notice Commits the register callData to prevent frontrunning.
+     * @param commitment hash of the register callData
+     */
+    function commit(bytes32 commitment) external;
+
 }
 ```
