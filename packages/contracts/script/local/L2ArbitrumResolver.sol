@@ -113,7 +113,8 @@ contract L2ArbitrumResolver is Script, ENSHelper {
             address(arbResolver),
             data,
             false,
-            0
+            0,
+            bytes("")
         );
 
         vm.stopBroadcast();

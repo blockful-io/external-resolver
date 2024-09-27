@@ -13,6 +13,7 @@ import {
   http,
   namehash,
   toHex,
+  keccak256,
   walletActions,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
@@ -73,12 +74,13 @@ const _ = (async () => {
 
   // SUBDOMAIN PRICING
 
-  const value = (await client.readContract({
-    address: resolverAddr,
-    abi: l1Abi,
-    functionName: 'registerParams',
-    args: [toHex(name), duration],
-  })) as bigint
+  const [value /* commitTime */ /* extraData */, ,] =
+    (await client.readContract({
+      address: resolverAddr,
+      abi: l1Abi,
+      functionName: 'registerParams',
+      args: [toHex(name), duration],
+    })) as [bigint, bigint, Hex]
 
   // REGISTER NEW SUBDOMAIN
 
@@ -112,6 +114,7 @@ const _ = (async () => {
       data, // calldata
       false, // primaryName
       0, // fuses
+      keccak256('void'),
     ],
     address: resolverAddr,
     account: signer,

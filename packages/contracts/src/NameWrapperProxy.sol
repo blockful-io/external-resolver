@@ -31,7 +31,8 @@ contract NameWrapperProxy is OffchainRegister, ENSHelper {
         address resolver,
         bytes[] calldata data,
         bool, /* reverseRecord */
-        uint16 fuses
+        uint16 fuses,
+        bytes memory /* extraData */
     )
         external
         payable
