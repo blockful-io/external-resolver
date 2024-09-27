@@ -19,7 +19,7 @@ contract NameWrapperProxyScript is DeployHelper, ENSHelper {
 
         uint256 subdomainPrice = 0.001 ether;
         NameWrapperProxy nameWrapperProxy = new NameWrapperProxy(
-            namehash("arb.eth"), address(nameWrapper), subdomainPrice
+            namehash("arb.eth"), address(nameWrapper), subdomainPrice, 0
         );
         nameWrapper.setApprovalForAll(address(nameWrapperProxy), true);
 

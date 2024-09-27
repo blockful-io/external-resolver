@@ -64,6 +64,25 @@ interface OffchainMulticallable {
 interface OffchainCommitable {
 
     /**
+     * @notice produces the commit hash from the register calldata
+     * @return commitHash the hash of the commit to be used
+     */
+    function makeCommitment(
+        string calldata name,
+        address owner,
+        uint256 duration,
+        bytes32 secret,
+        address resolver,
+        bytes[] calldata data,
+        bool reverseRecord,
+        uint16 fuses,
+        bytes memory extraData
+    )
+        external
+        pure
+        returns (bytes32 commitHash);
+
+    /**
      * @notice Commits the register callData to prevent frontrunning.
      * @param commitment hash of the register callData
      */

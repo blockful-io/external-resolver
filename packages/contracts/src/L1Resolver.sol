@@ -60,6 +60,8 @@ contract L1Resolver is
     uint256 constant VERSIONABLE_HASHES_SLOT = 3;
     uint256 constant VERSIONABLE_TEXTS_SLOT = 10;
     uint256 constant PRICE_SLOT = 0;
+    uint256 constant COMMIT_SLOT = 1;
+    uint256 constant EXTRA_DATA_SLOT = 2;
 
     /// Contract targets
     bytes32 constant TARGET_RESOLVER = keccak256("resolver");
@@ -148,7 +150,9 @@ contract L1Resolver is
         )
     {
         EVMFetcher.newFetchRequest(verifier, targets[TARGET_REGISTRAR])
-            .getStatic(PRICE_SLOT).fetch(this.registerParamsCallback.selector, "");
+            .getStatic(PRICE_SLOT).getStatic(COMMIT_SLOT).fetch(
+            this.registerParamsCallback.selector, ""
+        );
     }
 
     function registerParamsCallback(
@@ -159,7 +163,9 @@ contract L1Resolver is
         pure
         returns (uint256 price, uint256 commitTime, bytes memory extraData)
     {
-        return abi.decode(values[0], (uint256, uint256, bytes));
+        price = abi.decode(values[0], (uint256));
+        commitTime = abi.decode(values[1], (uint256));
+        return (price, commitTime, abi.encode(""));
     }
 
     /**

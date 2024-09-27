@@ -13,7 +13,6 @@ import {
   http,
   namehash,
   toHex,
-  keccak256,
   walletActions,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
@@ -114,7 +113,7 @@ const _ = (async () => {
       data, // calldata
       false, // primaryName
       0, // fuses
-      keccak256('void'),
+      `0x${'a'.repeat(64)}` as Hex, // extraData
     ],
     address: resolverAddr,
     account: signer,
