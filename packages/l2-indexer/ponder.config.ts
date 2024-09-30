@@ -17,6 +17,7 @@ export default createConfig({
   database: {
     kind: 'postgres',
     connectionString: process.env.DATABASE_URL,
+    schema: 'public',
   },
   networks: {
     arbitrum_sepolia: {
