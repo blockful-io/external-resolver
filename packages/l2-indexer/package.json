@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "rm -rf ./.ponder && ponder dev",
+    "dev": "ponder dev",
     "start": "ponder start",
     "codegen": "ponder codegen",
     "lint": "eslint . --ext .ts --fix",

@@ -1,15 +1,14 @@
 import { ponder } from '@/generated'
 import { config } from 'dotenv'
+import { zeroAddress, zeroHash } from 'viem'
 import { namehash } from 'viem/ens'
 
 config({
-  path: process.env.ENV_FILE || '../../.env',
+  path: process.env.ENV_FILE || '../../../.env',
 })
 
 const registryAddress = process.env.REGISTRY_ADDRESS
 if (!registryAddress) throw new Error('REGISTRY_ADDRESS is required')
-
-console.log({ registryAddress })
 
 ponder.on(
   'ETHRegistrarController:NameRegistered',
@@ -23,33 +22,100 @@ ponder.on(
       data: {
         node,
         name,
-        resolver: '0xe6A23a4351f4F05d35F0170984432eBe36C1d1D0',
+        resolver: zeroAddress,
         parent: namehash(extractParentFromName(name)),
         owner: event.args.owner,
         ttl: event.args.expires.toString(),
-        registerDate: event.block.timestamp.toString(),
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(
+          parseInt(event.block.timestamp.toString()) * 1000,
+        ).toISOString(),
         updatedAt: new Date().toISOString(),
       },
     })
   },
 )
 
+ponder.on('ENSRegistry:NewResolver', async ({ event, context }) => {
+  const { domain } = context.db
+
+  await domain.upsert({
+    id: event.args.node,
+    create: {
+      owner: zeroAddress,
+      node: event.args.node,
+      name: '',
+      parent: zeroHash,
+      resolver: event.args.resolver,
+      createdAt: new Date(
+        parseInt(event.block.timestamp.toString()) * 1000,
+      ).toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    update: {
+      resolver: event.args.resolver,
+      updatedAt: new Date().toISOString(),
+    },
+  })
+})
+
+ponder.on('ENSRegistry:NewTTL', async ({ event, context }) => {
+  const { domain } = context.db
+
+  await domain.update({
+    id: event.args.node,
+    data: {
+      ttl: event.args.ttl.toString(),
+      updatedAt: new Date().toISOString(),
+    },
+  })
+})
+
+ponder.on('ENSRegistry:NewOwner', async ({ event, context }) => {
+  const { domain } = context.db
+
+  if (event.args.node === zeroHash) return
+
+  await domain.upsert({
+    id: event.args.node,
+    create: {
+      owner: event.args.owner,
+      node: event.args.node,
+      name: '',
+      parent: zeroHash,
+      resolver: zeroAddress,
+      createdAt: new Date(
+        parseInt(event.block.timestamp.toString()) * 1000,
+      ).toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    update: {
+      owner: event.args.owner,
+      updatedAt: new Date().toISOString(),
+    },
+  })
+})
+
 ponder.on('NameWrapper:NameWrapped', async ({ event, context }) => {
   const { domain } = context.db
 
   const name = decodeDNSHex(event.args.name)
-  await domain.create({
+  await domain.upsert({
     id: event.args.node,
-    data: {
+    create: {
+      owner: event.args.owner,
       node: event.args.node,
       name,
       parent: namehash(extractParentFromName(name)),
+      resolver: zeroAddress,
+      createdAt: new Date(
+        parseInt(event.block.timestamp.toString()) * 1000,
+      ).toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    update: {
+      name,
+      parent: namehash(extractParentFromName(name)),
       owner: event.args.owner,
-      resolver: '0xe6A23a4351f4F05d35F0170984432eBe36C1d1D0',
-      ttl: event.args.expiry.toString(),
-      registerDate: event.block.timestamp.toString(),
-      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
   })
@@ -63,8 +129,9 @@ ponder.on('PublicResolver:TextChanged', async ({ event, context }) => {
       domain: event.args.node,
       key: event.args.key,
       value: event.args.value,
-      registerDate: event.block.timestamp.toString(),
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(
+        parseInt(event.block.timestamp.toString()) * 1000,
+      ).toISOString(),
       updatedAt: new Date().toISOString(),
     },
     update: {
@@ -83,8 +150,9 @@ ponder.on('PublicResolver:AddressChanged', async ({ event, context }) => {
       domain: event.args.node,
       address: event.args.newAddress,
       coin: event.args.coinType.toString(),
-      registerDate: event.block.timestamp.toString(),
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(
+        parseInt(event.block.timestamp.toString()) * 1000,
+      ).toISOString(),
       updatedAt: new Date().toISOString(),
     },
     update: {

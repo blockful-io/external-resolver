@@ -1,3 +1,4 @@
+import { config } from 'dotenv'
 import { createConfig } from '@ponder/core'
 import { http } from 'viem'
 
@@ -7,6 +8,10 @@ import {
   NameWrapper,
   PublicResolver,
 } from './abis'
+
+config({
+  path: process.env.ENV_FILE || '../../.env',
+})
 
 export default createConfig({
   database: {
