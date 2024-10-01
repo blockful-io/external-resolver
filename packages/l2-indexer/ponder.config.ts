@@ -23,7 +23,8 @@ export default createConfig({
     arbitrum_sepolia: {
       chainId: 421614,
       transport: http(process.env.RPC_URL),
-      pollingInterval: 60000, // 1min
+      pollingInterval: 60000 * 2, // 2 min
+      maxRequestsPerSecond: 1,
     },
   },
   contracts: {
