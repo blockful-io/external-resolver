@@ -10,8 +10,15 @@ ETHERSCAN_API_KEY?=VEJ7GISNRKFUESRPC4W4D3ZEM2P9B4J6C4
 
 include .env
 
-deploy-arb-resolver-l1:
+deploy-arb-l1:
 	@set -e; \
+	echo "Deploying ArbitrumVerifier..." && \
+	forge script $(deploy_dir)/ArbitrumVerifier.sol \
+		--rpc-url sepolia \
+		--broadcast \
+		-vvv \
+		--private-key $(PRIVATE_KEY) \
+		--verify && \
 	echo "Deploying L1ArbitrumResolver..." && \
 	forge script $(deploy_dir)/L1ArbitrumResolver.sol \
 		--rpc-url sepolia \
@@ -41,7 +48,7 @@ deploy-arb-name-wrapper-proxy:
 		--verify;
 
 	
-CONTRACTS := ENSRegistry ReverseRegistrar BaseRegistrarImplementation NameWrapper ETHRegistrarController NameWrapperProxy ArbitrumVerifier L2ArbitrumResolver
+CONTRACTS := ENSRegistry ReverseRegistrar BaseRegistrarImplementation NameWrapper ETHRegistrarController NameWrapperProxy L2ArbitrumResolver
 deploy-arb-full:
 	@set -e; \
 	$(foreach contract,$(CONTRACTS),\
