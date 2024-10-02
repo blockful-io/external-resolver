@@ -52,7 +52,8 @@ export class EthereumClient<chain extends Chain> {
     return owner
   }
 
-  async getNFTOwner(node: Hex): Promise<Hex> {
+  // this is useful when fetching names registered before introduction of the NameWrapper
+  async getLegacyOwner(node: Hex): Promise<Hex> {
     try {
       return await this.client.readContract({
         address: this.registrarAddress,
@@ -70,7 +71,7 @@ export class EthereumClient<chain extends Chain> {
   async verifyOwnership(node: Hex, address: Hex): Promise<boolean> {
     return (
       (await this.getOwner(node)) === address ||
-      (await this.getNFTOwner(node)) === address
+      (await this.getLegacyOwner(node)) === address
     )
   }
 
