@@ -5,6 +5,7 @@ import {
   fromHex,
   parseAbiItem,
   Hex,
+  zeroAddress,
 } from 'viem'
 
 export class EthereumClient<chain extends Chain> {
@@ -47,12 +48,31 @@ export class EthereumClient<chain extends Chain> {
     } catch {
       /** error is expected when it isn't a contract */
     }
+
     return owner
   }
 
+  // this is useful when fetching names registered before introduction of the NameWrapper
+  async getLegacyOwner(node: Hex): Promise<Hex> {
+    try {
+      return await this.client.readContract({
+        address: this.registrarAddress,
+        abi: [
+          parseAbiItem('function ownerOf(uint256 id) view returns (address)'),
+        ],
+        functionName: 'ownerOf',
+        args: [fromHex(node, 'bigint')],
+      })
+    } catch {
+      return zeroAddress
+    }
+  }
+
   async verifyOwnership(node: Hex, address: Hex): Promise<boolean> {
-    if (!this.registryAddress) return false
-    return (await this.getOwner(node)) === address
+    return (
+      (await this.getOwner(node)) === address ||
+      (await this.getLegacyOwner(node)) === address
+    )
   }
 
   async getResolver(node: Hex): Promise<Hex | undefined> {
