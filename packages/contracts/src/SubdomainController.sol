@@ -4,20 +4,23 @@ pragma solidity ^0.8.17;
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 
-import {ENSHelper} from "../script/Helper.sol";
-import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
+import {ENSHelper} from "../script/ENSHelper.sol";
+import {OffchainRegister} from "./interfaces/OffchainResolver.sol";
 
-contract SubdomainController is OffchainResolver, ENSHelper {
+contract SubdomainController is OffchainRegister, ENSHelper {
 
     uint256 public price;
+    uint256 public commitTime;
     bytes32 public baseNode;
     INameWrapper nameWrapper;
 
     constructor(
         bytes32 _baseNode,
         address _nameWrapperAddress,
-        uint256 _price
+        uint256 _price,
+        uint256 _commitTime
     ) {
+        commitTime = _commitTime;
         baseNode = _baseNode;
         price = _price;
         nameWrapper = INameWrapper(_nameWrapperAddress);
@@ -31,7 +34,8 @@ contract SubdomainController is OffchainResolver, ENSHelper {
         address resolver,
         bytes[] calldata data,
         bool, /* reverseRecord */
-        uint16 fuses
+        uint16 fuses,
+        bytes memory /* extraData */
     )
         external
         payable
@@ -53,18 +57,6 @@ contract SubdomainController is OffchainResolver, ENSHelper {
         if (data.length > 0) {
             Resolver(resolver).multicallWithNodeCheck(nodehash, data);
         }
-    }
-
-    function registerParams(
-        bytes memory, /* name */
-        uint256 /* duration */
-    )
-        external
-        view
-        override
-        returns (RegisterParams memory)
-    {
-        return RegisterParams(price);
     }
 
 }

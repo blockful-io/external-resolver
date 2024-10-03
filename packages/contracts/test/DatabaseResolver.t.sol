@@ -10,7 +10,7 @@ import {
 import "@ens-contracts/reverseRegistrar/ReverseRegistrar.sol";
 import "@ens-contracts/utils/UniversalResolver.sol";
 
-import {ENSHelper} from "../script/Helper.sol";
+import {ENSHelper} from "../script/ENSHelper.sol";
 import {DatabaseConfig} from "../script/config/DatabaseConfig.s.sol";
 import {DatabaseResolver} from "../src/DatabaseResolver.sol";
 import {DatabaseResolverScript} from "../script/deploy/DatabaseResolver.s.sol";

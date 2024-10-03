@@ -20,7 +20,7 @@ import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
-import { getRevertErrorData, getChain, RegisterParams } from './client'
+import { getRevertErrorData, getChain } from './client'
 
 config({
   path: process.env.ENV_FILE || '../.env',
@@ -31,7 +31,7 @@ let {
   L2_RESOLVER_ADDRESS: l2Resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
-  LAYER2_RPC: providerL2 = 'http://127.0.0.1:8547',
+  L2_RPC_URL: providerL2 = 'http://127.0.0.1:8547',
   PRIVATE_KEY:
     privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
 } = process.env
@@ -73,12 +73,13 @@ const _ = (async () => {
 
   // SUBDOMAIN PRICING
 
-  const registerParams = (await client.readContract({
-    address: resolverAddr,
-    abi: l1Abi,
-    functionName: 'registerParams',
-    args: [toHex(name), duration],
-  })) as RegisterParams
+  const [value /* commitTime */ /* extraData */, ,] =
+    (await client.readContract({
+      address: resolverAddr,
+      abi: l1Abi,
+      functionName: 'registerParams',
+      args: [toHex(name), duration],
+    })) as [bigint, bigint, Hex]
 
   // REGISTER NEW SUBDOMAIN
 
@@ -112,10 +113,11 @@ const _ = (async () => {
       data, // calldata
       false, // primaryName
       0, // fuses
+      `0x${'a'.repeat(64)}` as Hex, // extraData
     ],
     address: resolverAddr,
     account: signer,
-    value: registerParams.price,
+    value,
   }
 
   try {

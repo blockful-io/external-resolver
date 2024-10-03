@@ -22,7 +22,7 @@ import {StaticMetadataService} from
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {PublicResolver} from "@ens-contracts/resolvers/PublicResolver.sol";
 
-import {ENSHelper} from "../Helper.sol";
+import {ENSHelper} from "../ENSHelper.sol";
 import {SubdomainController} from "../../src/SubdomainController.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper {
@@ -79,8 +79,12 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         nameWrapper.setController(msg.sender, true);
 
         uint256 subdomainPrice = 0.001 ether;
+        uint256 commitTime = 0;
         SubdomainController subdomainController = new SubdomainController(
-            namehash("arb.eth"), address(nameWrapper), subdomainPrice
+            namehash("arb.eth"),
+            address(nameWrapper),
+            subdomainPrice,
+            commitTime
         );
         nameWrapper.setApprovalForAll(address(subdomainController), true);
 
@@ -113,7 +117,8 @@ contract L2ArbitrumResolver is Script, ENSHelper {
             address(arbResolver),
             data,
             false,
-            0
+            0,
+            bytes("")
         );
 
         vm.stopBroadcast();

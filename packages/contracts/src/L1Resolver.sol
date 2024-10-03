@@ -19,7 +19,11 @@ import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
-import {OffchainResolver} from "./interfaces/OffchainResolver.sol";
+import {
+    OffchainRegister,
+    OffchainMulticallable,
+    OffchainRegisterParams
+} from "./interfaces/OffchainResolver.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
@@ -27,7 +31,9 @@ contract L1Resolver is
     IERC165,
     IWriteDeferral,
     Ownable,
-    OffchainResolver,
+    OffchainRegister,
+    OffchainMulticallable,
+    OffchainRegisterParams,
     ENSIP16
 {
 
@@ -54,6 +60,8 @@ contract L1Resolver is
     uint256 constant VERSIONABLE_HASHES_SLOT = 3;
     uint256 constant VERSIONABLE_TEXTS_SLOT = 10;
     uint256 constant PRICE_SLOT = 0;
+    uint256 constant COMMIT_SLOT = 1;
+    uint256 constant EXTRA_DATA_SLOT = 2;
 
     /// Contract targets
     bytes32 constant TARGET_RESOLVER = keccak256("resolver");
@@ -101,6 +109,7 @@ contract L1Resolver is
      * @param -resolver The address of the resolver to set for this name.
      * @param -data Multicallable data bytes for setting records in the associated resolver upon reigstration.
      * @param -fuses The fuses to set for this name.
+     * @param -extraData any encoded additional data
      */
     function register(
         string calldata, /* name */
@@ -110,7 +119,8 @@ contract L1Resolver is
         address, /* resolver */
         bytes[] calldata, /* data */
         bool, /* reverseRecord */
-        uint16 /* fuses */
+        uint16, /* fuses */
+        bytes memory /* extraData */
     )
         external
         payable
@@ -122,7 +132,9 @@ contract L1Resolver is
      * @notice Returns the registration parameters for a given name and duration
      * @param -name The DNS-encoded name to query
      * @param -duration The duration in seconds for the registration
-     * @return RegisterParams struct containing registration parameters
+     * @return price The price of the registration in wei per second
+     * @return commitTime the amount of time the commit should wait before being revealed
+     * @return extraData any given structure in an ABI encoded format
      */
     function registerParams(
         bytes memory, /* name */
@@ -131,10 +143,16 @@ contract L1Resolver is
         external
         view
         override
-        returns (RegisterParams memory)
+        returns (
+            uint256, /* price */
+            uint256, /* commitTime */
+            bytes memory /* extraData */
+        )
     {
         EVMFetcher.newFetchRequest(verifier, targets[TARGET_REGISTRAR])
-            .getStatic(PRICE_SLOT).fetch(this.registerParamsCallback.selector, ""); // recordVersions
+            .getStatic(PRICE_SLOT).getStatic(COMMIT_SLOT).fetch(
+            this.registerParamsCallback.selector, ""
+        );
     }
 
     function registerParamsCallback(
@@ -143,9 +161,24 @@ contract L1Resolver is
     )
         public
         pure
-        returns (RegisterParams memory)
+        returns (uint256 price, uint256 commitTime, bytes memory extraData)
     {
-        return abi.decode(values[0], (RegisterParams));
+        price = abi.decode(values[0], (uint256));
+        commitTime = abi.decode(values[1], (uint256));
+        return (price, commitTime, abi.encode(""));
+    }
+
+    /**
+     * @notice Executes multiple calls in a single transaction.
+     * @param -data An array of encoded function call data.
+     */
+    function multicall(bytes[] calldata /* data */ )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
     //////// ENSIP 10 ////////
