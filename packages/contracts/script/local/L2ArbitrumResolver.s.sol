@@ -23,7 +23,7 @@ import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {PublicResolver} from "@ens-contracts/resolvers/PublicResolver.sol";
 
 import {ENSHelper} from "../Helper.sol";
-import {NameWrapperProxy} from "../../src/NameWrapperProxy.sol";
+import {SubdomainController} from "../../src/SubdomainController.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper {
 
@@ -79,15 +79,15 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         nameWrapper.setController(msg.sender, true);
 
         uint256 subdomainPrice = 0.001 ether;
-        NameWrapperProxy nameWrapperProxy = new NameWrapperProxy(
+        SubdomainController subdomainController = new SubdomainController(
             namehash("arb.eth"), address(nameWrapper), subdomainPrice
         );
-        nameWrapper.setApprovalForAll(address(nameWrapperProxy), true);
+        nameWrapper.setApprovalForAll(address(subdomainController), true);
 
         PublicResolver arbResolver = new PublicResolver(
             registry,
             nameWrapper,
-            address(nameWrapperProxy),
+            address(subdomainController),
             address(reverseRegistrar)
         );
 
@@ -103,9 +103,9 @@ contract L2ArbitrumResolver is Script, ENSHelper {
             TextResolver.setText.selector,
             namehash("blockful.arb.eth"),
             "com.twitter",
-            "@blockfu"
+            "@blockful"
         );
-        nameWrapperProxy.register{value: nameWrapperProxy.price()}(
+        subdomainController.register{value: subdomainController.price()}(
             "blockful",
             msg.sender,
             31556952000,
@@ -120,7 +120,9 @@ contract L2ArbitrumResolver is Script, ENSHelper {
 
         console.log("Registry deployed at", address(registry));
         console.log("NameWrapper deployed at", address(nameWrapper));
-        console.log("NameWrapperProxy deployed at", address(nameWrapperProxy));
+        console.log(
+            "SubdomainController deployed at", address(subdomainController)
+        );
         console.log("L2Resolver deployed at", address(arbResolver));
     }
 

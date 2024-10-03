@@ -19,7 +19,7 @@ abstract contract ENSIP16 is IERC165, IENSIP16 {
 
     //////// EVENTS ////////
 
-    event MetadataUrlSet(string indexed previousUrl, string indexed newUrl);
+    event MetadataChanged(string indexed previousUrl, string indexed newUrl);
 
     //////// INITIALIZER ////////
 
@@ -72,7 +72,7 @@ abstract contract ENSIP16 is IERC165, IENSIP16 {
         string memory previousUrl = metadataUrl;
         metadataUrl = newUrl;
 
-        emit MetadataUrlSet(previousUrl, newUrl);
+        emit MetadataChanged(previousUrl, newUrl);
     }
 
 }
