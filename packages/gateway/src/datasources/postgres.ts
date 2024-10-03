@@ -7,16 +7,17 @@ import * as entities from '../entities'
 // to initialize the initial connection with the database, register all entities
 export function NewDataSource(
   dbUrl: string,
-  synchronize: boolean = false,
-  debug: boolean = false,
+  options?: {
+    synchronize?: boolean
+    debug?: boolean
+  },
 ): DataSource {
   return new DataSource({
     type: 'postgres',
     url: dbUrl,
-    synchronize,
-    logging: debug,
+    logging: options?.debug,
     entities,
     migrations: [path.resolve(__dirname, 'migrations/*.ts')],
-    migrationsRun: true,
+    migrationsRun: options ? options.synchronize : true,
   })
 }

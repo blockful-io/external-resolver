@@ -10,6 +10,7 @@
     "client": "npm run -w @blockful/client",
     "gateway": "npm run -w @blockful/gateway",
     "contracts": "npm run -w @blockful/contracts",
+    "l2-indexer": "npm run -w @blockful/l2-indexer",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
     "build": "turbo build --force",
