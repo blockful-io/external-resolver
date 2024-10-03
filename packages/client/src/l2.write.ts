@@ -8,6 +8,7 @@ import {
   Hash,
   Hex,
   createPublicClient,
+  encodeFunctionData,
   getChainContractAddress,
   http,
   namehash,
@@ -17,10 +18,9 @@ import {
 import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
-import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
-import { abi as l2Abi } from '@blockful/contracts/out/L2Resolver.sol/L2Resolver.json'
 import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
-import { getRevertErrorData, handleL2Storage, getChain } from './client'
+import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
+import { getRevertErrorData, getChain } from './client'
 
 config({
   path: process.env.ENV_FILE || '../.env',
@@ -28,10 +28,10 @@ config({
 
 let {
   UNIVERSAL_RESOLVER_ADDRESS: resolver,
+  L2_RESOLVER_ADDRESS: l2Resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
-  LAYER2_RPC: providerL2 = 'http://127.0.0.1:8547',
-  L2_RESOLVER: l2resolver,
+  L2_RPC_URL: providerL2 = 'http://127.0.0.1:8547',
   PRIVATE_KEY:
     privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
 } = process.env
@@ -46,9 +46,12 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  if (!l2resolver) throw new Error('L2_RESOLVER is required')
+  if (!l2Resolver) {
+    throw new Error('L2_RESOLVER_ADDRESS is required')
+  }
 
-  const publicAddress = normalize('blockful.eth')
+  const publicAddress = normalize('lucas.arb.eth')
+  const node = namehash(publicAddress)
   const signer = privateKeyToAccount(privateKey as Hex)
 
   if (!resolver) {
@@ -65,111 +68,89 @@ const _ = (async () => {
     args: [toHex(packetToBytes(publicAddress))],
   })) as Hash[]
 
-  // REGISTER NEW DOMAIN
-  try {
-    const { request } = await client.simulateContract({
-      functionName: 'register',
-      abi: l1Abi,
-      args: [toHex(packetToBytes(publicAddress)), l2resolver],
-      address: resolverAddr,
-      account: signer,
-    })
-    await client.writeContract(request)
+  const name = extractLabelFromName(publicAddress)
+  const duration = 31556952000n
 
-    await client.simulateContract({
-      functionName: 'setOwner',
-      abi: l1Abi,
-      args: [toHex(packetToBytes(publicAddress)), signer.address],
+  // SUBDOMAIN PRICING
+
+  const [value /* commitTime */ /* extraData */, ,] =
+    (await client.readContract({
       address: resolverAddr,
-    })
+      abi: l1Abi,
+      functionName: 'registerParams',
+      args: [toHex(name), duration],
+    })) as [bigint, bigint, Hex]
+
+  // REGISTER NEW SUBDOMAIN
+
+  const data: Hex[] = [
+    encodeFunctionData({
+      functionName: 'setText',
+      abi: l1Abi,
+      args: [node, 'com.twitter', '@lucas'],
+    }),
+    encodeFunctionData({
+      functionName: 'setAddr',
+      abi: l1Abi,
+      args: [node, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
+    }),
+    encodeFunctionData({
+      functionName: 'setAddr',
+      abi: l1Abi,
+      args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
+    }),
+  ]
+
+  const calldata = {
+    functionName: 'register',
+    abi: l1Abi,
+    args: [
+      name,
+      signer.address, // owner
+      duration,
+      `0x${'a'.repeat(64)}` as Hex, // secret
+      l2Resolver, // resolver
+      data, // calldata
+      false, // primaryName
+      0, // fuses
+      `0x${'a'.repeat(64)}` as Hex, // extraData
+    ],
+    address: resolverAddr,
+    account: signer,
+    value,
+  }
+
+  try {
+    await client.simulateContract(calldata)
   } catch (err) {
     const data = getRevertErrorData(err)
     if (data?.errorName === 'StorageHandledByL2') {
       const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-      await handleL2Storage({
-        chainId,
-        l2Url: providerL2,
-        args: {
-          functionName: 'setOwner',
-          abi: l2Abi,
-          args: [namehash(publicAddress), signer.address],
+      const l2Client = createPublicClient({
+        chain: getChain(Number(chainId)),
+        transport: http(providerL2),
+      }).extend(walletActions)
+
+      try {
+        const { request } = await l2Client.simulateContract({
+          ...calldata,
           address: contractAddress,
-          account: signer,
-        },
-      })
+        })
+        await l2Client.writeContract(request)
+      } catch (err) {
+        console.log('error while trying to make the request: ', { err })
+      }
     } else if (data) {
       console.error('error registering domain: ', data.errorName)
     } else {
       console.error('error registering domain: ', { err })
     }
   }
-
-  // SET TEXT
-  try {
-    await client.simulateContract({
-      functionName: 'setText',
-      abi: l1Abi,
-      args: [toHex(packetToBytes(publicAddress)), 'com.twitter', '@blockful'],
-      address: resolverAddr,
-    })
-  } catch (err) {
-    const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByL2') {
-      const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
-
-      await handleL2Storage({
-        chainId,
-        l2Url: providerL2,
-        args: {
-          functionName: 'setText',
-          abi: l2Abi,
-          args: [namehash(publicAddress), 'com.twitter', '@blockful'],
-          address: contractAddress,
-          account: signer,
-        },
-      })
-    } else if (data) {
-      console.error('error setting text: ', data.errorName)
-    } else {
-      console.error('error setting text: ', { err })
-    }
-  }
-
-  // SET ADDRESS
-  try {
-    await client.simulateContract({
-      functionName: 'setAddr',
-      abi: l1Abi,
-      args: [
-        toHex(packetToBytes(publicAddress)),
-        '0x04270c4366010A52192bC8D3E29d9f0E21bBe969',
-      ],
-      address: resolverAddr,
-    })
-  } catch (err) {
-    const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByL2') {
-      const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
-
-      await handleL2Storage({
-        chainId,
-        l2Url: providerL2,
-        args: {
-          functionName: 'setAddr',
-          abi: l2Abi,
-          args: [
-            namehash(publicAddress),
-            '0x04270c4366010A52192bC8D3E29d9f0E21bBe969',
-          ],
-          address: contractAddress,
-          account: signer,
-        },
-      })
-    } else if (data) {
-      console.error('error setting addr: ', data.errorName)
-    } else {
-      console.error('error setting addr: ', { err })
-    }
-  }
 })()
+
+// gather the first part of the domain (e.g. floripa.blockful.eth -> floripa)
+function extractLabelFromName(name: string): string {
+  const [, label] = /^(\w+)/.exec(name) || []
+  return label
+}

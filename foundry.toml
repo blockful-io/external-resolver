@@ -14,6 +14,11 @@ remappings = [
   "@nitro-contracts=node_modules/@arbitrum/nitro-contracts",
   "@evmgateway=packages/contracts/src/evmgateway",
 ]
+fs_permissions = [
+  { access = "read", path = "./broadcast" },
+  { access = "read", path = "./packages/contracts/out" },
+]
+sparse_mode = true
 
 ignored_warnings_from = [
   "node_modules/",
@@ -29,8 +34,8 @@ sepolia = { key = "${ETHERSCAN_KEY}" }
 
 
 [rpc_endpoints]
-rpc_url = "${RPC_URL}"
-arbitrum_rpc_url = "${ARBITRUM_RPC_URL}"
+sepolia = "${RPC_URL}"
+arb_sepolia = "${L2_RPC_URL}"
 
 
 [fmt]

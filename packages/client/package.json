@@ -2,7 +2,7 @@
   "name": "@blockful/client",
   "scripts": {
     "test": "npm-run-all test:**",
-    "test:l1": "hardhat test ./test/l1.e2e.spec.ts --network localhost",
+    "test:l1": "hardhat test ./test/arb.e2e.spec.ts --network localhost",
     "test:db": "hardhat test ./test/db.e2e.spec.ts --network localhost",
     "start:read": "ts-node src/read.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     "start:write:db": "ts-node src/db.write.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
@@ -10,24 +10,24 @@
     "lint": "eslint . --ext .ts --fix"
   },
   "devDependencies": {
-    "@apollo/server": "^4.10.5",
+    "@apollo/server": "^4.11.0",
     "@blockful/ccip-server": "*",
     "@blockful/gateway": "*",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@nomicfoundation/hardhat-verify": "^2.0.8",
+    "@nomicfoundation/hardhat-verify": "^2.0.11",
     "@nomicfoundation/ignition-core": "^0.15.5",
     "@typechain/hardhat": "^9.1.0",
-    "@types/chai": "^4.3.16",
+    "@types/chai": "^4.3.19",
     "@types/mocha": ">=9.1.0",
     "aes-js": "^3.1.2",
     "chai": "^4.2.0",
     "dotenv": "^16.4.5",
-    "hardhat": "^2.22.6",
+    "hardhat": "^2.22.11",
     "npm-run-all": "^4.1.5",
     "reflect-metadata": "^0.2.2",
     "solidity-coverage": "^0.8.12",
     "typeorm": "^0.3.20",
-    "viem": "^2.17.4"
+    "viem": "^2.21.12"
   },
   "peerDependencies": {
     "@blockful/tsconfig": "*"

@@ -13,7 +13,7 @@ import {BaseRegistrarImplementation} from
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 
-import {ENSHelper} from "../Helper.sol";
+import {ENSHelper} from "../ENSHelper.sol";
 
 contract DatabaseConfig is Script, ENSHelper {
 
@@ -21,7 +21,7 @@ contract DatabaseConfig is Script, ENSHelper {
 
     struct NetworkConfig {
         string gatewayUrl;
-        string graphqlUrl;
+        string metadataUrl;
         uint32 gatewayTimestamp;
         address[] signers;
         ENSRegistry registry;
@@ -38,7 +38,7 @@ contract DatabaseConfig is Script, ENSHelper {
         view
         returns (
             string memory gatewayUrl,
-            string memory graphqlUrl,
+            string memory metadataUrl,
             uint32 gatewayTimestamp,
             address[] memory signers,
             ENSRegistry registry
@@ -46,7 +46,7 @@ contract DatabaseConfig is Script, ENSHelper {
     {
         return (
             _activeNetworkConfig.gatewayUrl,
-            _activeNetworkConfig.graphqlUrl,
+            _activeNetworkConfig.metadataUrl,
             _activeNetworkConfig.gatewayTimestamp,
             _activeNetworkConfig.signers,
             _activeNetworkConfig.registry
@@ -58,7 +58,7 @@ contract DatabaseConfig is Script, ENSHelper {
         signers[0] = vm.envAddress("GATEWAY_ADDRESS");
         return NetworkConfig({
             gatewayUrl: vm.envString("GATEWAY_URL"),
-            graphqlUrl: vm.envString("GRAPHQL_URL"),
+            metadataUrl: vm.envString("METADATA_URL"),
             gatewayTimestamp: 600,
             signers: signers,
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e)
@@ -70,7 +70,7 @@ contract DatabaseConfig is Script, ENSHelper {
         signers[0] = vm.envAddress("GATEWAY_ADDRESS");
         return NetworkConfig({
             gatewayUrl: vm.envString("GATEWAY_URL"),
-            graphqlUrl: vm.envString("GRAPHQL_URL"),
+            metadataUrl: vm.envString("METADATA_URL"),
             gatewayTimestamp: 600,
             signers: signers,
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e)
@@ -115,7 +115,7 @@ contract DatabaseConfig is Script, ENSHelper {
 
         return NetworkConfig({
             gatewayUrl: urls[0],
-            graphqlUrl: "https://127.0.0.1:3000",
+            metadataUrl: "https://127.0.0.1:3000",
             gatewayTimestamp: 600,
             signers: signers,
             registry: registry

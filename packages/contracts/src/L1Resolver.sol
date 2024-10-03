@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {ENS} from "@ens-contracts/registry/ENS.sol";
-import {DummyNameWrapper} from
-    "@ens-contracts/resolvers/mocks/DummyNameWrapper.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
-import {BytesUtils} from "@ens-contracts/dnssec-oracle/BytesUtils.sol";
-import {HexUtils} from "@ens-contracts/utils/HexUtils.sol";
 import {IExtendedResolver} from
     "@ens-contracts/resolvers/profiles/IExtendedResolver.sol";
 import {IAddrResolver} from
@@ -19,43 +13,41 @@ import {ITextResolver} from
 import {IContentHashResolver} from
     "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {BytesUtils as WrapperBytes} from "@ens-contracts/wrapper/BytesUtils.sol";
 
-import {IWriteDeferral} from "./IWriteDeferral.sol";
+import {ENSIP16} from "./ENSIP16.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
-import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
+import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
+import {
+    OffchainRegister,
+    OffchainMulticallable,
+    OffchainRegisterParams
+} from "./interfaces/OffchainResolver.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
     IExtendedResolver,
     IERC165,
     IWriteDeferral,
-    Ownable
+    Ownable,
+    OffchainRegister,
+    OffchainMulticallable,
+    OffchainRegisterParams,
+    ENSIP16
 {
 
     using EVMFetcher for EVMFetcher.EVMFetchRequest;
-    using BytesUtils for bytes;
-    using HexUtils for bytes;
-
-    //////// ERRORS ////////
-
-    error L1Resolver__UnavailableDomain(bytes32 node);
-    error L1Resolver__ForbiddenAction(bytes32 node);
-    error L1Resolver__DomainNotFound(bytes32 node);
 
     //////// CONTRACT VARIABLE STATE ////////
 
-    // id of chain that is storing the domains
-    uint256 public chainId;
-    // Mapping domain -> offchain contract address
-    mapping(bytes32 => address) private _targets;
+    // address of each target contract
+    mapping(bytes32 => address) public targets;
 
     //////// CONTRACT IMMUTABLE STATE ////////
 
-    ENS immutable ens;
-    INameWrapper immutable nameWrapper;
+    // id of chain that is storing the domains
+    uint256 immutable chainId;
     // EVM Verifier to handle data validation based on Merkle Proof
     IEVMVerifier immutable verifier;
 
@@ -67,99 +59,163 @@ contract L1Resolver is
     uint256 constant VERSIONABLE_ADDRESSES_SLOT = 2;
     uint256 constant VERSIONABLE_HASHES_SLOT = 3;
     uint256 constant VERSIONABLE_TEXTS_SLOT = 10;
+    uint256 constant PRICE_SLOT = 0;
+    uint256 constant COMMIT_SLOT = 1;
+    uint256 constant EXTRA_DATA_SLOT = 2;
+
+    /// Contract targets
+    bytes32 constant TARGET_RESOLVER = keccak256("resolver");
+    bytes32 constant TARGET_REGISTRAR = keccak256("registrar");
 
     //////// INITIALIZER ////////
 
     /**
      * @notice Initializes the contract with the initial parameters
      * @param _verifier Gateway UR.
-     * @param _ens Signer addresses
-     * @param _nameWrapper ENS' NameWrapper
      */
     constructor(
         uint256 _chainId,
+        address _target_resolver,
+        address _target_registrar,
         IEVMVerifier _verifier,
-        ENS _ens,
-        INameWrapper _nameWrapper
-    ) {
-        require(
-            address(_nameWrapper) != address(0),
-            "Name Wrapper address must be set"
-        );
+        string memory _metadataUrl
+    )
+        ENSIP16(_metadataUrl)
+    {
         require(
             address(_verifier) != address(0), "Verifier address must be set"
         );
-        require(address(_ens) != address(0), "Registry address must be set");
-        ens = _ens;
+        require(
+            address(_target_registrar) != address(0),
+            "Registry address must be set"
+        );
+        require(
+            address(_target_resolver) != address(0),
+            "Resolver address must be set"
+        );
         verifier = _verifier;
-        nameWrapper = _nameWrapper;
-
-        setChainId(_chainId);
+        chainId = _chainId;
+        setTarget(TARGET_RESOLVER, _target_resolver);
+        setTarget(TARGET_REGISTRAR, _target_registrar);
     }
 
-    //////// OFFCHAIN STORAGE REGISTER DOMAIN ////////
+    //////// OFFCHAIN STORAGE REGISTER SUBDOMAIN ////////
 
     /**
-     * Resolves a name, as specified by ENSIP 10 (wildcard).
-     * @param name The DNS-encoded name to resolve.
-     * @param resolver Address of resolver that should will store this domain
+     * Forwards the registering of a subdomain to the L2 contracts
+     * @param -name The DNS-encoded name to resolve.
+     * @param -owner Owner of the domain
+     * @param -duration duration The duration in seconds of the registration.
+     * @param -resolver The address of the resolver to set for this name.
+     * @param -data Multicallable data bytes for setting records in the associated resolver upon reigstration.
+     * @param -fuses The fuses to set for this name.
+     * @param -extraData any encoded additional data
      */
-    function register(bytes calldata name, address resolver) external {
-        bytes32 node = WrapperBytes.namehash(name, 0);
-        (, address target, bool parent) = getTarget(name);
-        address onchainOwner = ens.owner(node);
-        if (
-            (onchainOwner != address(0) && onchainOwner != msg.sender)
-                || (target != address(0) && !parent)
-        ) revert L1Resolver__UnavailableDomain(node);
-
-        setTarget(node, resolver);
+    function register(
+        string calldata, /* name */
+        address, /* owner */
+        uint256, /* duration */
+        bytes32, /* secret */
+        address, /* resolver */
+        bytes[] calldata, /* data */
+        bool, /* reverseRecord */
+        uint16, /* fuses */
+        bytes memory /* extraData */
+    )
+        external
+        payable
+    {
+        _offChainStorage(targets[TARGET_REGISTRAR]);
     }
 
     /**
-     * Forwards the ownership setting to the L2 contracts
-     * @param name The DNS-encoded name to resolve.
+     * @notice Returns the registration parameters for a given name and duration
+     * @param -name The DNS-encoded name to query
+     * @param -duration The duration in seconds for the registration
+     * @return price The price of the registration in wei per second
+     * @return commitTime the amount of time the commit should wait before being revealed
+     * @return extraData any given structure in an ABI encoded format
      */
-    function setOwner(bytes calldata name, address /*owner*/ ) public view {
-        _offChainStorage(name);
+    function registerParams(
+        bytes memory, /* name */
+        uint256 /* duration */
+    )
+        external
+        view
+        override
+        returns (
+            uint256, /* price */
+            uint256, /* commitTime */
+            bytes memory /* extraData */
+        )
+    {
+        EVMFetcher.newFetchRequest(verifier, targets[TARGET_REGISTRAR])
+            .getStatic(PRICE_SLOT).getStatic(COMMIT_SLOT).fetch(
+            this.registerParamsCallback.selector, ""
+        );
+    }
+
+    function registerParamsCallback(
+        bytes[] memory values,
+        bytes memory
+    )
+        public
+        pure
+        returns (uint256 price, uint256 commitTime, bytes memory extraData)
+    {
+        price = abi.decode(values[0], (uint256));
+        commitTime = abi.decode(values[1], (uint256));
+        return (price, commitTime, abi.encode(""));
+    }
+
+    /**
+     * @notice Executes multiple calls in a single transaction.
+     * @param -data An array of encoded function call data.
+     */
+    function multicall(bytes[] calldata /* data */ )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
     //////// ENSIP 10 ////////
 
     /**
      * @dev Resolve and verify a record stored in l2 target address. It supports subname by fetching target recursively to the nearlest parent.
-     * @param name DNS encoded ENS name to query
+     * @param -name DNS encoded ENS name to query
      * @param data The actual calldata
      * @return result result of the call
      */
     function resolve(
-        bytes calldata name,
+        bytes calldata, /* name */
         bytes calldata data
     )
         external
         view
         returns (bytes memory result)
     {
-        (, address target,) = getTarget(name);
         bytes4 selector = bytes4(data);
 
         if (selector == IAddrResolver.addr.selector) {
             bytes32 node = abi.decode(data[4:], (bytes32));
-            return _addr(node, target);
+            return _addr(node);
         }
         if (selector == IAddressResolver.addr.selector) {
             (bytes32 node, uint256 cointype) =
                 abi.decode(data[4:], (bytes32, uint256));
-            return _addr(node, cointype, target);
+            return _addr(node, cointype);
         }
         if (selector == ITextResolver.text.selector) {
             (bytes32 node, string memory key) =
                 abi.decode(data[4:], (bytes32, string));
-            return bytes(_text(node, key, target));
+            return bytes(_text(node, key));
         }
         if (selector == IContentHashResolver.contenthash.selector) {
             bytes32 node = abi.decode(data[4:], (bytes32));
-            return _contenthash(node, target);
+            return _contenthash(node);
         }
     }
 
@@ -168,22 +224,15 @@ contract L1Resolver is
     /**
      * Sets the address associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param name The DNS encoded node to update.
-     * @param a The address to set.
+     * @param -name The DNS encoded node to update.
+     * @param -a The address to set.
      */
-    function setAddr(bytes calldata name, address a) external {
-        _offChainStorage(name);
+    function setAddr(bytes32, /* name */ address /* a */ ) external view {
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
-    function _addr(
-        bytes32 node,
-        address target
-    )
-        private
-        view
-        returns (bytes memory)
-    {
-        EVMFetcher.newFetchRequest(verifier, target).getStatic(
+    function _addr(bytes32 node) private view returns (bytes memory) {
+        EVMFetcher.newFetchRequest(verifier, targets[TARGET_RESOLVER]).getStatic(
             RECORD_VERSIONS_SLOT
         ).element(node).getDynamic(VERSIONABLE_ADDRESSES_SLOT).ref(0).element(
             node
@@ -206,30 +255,30 @@ contract L1Resolver is
     /**
      * Sets the address associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param name The DNS encoded node to update.
-     * @param coinType The constant used to define the coin type of the corresponding address.
-     * @param a The address to set.
+     * @param -name The DNS encoded node to update.
+     * @param -coinType The constant used to define the coin type of the corresponding address.
+     * @param -a The address to set.
      */
     function setAddr(
-        bytes calldata name,
-        uint256 coinType,
-        bytes memory a
+        bytes32, /* name */
+        uint256, /* coinType */
+        bytes memory /* a */
     )
         public
+        view
     {
-        _offChainStorage(name);
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
     function _addr(
         bytes32 node,
-        uint256 coinType,
-        address target
+        uint256 coinType
     )
         private
         view
         returns (bytes memory)
     {
-        EVMFetcher.newFetchRequest(verifier, target).getStatic(
+        EVMFetcher.newFetchRequest(verifier, targets[TARGET_RESOLVER]).getStatic(
             RECORD_VERSIONS_SLOT
         ).element(node).getDynamic(VERSIONABLE_ADDRESSES_SLOT).ref(0).element(
             node
@@ -252,30 +301,30 @@ contract L1Resolver is
     /**
      * Sets the text data associated with an ENS node and key.
      * May only be called by the owner of that node in the ENS registry.
-     * @param name The DNS encoded node to update.
-     * @param key The key to set.
-     * @param value The text data value to set.
+     * @param -name The DNS encoded node to update.
+     * @param -key The key to set.
+     * @param -value The text data value to set.
      */
     function setText(
-        bytes calldata name,
-        string calldata key,
-        string calldata value
+        bytes32, /* name */
+        string calldata, /* key */
+        string calldata /* value */
     )
         external
+        view
     {
-        _offChainStorage(name);
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
     function _text(
         bytes32 node,
-        string memory key,
-        address target
+        string memory key
     )
         private
         view
         returns (bytes memory)
     {
-        EVMFetcher.newFetchRequest(verifier, target).getStatic(
+        EVMFetcher.newFetchRequest(verifier, targets[TARGET_RESOLVER]).getStatic(
             RECORD_VERSIONS_SLOT
         ).element(node).getDynamic(VERSIONABLE_TEXTS_SLOT).ref(0).element(node)
             .element(key).fetch(this.textCallback.selector, "");
@@ -297,27 +346,21 @@ contract L1Resolver is
     /**
      * Sets the contenthash associated with an ENS node.
      * May only be called by the owner of that node in the ENS registry.
-     * @param name The DNS encoded node to update.
-     * @param hash The contenthash to set
+     * @param -name The DNS encoded node to update.
+     * @param -hash The contenthash to set
      */
     function setContenthash(
-        bytes calldata name,
-        bytes calldata hash
+        bytes32, /* name */
+        bytes calldata /* hash */
     )
         external
+        view
     {
-        _offChainStorage(name);
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
-    function _contenthash(
-        bytes32 node,
-        address target
-    )
-        private
-        view
-        returns (bytes memory)
-    {
-        EVMFetcher.newFetchRequest(verifier, target).getStatic(
+    function _contenthash(bytes32 node) private view returns (bytes memory) {
+        EVMFetcher.newFetchRequest(verifier, targets[TARGET_RESOLVER]).getStatic(
             RECORD_VERSIONS_SLOT
         ).element(node).getDynamic(VERSIONABLE_HASHES_SLOT).ref(0).element(node)
             .fetch(this.contenthashCallback.selector, "");
@@ -338,111 +381,44 @@ contract L1Resolver is
 
     /**
      * @notice Builds an StorageHandledByL2 error.
-     *
-     * @param name The DNS encoded node to update.
      */
-    function _offChainStorage(bytes calldata name) internal view {
-        (bytes32 node, address target,) = this.getTarget(name);
-        if (target == address(0)) revert L1Resolver__DomainNotFound(node);
+    function _offChainStorage(address target) internal view {
         revert StorageHandledByL2(chainId, target);
     }
 
     //////// ENS ERC-165 ////////
 
-    function supportsInterface(bytes4 interfaceID) public pure returns (bool) {
+    function supportsInterface(bytes4 interfaceID)
+        public
+        view
+        override(ENSIP16, IERC165)
+        returns (bool)
+    {
         return interfaceID == type(IExtendedResolver).interfaceId
+            || interfaceID == type(IWriteDeferral).interfaceId
             || interfaceID == type(IERC165).interfaceId
-            || interfaceID == type(EVMFetchTarget).interfaceId;
-    }
-
-    //////// PUBLIC VIEW FUNCTIONS ////////
-
-    /**
-     * @dev Returns the L2 target address that can answer queries for `name`.
-     * @param name DNS encoded ENS name to query
-     * @return node namehash of resolved domain
-     * @return target The L2 resolver address to verify against.
-     * @return parent boolean flag indicating it got the parent target
-     */
-    function getTarget(bytes calldata name)
-        public
-        view
-        returns (bytes32, address, bool)
-    {
-        return getTarget(name, 0);
-    }
-
-    /**
-     * @dev Returns the L2 target address that can answer queries for `name`.
-     * @param name DNS encoded ENS name to query
-     * @param offset for recursive resolution
-     * @return node namehash of resolved domain
-     * @return target The L2 resolver address to verify against.
-     * @return parent boolean flag indicating it got the parent target
-     */
-    function getTarget(
-        bytes calldata name,
-        uint256 offset
-    )
-        public
-        view
-        returns (bytes32 node, address target, bool parent)
-    {
-        uint256 len = name.readUint8(offset);
-        node = bytes32(0);
-        if (len > 0) {
-            bytes32 label = name.keccak(offset + 1, len);
-            (node, target, parent) = getTarget(name, offset + len + 1);
-            node = keccak256(abi.encodePacked(node, label));
-            if (_targets[node] != address(0)) {
-                return (node, _targets[node], false);
-            }
-        } else {
-            return (bytes32(0), address(0), false);
-        }
-        if (target != address(0)) parent = true;
-        return (node, target, parent);
+            || interfaceID == type(EVMFetchTarget).interfaceId
+            || super.supportsInterface(interfaceID);
     }
 
     //////// PUBLIC WRITE FUNCTIONS ////////
 
     /**
-     * Set target address to verify against
-     * @param node The ENS node to query.
-     * @param target The L2 resolver address to verify against.
+     * @notice Sets the new metadata URL and emits a MetadataUrlSet event.
+     * @param newUrl New URL to be set.
      */
-    function setTarget(bytes32 node, address target) public {
-        if (!isAuthorised(node)) revert L1Resolver__ForbiddenAction(node);
-        address prevAddr = _targets[node];
-        _targets[node] = target;
-        emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
+    function setMetadataUrl(string memory newUrl) external override onlyOwner {
+        super._setMetadataUrl(newUrl);
     }
 
     /**
-     * Set chainId for offchain storage
-     * @param _chainId id of the given chain
+     * Set target address to redirect request to
+     * @param target The L2 contract address
      */
-    function setChainId(uint256 _chainId) public onlyOwner {
-        uint256 prevChainId = chainId;
-        chainId = _chainId;
-        emit L2HandlerDefaultChainIdChanged(prevChainId, chainId);
-    }
-
-    //////// PRIVATE FUNCTIONS ////////
-
-    function isAuthorised(bytes32 node) internal view returns (bool) {
-        // TODO: Add support for
-        // trustedETHController
-        // trustedReverseRegistrar
-        // isApprovedForAll
-        // isApprovedFor
-        address owner = ens.owner(node);
-
-        if (owner == address(nameWrapper)) {
-            owner = nameWrapper.ownerOf(uint256(node));
-        }
-
-        return owner == msg.sender || owner == address(0);
+    function setTarget(bytes32 key, address target) public onlyOwner {
+        address prevAddr = targets[key];
+        targets[key] = target;
+        emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
     }
 
 }

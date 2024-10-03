@@ -25,9 +25,9 @@ function getChain(chainId: number): chains.Chain {
 const {
   ROLLUP_ADDRESS: rollupAddr,
   CHAIN_ID: chainId = '31337',
-  CHAIN_ID_L2: chainIdL2 = '412346',
+  L2_CHAIN_ID: chainIdL2 = '412346',
   RPC_URL: rpcUrl = 'http://127.0.0.1:8545',
-  LAYER2_RPC: rpcUrlL2 = 'http://127.0.0.1:8547',
+  L2_RPC_URL: rpcUrlL2 = 'http://127.0.0.1:8547',
   DEBUG,
   PORT: port = 3000,
 } = process.env
@@ -60,11 +60,7 @@ const _ = (async () => {
   const server = new ccip.Server()
   server.app.use(withLogger({ abi, debug: DEBUG === 'true' }))
 
-  server.add(
-    abi,
-    withQuery(), // required for Universal Resolver integration
-    withGetStorageSlot(proofService),
-  )
+  server.add(abi, withQuery(), withGetStorageSlot(proofService))
 
   server.makeApp('/').listen(port, () => {
     console.log(`Gateway bound to port ${port}.`)
