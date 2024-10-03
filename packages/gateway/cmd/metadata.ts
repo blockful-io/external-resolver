@@ -25,7 +25,10 @@ const _ = (async () => {
     throw new Error('RESOLVER_ADDRESS is required')
   }
 
-  const dbClient = await NewDataSource(dbUrl).initialize()
+  const synchronize = process.env.DB_MIGRATE
+    ? process.env.DB_MIGRATE === 'true'
+    : undefined
+  const dbClient = await NewDataSource(dbUrl, { synchronize }).initialize()
   const repo = new PostgresRepository(dbClient)
 
   const rpcURL = process.env.RPC_URL || 'http://localhost:8545'
