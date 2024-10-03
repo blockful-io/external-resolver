@@ -39,7 +39,7 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
             l2Resolver: getContractAddress(
                 "L2ArbitrumResolver", "PublicResolver", 42161
             ),
-            l2Registrar: getContractAddress("NameWrapperProxy", 42161)
+            l2Registrar: getContractAddress("SubdomainController", 42161)
         });
     }
 
@@ -51,7 +51,7 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
             l2Resolver: getContractAddress(
                 "L2ArbitrumResolver", "PublicResolver", 421614
             ),
-            l2Registrar: getContractAddress("NameWrapperProxy", 421614)
+            l2Registrar: getContractAddress("SubdomainController", 421614)
         });
     }
 
@@ -95,7 +95,7 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
                 "L2ArbitrumResolver", "PublicResolver", 412346
             ),
             l2Registrar: getContractAddress(
-                "L2ArbitrumResolver", "NameWrapperProxy", 412346
+                "L2ArbitrumResolver", "SubdomainController", 412346
             )
         });
     }

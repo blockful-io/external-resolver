@@ -8,9 +8,9 @@ import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 
 import {DeployHelper} from "../DeployHelper.sol";
 import {ENSHelper} from "../ENSHelper.sol";
-import {NameWrapperProxy} from "../../src/NameWrapperProxy.sol";
+import {SubdomainController} from "../../src/SubdomainController.sol";
 
-contract NameWrapperProxyScript is DeployHelper, ENSHelper {
+contract SubdomainControllerScript is DeployHelper, ENSHelper {
 
     function run() external {
         NameWrapper nameWrapper = NameWrapper(getContractAddress("NameWrapper"));
@@ -18,10 +18,10 @@ contract NameWrapperProxyScript is DeployHelper, ENSHelper {
         vm.startBroadcast();
 
         uint256 subdomainPrice = 0.001 ether;
-        NameWrapperProxy nameWrapperProxy = new NameWrapperProxy(
+        SubdomainController subdomainController = new SubdomainController(
             namehash("arb.eth"), address(nameWrapper), subdomainPrice, 0
         );
-        nameWrapper.setApprovalForAll(address(nameWrapperProxy), true);
+        nameWrapper.setApprovalForAll(address(subdomainController), true);
 
         vm.stopBroadcast();
     }

@@ -16,7 +16,7 @@ import {PublicResolver} from "@ens-contracts/resolvers/PublicResolver.sol";
 
 import {ENSHelper} from "../ENSHelper.sol";
 import {DeployHelper} from "../DeployHelper.sol";
-import {NameWrapperProxy} from "../../src/NameWrapperProxy.sol";
+import {SubdomainController} from "../../src/SubdomainController.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper, DeployHelper {
 
@@ -25,15 +25,15 @@ contract L2ArbitrumResolver is Script, ENSHelper, DeployHelper {
         ReverseRegistrar reverseRegistrar =
             ReverseRegistrar(getContractAddress("ReverseRegistrar"));
         NameWrapper nameWrapper = NameWrapper(getContractAddress("NameWrapper"));
-        NameWrapperProxy nameWrapperProxy =
-            NameWrapperProxy(getContractAddress("NameWrapperProxy"));
+        SubdomainController subdomainController =
+            SubdomainController(getContractAddress("SubdomainController"));
 
         vm.startBroadcast();
 
         PublicResolver arbResolver = new PublicResolver(
             registry,
             nameWrapper,
-            address(nameWrapperProxy),
+            address(subdomainController),
             address(reverseRegistrar)
         );
 
@@ -48,7 +48,9 @@ contract L2ArbitrumResolver is Script, ENSHelper, DeployHelper {
 
         console.log("Registry deployed at", address(registry));
         console.log("NameWrapper deployed at", address(nameWrapper));
-        console.log("NameWrapperProxy deployed at", address(nameWrapperProxy));
+        console.log(
+            "SubdomainController deployed at", address(subdomainController)
+        );
         console.log("L2Resolver deployed at", address(arbResolver));
     }
 

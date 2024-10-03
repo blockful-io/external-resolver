@@ -37,18 +37,8 @@ deploy-arb-resolver:
 		--private-key $(L2_PRIVATE_KEY) \
 		--verify;
 
-deploy-arb-name-wrapper-proxy:
-	@set -e; \
-	echo "Deploying NameWrapperProxy..." && \
-	forge script $(deploy_dir)/NameWrapperProxy.sol \
-		--rpc-url arb_sepolia \
-		--broadcast \
-		-vvv \
-		--private-key $(L2_PRIVATE_KEY) \
-		--verify;
-
 	
-CONTRACTS := ENSRegistry ReverseRegistrar BaseRegistrarImplementation NameWrapper ETHRegistrarController NameWrapperProxy L2ArbitrumResolver
+CONTRACTS := ENSRegistry ReverseRegistrar BaseRegistrarImplementation NameWrapper ETHRegistrarController SubdomainController L2ArbitrumResolver
 deploy-arb-full:
 	@set -e; \
 	$(foreach contract,$(CONTRACTS),\
