@@ -18,7 +18,7 @@ ponder.on(
     const node = namehash(event.args.name)
     const name = decodeDNSHex(event.args.name)
     await domain.create({
-      id: `${event.args.owner}-${node}`,
+      id: node,
       data: {
         node,
         name,
