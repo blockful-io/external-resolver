@@ -7,7 +7,7 @@ import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 import {ENSHelper} from "../script/ENSHelper.sol";
 import {OffchainRegister} from "./interfaces/OffchainResolver.sol";
 
-contract NameWrapperProxy is OffchainRegister, ENSHelper {
+contract SubdomainController is OffchainRegister, ENSHelper {
 
     uint256 public price;
     uint256 public commitTime;
