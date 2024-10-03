@@ -173,7 +173,7 @@ npm run migration:generate -- -n <migration_name>
     npm run contracts dev:arb:l2
     ```
 
-2. Gather the contract address from the terminal and add it [here](https://github.com/blockful-io/external-resolver/blob/main/packages/contracts/script/local/ArbResolver.s.sol#L56) so the L1 domain gets resolved by the L2 contract you just deployed.
+2. Gather the contract address from the terminal and add it [here](https://github.com/blockful-io/external-resolver/blob/main/packages/contracts/script/local/L1ArbitrumResolver.s.sol#L56) so the L1 domain gets resolved by the L2 contract you just deployed.
 
 3. Start the gateway:
 

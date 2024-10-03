@@ -17,8 +17,8 @@ import {ContentHashResolver} from
     "@ens-contracts/resolvers/profiles/ContentHashResolver.sol";
 
 import {ENSIP16} from "./ENSIP16.sol";
-import {IWriteDeferral} from "./IWriteDeferral.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
+import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 /**
@@ -458,11 +458,11 @@ contract DatabaseResolver is
     //////// PUBLIC WRITE FUNCTIONS ////////
 
     /**
-     * @notice Sets the new graphQL URL and emits a GraphqlUrlSet event
+     * @notice Sets the new metadata URL and emits a MetadataUrlSet event.
      * @param newUrl New URL to be set.
      */
-    function setGraphqlUrl(string memory newUrl) external override onlyOwner {
-        graphqlUrl = newUrl;
+    function setMetadataUrl(string memory newUrl) external override onlyOwner {
+        _setMetadataUrl(newUrl);
     }
 
     /**

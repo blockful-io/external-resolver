@@ -16,52 +16,48 @@ import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 
 import {ENSHelper} from "../Helper.sol";
 import {L1Verifier} from "@evmgateway/L1Verifier.sol";
-import {ArbVerifier} from "../../src/ArbVerifier.sol";
-import {L2Resolver} from "../../src/L2Resolver.sol";
+import {ArbitrumVerifier} from "../../src/ArbitrumVerifier.sol";
 import {L1Resolver} from "../../src/L1Resolver.sol";
-import {ArbitrumConfig} from "../config/ArbitrumConfig.s.sol";
+import {L1ArbitrumConfig} from "../config/L1ArbitrumConfig.s.sol";
 
-contract arbResolverScript is Script, ENSHelper {
+contract L1ArbitrumResolverScript is Script, ENSHelper {
 
     function run() external {
-        ArbitrumConfig config = new ArbitrumConfig(block.chainid, msg.sender);
         (
             ENSRegistry registry,
-            , /* ReverseRegistrar */
-            , /* UniversalResolver */
             IRollupCore rollup,
-            NameWrapper nameWrapper,
-            uint256 targetChainId
-        ) = config.activeNetworkConfig();
+            uint256 targetChainId,
+            address l2Resolver,
+            address l2Registrar
+        ) = (new L1ArbitrumConfig(block.chainid, msg.sender))
+            .activeNetworkConfig();
 
         string[] memory urls = new string[](1);
         urls[0] = "http://127.0.0.1:3000/{sender}/{data}.json";
 
+        string memory metadataUrl = "https://localhost:3000";
+
         vm.startBroadcast();
 
-        ArbVerifier verifier = new ArbVerifier(urls, rollup);
-        L1Resolver l1resolver =
-            new L1Resolver(targetChainId, verifier, registry, nameWrapper);
-
-        // .eth
-        registry.setSubnodeRecord(
-            rootNode, labelhash("eth"), msg.sender, address(0x123), 99999
+        ArbitrumVerifier verifier = new ArbitrumVerifier(urls, rollup);
+        L1Resolver l1resolver = new L1Resolver(
+            targetChainId, l2Resolver, l2Registrar, verifier, metadataUrl
         );
 
-        // blockful.eth
+        // .eth
+        registry.setSubnodeOwner(rootNode, labelhash("eth"), msg.sender);
+        // arb.eth
         registry.setSubnodeRecord(
             namehash("eth"),
-            labelhash("blockful"),
+            labelhash("arb"),
             msg.sender,
             address(l1resolver),
             100000
         );
 
-        l1resolver.setTarget(
-            namehash("blockful.eth"), 0xE78b46AE59984D11A215B6F84C7de4CB111eF63C
-        );
-
         vm.stopBroadcast();
+
+        console.log("L1Resolver deployed at", address(l1resolver));
     }
 
 }

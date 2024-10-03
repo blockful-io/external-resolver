@@ -2,7 +2,7 @@
   "name": "@blockful/client",
   "scripts": {
     "test": "npm-run-all test:**",
-    "test:l1": "hardhat test ./test/l1.e2e.spec.ts --network localhost",
+    "test:l1": "hardhat test ./test/arb.e2e.spec.ts --network localhost",
     "test:db": "hardhat test ./test/db.e2e.spec.ts --network localhost",
     "start:read": "ts-node src/read.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     "start:write:db": "ts-node src/db.write.ts --resolver 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",

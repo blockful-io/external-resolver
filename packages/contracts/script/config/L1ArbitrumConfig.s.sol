@@ -14,17 +14,16 @@ import {UniversalResolver} from "@ens-contracts/utils/UniversalResolver.sol";
 
 import {ENSHelper} from "../Helper.sol";
 
-contract ArbitrumConfig is Script, ENSHelper {
+contract L1ArbitrumConfig is Script, ENSHelper {
 
     NetworkConfig public activeNetworkConfig;
 
     struct NetworkConfig {
         ENSRegistry registry;
-        ReverseRegistrar registrar;
-        UniversalResolver universalResolver;
         IRollupCore rollup;
-        NameWrapper nameWrapper;
         uint256 targetChainId;
+        address l2Resolver;
+        address l2Registrar;
     }
 
     constructor(uint256 chainId, address sender) {
@@ -33,29 +32,23 @@ contract ArbitrumConfig is Script, ENSHelper {
         else activeNetworkConfig = _getAnvilConfig(sender);
     }
 
-    function _getMainnetConfig() private pure returns (NetworkConfig memory) {
+    function _getMainnetConfig() private view returns (NetworkConfig memory) {
         return NetworkConfig({
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e),
-            registrar: ReverseRegistrar(0xa58E81fe9b61B5c3fE2AFD33CF304c454AbFc7Cb),
-            universalResolver: UniversalResolver(
-                0xce01f8eee7E479C928F8919abD53E553a36CeF67
-            ),
             rollup: IRollupCore(0x5eF0D09d1E6204141B4d37530808eD19f60FBa35),
-            nameWrapper: NameWrapper(0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401),
-            targetChainId: 42161
+            targetChainId: 42161,
+            l2Resolver: vm.envAddress("L2_RESOLVER_ADDRESS"),
+            l2Registrar: vm.envAddress("L2_REGISTRAR_ADDRESS")
         });
     }
 
-    function _getSepoliaConfig() private pure returns (NetworkConfig memory) {
+    function _getSepoliaConfig() private view returns (NetworkConfig memory) {
         return NetworkConfig({
             registry: ENSRegistry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e),
-            registrar: ReverseRegistrar(0xA0a1AbcDAe1a2a4A2EF8e9113Ff0e02DD81DC0C6),
-            universalResolver: UniversalResolver(
-                0xc8Af999e38273D658BE1b921b88A9Ddf005769cC
-            ),
             rollup: IRollupCore(0xd80810638dbDF9081b72C1B33c65375e807281C8),
-            nameWrapper: NameWrapper(0x0635513f179D50A207757E05759CbD106d7dFcE8),
-            targetChainId: 421614
+            targetChainId: 421614,
+            l2Resolver: vm.envAddress("L2_RESOLVER_ADDRESS"),
+            l2Registrar: vm.envAddress("L2_REGISTRAR_ADDRESS")
         });
     }
 
@@ -67,38 +60,36 @@ contract ArbitrumConfig is Script, ENSHelper {
             return activeNetworkConfig;
         }
 
-        string[] memory urls = new string[](1);
-        urls[0] = "https://127.0.0.1:3000/{sender}/{data}.json";
-
         vm.startBroadcast(sender);
         ENSRegistry registry = new ENSRegistry();
+
+        string[] memory urls = new string[](0);
         UniversalResolver universalResolver =
             new UniversalResolver(address(registry), urls);
 
         ReverseRegistrar registrar = new ReverseRegistrar(registry);
 
         // .reverse
-        registry.setSubnodeOwner(rootNode, labelhash("reverse"), msg.sender);
+        registry.setSubnodeOwner(rootNode, labelhash("reverse"), sender);
         // addr.reverse
         registry.setSubnodeOwner(
             namehash("reverse"), labelhash("addr"), address(registrar)
         );
 
-        NameWrapper nameWrap = new NameWrapper(
-            registry,
-            IBaseRegistrar(address(registrar)),
-            IMetadataService(msg.sender)
-        );
+        // .reverse
+        registry.setSubnodeOwner(rootNode, labelhash("eth"), sender);
 
         vm.stopBroadcast();
 
+        console.log("Registry deployed at", address(registry));
+        console.log("UniversalResolver deployed at", address(universalResolver));
+
         return NetworkConfig({
             registry: registry,
-            registrar: registrar,
-            universalResolver: universalResolver,
             rollup: IRollupCore(0x3fC2B5464aD073036fEA6e396eC2Ac0406A3b058),
-            nameWrapper: nameWrap,
-            targetChainId: 31337
+            targetChainId: 412346,
+            l2Resolver: vm.envAddress("L2_RESOLVER_ADDRESS"),
+            l2Registrar: vm.envAddress("L2_REGISTRAR_ADDRESS")
         });
     }
 

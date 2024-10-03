@@ -3,12 +3,8 @@ import {
   RawContractError,
   Hex,
   Address,
-  Abi,
-  createPublicClient,
   PrivateKeyAccount,
-  walletActions,
-  http,
-  Account,
+  defineChain,
 } from 'viem'
 import * as chains from 'viem/chains'
 
@@ -17,6 +13,10 @@ import {
   MessageData,
   TypedSignature,
 } from '@blockful/gateway/src/types'
+
+export interface RegisterParams {
+  price: bigint
+}
 
 export function getRevertErrorData(err: unknown) {
   if (!(err instanceof BaseError)) return undefined
@@ -42,36 +42,6 @@ export async function ccipRequest({
       'Content-Type': 'application/json',
     },
   })
-}
-
-export async function handleL2Storage({
-  chainId,
-  l2Url,
-  args,
-}: {
-  chainId: bigint
-  l2Url: string
-  args: {
-    abi: Abi | unknown[]
-    address: Address
-    account: Account
-    functionName: string
-    args: unknown[]
-  }
-}) {
-  const chain = getChain(Number(chainId))
-
-  const l2Client = createPublicClient({
-    chain,
-    transport: http(l2Url),
-  }).extend(walletActions)
-
-  try {
-    const { request } = await l2Client.simulateContract(args)
-    await l2Client.writeContract(request)
-  } catch (err) {
-    console.log('error while trying to make the request: ', { err })
-  }
 }
 
 export async function handleDBStorage({
@@ -108,5 +78,21 @@ export async function handleDBStorage({
 }
 
 export function getChain(chainId: number) {
-  return Object.values(chains).find((chain) => chain.id === chainId)
+  return [
+    ...Object.values(chains),
+    defineChain({
+      id: Number(chainId),
+      name: 'Arbitrum Local',
+      nativeCurrency: {
+        name: 'Arbitrum Sepolia Ether',
+        symbol: 'ETH',
+        decimals: 18,
+      },
+      rpcUrls: {
+        default: {
+          http: ['http://127.0.0.1:8547'],
+        },
+      },
+    }),
+  ].find((chain) => chain.id === chainId)
 }

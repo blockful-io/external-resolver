@@ -59,14 +59,14 @@ export class EVMProofHelper<chain extends Chain> {
    *   corresponding decoding library will understand.
    */
   async getProofs(
-    blockNo: bigint,
+    blockNumber: bigint,
     address: Address,
     slots: bigint[],
   ): Promise<StateProof> {
     const proofs = await this.provider.getProof({
       address,
-      storageKeys: slots.map((slot) => toHex(slot)),
-      blockNumber: BigInt('0x' + blockNo.toString(16)),
+      storageKeys: slots.map((slot) => toHex(slot, { size: 32 })),
+      blockNumber,
     })
     return {
       stateTrieWitness: proofs.accountProof,
