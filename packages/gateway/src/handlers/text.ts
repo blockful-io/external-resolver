@@ -59,8 +59,7 @@ export function withGetText(repo: ReadRepository): ccip.HandlerDescription {
     type: 'text(bytes32 node, string key) view returns (string)',
     func: async ({ node, key }) => {
       const text = await repo.getText({ node, key })
-      if (text)
-        return { data: [text.value], extraData: formatTTL(parseInt(text.ttl)) }
+      if (text) return { data: [text.value], extraData: formatTTL(text.ttl) }
     },
   }
 }

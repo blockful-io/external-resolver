@@ -136,7 +136,7 @@ export function withGetContentHash(
       if (content)
         return {
           data: [content.value],
-          extraData: formatTTL(parseInt(content.ttl)),
+          extraData: formatTTL(content.ttl),
         }
     },
   }

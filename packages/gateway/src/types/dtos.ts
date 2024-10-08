@@ -3,7 +3,7 @@ import { PubKey } from '.'
 
 export type Response = {
   value: string
-  ttl: string
+  ttl: number
 }
 
 export type WritingProps = {
@@ -69,5 +69,5 @@ export type SetPubkeyProps = NodeProps &
 
 export type GetPubkeyResponse = {
   value: PubKey
-  ttl: string
+  ttl: number
 }
