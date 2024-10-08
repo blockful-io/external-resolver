@@ -1,6 +1,3 @@
-/**
- * Script for running the server locally exposing the API
- */
 import 'reflect-metadata'
 import { config } from 'dotenv'
 import { Hex, createPublicClient, getChainContractAddress, http } from 'viem'
@@ -23,6 +20,7 @@ import {
   withQuery,
   withRegisterDomain,
   withTransferDomain,
+  withRegisterParams,
 } from '../src/handlers'
 import { abi } from '../src/abi'
 import { getChain } from '../src/chain'
@@ -106,6 +104,7 @@ const _ = (async () => {
     withSetAddrByCoin(repo, ownershipValidator),
     withGetContentHash(repo),
     withSetContentHash(repo, ownershipValidator),
+    withRegisterParams(),
     withRegisterDomain(repo),
     withTransferDomain(repo, ownershipValidator),
   )

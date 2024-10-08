@@ -20,6 +20,11 @@ import {ENSIP16} from "./ENSIP16.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
 import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
+import {
+    OffchainRegister,
+    OffchainRegisterParams,
+    OffchainMulticallable
+} from "./interfaces/OffchainResolver.sol";
 
 /**
  * Implements an ENS resolver that directs all queries to a CCIP read gateway.
@@ -36,6 +41,9 @@ contract DatabaseResolver is
     TextResolver,
     ContentHashResolver,
     NameResolver,
+    OffchainRegister,
+    OffchainRegisterParams,
+    OffchainMulticallable,
     Ownable
 {
 
@@ -106,21 +114,58 @@ contract DatabaseResolver is
     //////// OFFCHAIN STORAGE REGISTER DOMAIN ////////
 
     /**
-     * Resolves a name, as specified by ENSIP 10 (wildcard).
-     * @param -name The DNS-encoded name to be registered.
-     * @param -ttl Expiration timestamp of the domain
-     * @param -owner address of the owner of the domain
+     * Forwards the registering of a domain to the L2 contracts
+     * @param -parentNode namehash of the parent node
+     * @param -label The name to be registered.
+     * @param -owner Owner of the domain
+     * @param -duration duration The duration in seconds of the registration.
+     * @param -secret The secret to be used for the registration based on commit/reveal
+     * @param -resolver The address of the resolver to set for this name.
+     * @param -data Multicallable data bytes for setting records in the associated resolver upon reigstration.
+     * @param -reverseRecord Whether this name is the primary name
+     * @param -fuses The fuses to set for this name.
+     * @param -extraData any encoded additional data
      */
     function register(
-        bytes memory, /* name */
-        uint32, /* ttl */
+        bytes32, /* parentNode */
+        string calldata, /* name */
         address, /* owner */
-        bytes[] calldata /* data */
+        uint256, /* duration */
+        bytes32, /* secret */
+        address, /* resolver */
+        bytes[] calldata, /* data */
+        bool, /* reverseRecord */
+        uint16, /* fuses */
+        bytes memory /* extraData */
+    )
+        external
+        payable
+        override
+    {
+        _offChainStorage();
+    }
+
+    /**
+     * @notice Returns the registration parameters for a given name and duration
+     * @param -name The DNS-encoded name to query
+     * @param -duration The duration in seconds for the registration
+     * @return price The price of the registration in wei per second
+     * @return commitTime the amount of time the commit should wait before being revealed
+     * @return extraData any given structure in an ABI encoded format
+     */
+    function registerParams(
+        bytes calldata, /* name */
+        uint256 /* duration */
     )
         external
         view
+        returns (
+            uint256, /* price */
+            uint256, /* commitTime */
+            bytes memory /* extraData */
+        )
     {
-        _offChainStorage();
+        _offChainLookup(msg.data);
     }
 
     //////// OFFCHAIN STORAGE TRANSFER DOMAIN ////////

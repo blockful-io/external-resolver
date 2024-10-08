@@ -1,4 +1,4 @@
-import { hexToString, namehash } from 'viem'
+import { concat, keccak256, labelhash, stringToBytes } from 'viem'
 
 import * as ccip from '@blockful/ccip-server'
 
@@ -29,36 +29,47 @@ interface ReadRepository {
   getDomain(params: NodeProps): Promise<Domain | null>
 }
 
+export function withRegisterParams(): ccip.HandlerDescription {
+  return {
+    type: 'registerParams(bytes memory name,uint256 duration)',
+    func: async ({ duration }) => {
+      const price = 0n
+      const commitTime = 0n
+      const extraData = stringToBytes('')
+      return {
+        data: [price, commitTime, extraData],
+        extraData: formatTTL(duration),
+      }
+    },
+  }
+}
+
 export function withRegisterDomain(
   repo: WriteRepository & ReadRepository,
 ): ccip.HandlerDescription {
   return {
-    type: 'register(bytes memory name, uint32 ttl, address owner, bytes[] calldata data)',
+    type: 'register(bytes32 parentNode, string calldata label, address owner, uint256 duration, bytes32 secret, address resolver, bytes[] calldata data, bool reverseRecord, uint16 fuses, bytes memory extraData)',
     func: async (
-      { name, ttl, owner, data },
+      { parentNode, label, duration: ttl, owner, data },
       { signature }: { signature: TypedSignature },
     ) => {
       try {
-        name = hexToString(name)
-        const node = namehash(name)
+        const node = keccak256(concat([parentNode, labelhash(label)]))
 
         const existingDomain = await repo.getDomain({ node })
         if (existingDomain) {
           return { error: { message: 'Domain already exists', status: 400 } }
         }
 
-        const [, parent] = /\w*\.(.*)$/.exec(name) || []
-        const parentHash = namehash(parent)
-
         const addresses = parseEncodedAddressCalls(data, signature)
         const texts = parseEncodedTextCalls(data, signature)
 
         await repo.register({
-          name,
+          name: label,
           node,
-          ttl,
+          ttl: ttl.toString(),
           owner,
-          parent: parentHash,
+          parent: parentNode,
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
           addresses,

@@ -20,7 +20,8 @@ import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
-import { getRevertErrorData, getChain } from './client'
+import { MessageData, DomainData } from '@blockful/gateway/src/types'
+import { getRevertErrorData, getChain, handleDBStorage } from './client'
 
 config({
   path: process.env.ENV_FILE || '../.env',
@@ -33,7 +34,7 @@ let {
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   L2_RPC_URL: providerL2 = 'http://127.0.0.1:8547',
   PRIVATE_KEY:
-    privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
+  privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
 } = process.env
 
 const chain = getChain(parseInt(chainId))
@@ -76,13 +77,19 @@ const _ = (async () => {
 
   // SUBDOMAIN PRICING
 
-  const [value /* commitTime */ /* extraData */, ,] =
-    (await client.readContract({
+  let value = 0n
+  try {
+    const [_value] = (await client.readContract({
       address: resolverAddr,
       abi: l1Abi,
       functionName: 'registerParams',
       args: [toHex(name), duration],
     })) as [bigint, bigint, Hex]
+
+    value = _value
+  } catch {
+    // expected revert when the resolver doesn't implement registerParams
+  }
 
   // REGISTER NEW SUBDOMAIN
 
@@ -128,6 +135,15 @@ const _ = (async () => {
   } catch (err) {
     const data = getRevertErrorData(err)
     switch (data?.errorName) {
+      case 'StorageHandledByOffChainDatabase': {
+        const [domain, url, message] = data.args as [
+          DomainData,
+          string,
+          MessageData,
+        ]
+        await handleDBStorage({ domain, url, message, signer })
+        return
+      }
       case 'StorageHandledByL2': {
         const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
