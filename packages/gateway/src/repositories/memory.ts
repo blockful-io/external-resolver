@@ -194,7 +194,7 @@ export class InMemoryRepository {
     const domain = this.domains.get(node)
     let ttl = domain?.ttl
     if (!address) return
-    if (!domain || !ttl) ttl = 300 // default value
+    if (!domain || !ttl) ttl = '300' // default value
     return { value: address.address, ttl }
   }
 
@@ -226,7 +226,7 @@ export class InMemoryRepository {
     const domain = this.domains.get(node)
     let ttl = domain?.ttl
     if (!text) return
-    if (!domain || !ttl) ttl = 300 // default value
+    if (!domain || !ttl) ttl = '300' // default value
     return { value: text.value, ttl }
   }
 

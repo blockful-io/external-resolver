@@ -138,7 +138,10 @@ export function withGetContentHash(
     func: async ({ node }) => {
       const content = await repo.getContentHash({ node })
       if (content)
-        return { data: [content.value], extraData: formatTTL(content.ttl) }
+        return {
+          data: [content.value],
+          extraData: formatTTL(parseInt(content.ttl)),
+        }
     },
   }
 }
