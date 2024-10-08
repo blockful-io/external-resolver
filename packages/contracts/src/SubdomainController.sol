@@ -27,9 +27,10 @@ contract SubdomainController is OffchainRegister, ENSHelper {
     }
 
     function register(
-        string calldata name,
+        bytes32 parentNode,
+        string calldata label,
         address owner,
-        uint256 duration,
+        uint256 duration,     
         bytes32, /* secret */
         address resolver,
         bytes[] calldata data,
@@ -41,21 +42,20 @@ contract SubdomainController is OffchainRegister, ENSHelper {
         payable
         override
     {
-        bytes32 nodehash =
-            keccak256(abi.encodePacked(baseNode, labelhash(name)));
+        bytes32 node = keccak256(abi.encodePacked(parentNode, labelhash(label)));
 
         require(
-            nameWrapper.ownerOf(uint256(nodehash)) == address(0),
+            nameWrapper.ownerOf(uint256(node)) == address(0),
             "domain already registered"
         );
         require(msg.value >= price, "insufficient funds");
 
         nameWrapper.setSubnodeRecord(
-            baseNode, name, owner, resolver, 0, fuses, uint64(duration)
+            parentNode, label, owner, resolver, 0, fuses, uint64(duration)
         );
 
         if (data.length > 0) {
-            Resolver(resolver).multicallWithNodeCheck(nodehash, data);
+            Resolver(resolver).multicallWithNodeCheck(node, data);
         }
     }
 

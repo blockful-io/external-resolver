@@ -110,6 +110,7 @@ contract L2ArbitrumResolver is Script, ENSHelper {
             "@blockful"
         );
         subdomainController.register{value: subdomainController.price()}(
+            namehash("arb.eth"),
             "blockful",
             msg.sender,
             31556952000,
