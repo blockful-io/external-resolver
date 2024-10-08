@@ -1,4 +1,4 @@
-import { concat, keccak256, labelhash, stringToBytes } from 'viem'
+import { concat, keccak256, labelhash } from 'viem'
 
 import * as ccip from '@blockful/ccip-server'
 
@@ -27,21 +27,6 @@ interface WriteRepository {
 interface ReadRepository {
   getContentHash(params: NodeProps): Promise<Response | undefined>
   getDomain(params: NodeProps): Promise<Domain | null>
-}
-
-export function withRegisterParams(): ccip.HandlerDescription {
-  return {
-    type: 'registerParams(bytes memory name,uint256 duration)',
-    func: async ({ duration }) => {
-      const price = 0n
-      const commitTime = 0n
-      const extraData = stringToBytes('')
-      return {
-        data: [price, commitTime, extraData],
-        extraData: formatTTL(duration),
-      }
-    },
-  }
 }
 
 export function withRegisterDomain(

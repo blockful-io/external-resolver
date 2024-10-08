@@ -79,16 +79,16 @@ const _ = (async () => {
 
   let value = 0n
   try {
-    const [_value] = (await client.readContract({
-      address: resolverAddr,
-      abi: l1Abi,
-      functionName: 'registerParams',
-      args: [toHex(name), duration],
-    })) as [bigint, bigint, Hex]
-
+    const [_value /* commitTime */ /* extraData */, ,] =
+      (await client.readContract({
+        address: resolverAddr,
+        abi: l1Abi,
+        functionName: 'registerParams',
+        args: [toHex(name), duration],
+      })) as [bigint, bigint, Hex]
     value = _value
   } catch {
-    // expected revert when the resolver doesn't implement registerParams
+    // interface not implemented by the resolver
   }
 
   // REGISTER NEW SUBDOMAIN

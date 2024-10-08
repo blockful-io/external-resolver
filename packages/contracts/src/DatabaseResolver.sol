@@ -22,7 +22,6 @@ import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 import {
     OffchainRegister,
-    OffchainRegisterParams,
     OffchainMulticallable
 } from "./interfaces/OffchainResolver.sol";
 
@@ -42,7 +41,6 @@ contract DatabaseResolver is
     ContentHashResolver,
     NameResolver,
     OffchainRegister,
-    OffchainRegisterParams,
     OffchainMulticallable,
     Ownable
 {
@@ -143,29 +141,6 @@ contract DatabaseResolver is
         override
     {
         _offChainStorage();
-    }
-
-    /**
-     * @notice Returns the registration parameters for a given name and duration
-     * @param -name The DNS-encoded name to query
-     * @param -duration The duration in seconds for the registration
-     * @return price The price of the registration in wei per second
-     * @return commitTime the amount of time the commit should wait before being revealed
-     * @return extraData any given structure in an ABI encoded format
-     */
-    function registerParams(
-        bytes calldata, /* name */
-        uint256 /* duration */
-    )
-        external
-        view
-        returns (
-            uint256, /* price */
-            uint256, /* commitTime */
-            bytes memory /* extraData */
-        )
-    {
-        _offChainLookup(msg.data);
     }
 
     //////// OFFCHAIN STORAGE TRANSFER DOMAIN ////////

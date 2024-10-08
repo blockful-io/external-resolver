@@ -20,7 +20,6 @@ import {
   withQuery,
   withRegisterDomain,
   withTransferDomain,
-  withRegisterParams,
 } from '../src/handlers'
 import { abi } from '../src/abi'
 import { getChain } from '../src/chain'
@@ -104,7 +103,6 @@ const _ = (async () => {
     withSetAddrByCoin(repo, ownershipValidator),
     withGetContentHash(repo),
     withSetContentHash(repo, ownershipValidator),
-    withRegisterParams(),
     withRegisterDomain(repo),
     withTransferDomain(repo, ownershipValidator),
   )
