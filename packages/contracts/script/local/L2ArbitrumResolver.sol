@@ -81,7 +81,6 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         uint256 subdomainPrice = 0.001 ether;
         uint256 commitTime = 0;
         SubdomainController subdomainController = new SubdomainController(
-            namehash("arb.eth"),
             address(nameWrapper),
             subdomainPrice,
             commitTime

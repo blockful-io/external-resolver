@@ -11,17 +11,14 @@ contract SubdomainController is OffchainRegister, ENSHelper {
 
     uint256 public price;
     uint256 public commitTime;
-    bytes32 public baseNode;
     INameWrapper nameWrapper;
 
     constructor(
-        bytes32 _baseNode,
         address _nameWrapperAddress,
         uint256 _price,
         uint256 _commitTime
     ) {
         commitTime = _commitTime;
-        baseNode = _baseNode;
         price = _price;
         nameWrapper = INameWrapper(_nameWrapperAddress);
     }
