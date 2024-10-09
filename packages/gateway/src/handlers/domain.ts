@@ -1,4 +1,4 @@
-import { concat, keccak256, labelhash } from 'viem'
+import { namehash } from 'viem'
 
 import * as ccip from '@blockful/ccip-server'
 
@@ -17,6 +17,7 @@ import {
   parseEncodedTextCalls,
 } from '../services'
 import { Domain } from '../entities'
+import { decodeDNSName, extractParentFromName } from '../utils'
 
 interface WriteRepository {
   register(params: RegisterDomainProps)
@@ -33,13 +34,14 @@ export function withRegisterDomain(
   repo: WriteRepository & ReadRepository,
 ): ccip.HandlerDescription {
   return {
-    type: 'register(bytes32 parentNode, string calldata label, address owner, uint256 duration, bytes32 secret, address resolver, bytes[] calldata data, bool reverseRecord, uint16 fuses, bytes memory extraData)',
+    type: 'register(bytes calldata name, address owner, uint256 duration, bytes32 secret, address resolver, bytes[] calldata data, bool reverseRecord, uint16 fuses, bytes memory extraData)',
     func: async (
-      { parentNode, label, duration: ttl, owner, data },
+      { name, duration: ttl, owner, data },
       { signature }: { signature: TypedSignature },
     ) => {
       try {
-        const node = keccak256(concat([parentNode, labelhash(label)]))
+        name = decodeDNSName(name)
+        const node = namehash(name)
 
         const existingDomain = await repo.getDomain({ node })
         if (existingDomain) {
@@ -50,11 +52,11 @@ export function withRegisterDomain(
         const texts = parseEncodedTextCalls(data, signature)
 
         await repo.register({
-          name: label,
+          name,
           node,
           ttl: ttl.toString(),
           owner,
-          parent: parentNode,
+          parent: namehash(extractParentFromName(name)),
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
           addresses,

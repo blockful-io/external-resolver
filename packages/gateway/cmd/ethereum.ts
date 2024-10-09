@@ -10,7 +10,7 @@ import { abi } from '../src/abi'
 import { L1ProofService } from '../src/services'
 import { withLogger } from '../src/middlewares'
 import { withQuery, withGetStorageSlot } from '../src/handlers'
-import { getChain } from '../src/chain'
+import { getChain } from '../src/utils'
 
 config({
   path: process.env.ENV_FILE || '../.env',

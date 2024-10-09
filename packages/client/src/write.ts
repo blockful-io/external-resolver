@@ -34,7 +34,7 @@ let {
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   L2_RPC_URL: providerL2 = 'http://127.0.0.1:8547',
   PRIVATE_KEY:
-  privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
+    privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
 } = process.env
 
 const chain = getChain(parseInt(chainId))
@@ -54,7 +54,7 @@ const _ = (async () => {
     throw new Error('RESOLVER_ADDRESS is required')
   }
 
-  const name = normalize('gibi.arb.eth')
+  const name = normalize('gibi.blockful.eth')
   const dnsName = toHex(packetToBytes(name))
   const node = namehash(name)
   const signer = privateKeyToAccount(privateKey as Hex)
