@@ -54,6 +54,7 @@ const _ = (async () => {
   }
 
   const name = normalize('gibi.arb.eth')
+  const dnsName = toHex(packetToBytes(name))
   const node = namehash(name)
   const signer = privateKeyToAccount(privateKey as Hex)
 
@@ -68,7 +69,7 @@ const _ = (async () => {
     address: universalResolver as Hex,
     functionName: 'findResolver',
     abi: uAbi,
-    args: [toHex(packetToBytes(name))],
+    args: [dnsName],
   })) as Hash[]
 
   const duration = 31556952000n
@@ -107,7 +108,7 @@ const _ = (async () => {
     functionName: 'register',
     abi: l1Abi,
     args: [
-      toHex(name), // name
+      dnsName, // name
       signer.address, // owner
       duration,
       `0x${'a'.repeat(64)}` as Hex, // secret

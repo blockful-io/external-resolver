@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/console.sol";
-
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 import {BytesUtils} from "@ens-contracts/utils/BytesUtils.sol";
@@ -43,7 +41,7 @@ contract SubdomainController is OffchainRegister, ENSHelper {
         payable
         override
     {
-        bytes32 node = _getNode(name);
+        bytes32 node = name.namehash(0);
         string memory label = _getLabel(name);
 
         (, uint256 offset) = name.readLabel(0);
@@ -62,28 +60,6 @@ contract SubdomainController is OffchainRegister, ENSHelper {
         if (data.length > 0) {
             Resolver(resolver).multicallWithNodeCheck(node, data);
         }
-    }
-
-    function _getNode(bytes memory name) private pure returns (bytes32 node) {
-        return _getNode(name, 0);
-    }
-
-    function _getNode(
-        bytes memory name,
-        uint256 offset
-    )
-        private
-        pure
-        returns (bytes32 node)
-    {
-        uint256 len = name.readUint8(offset);
-        node = bytes32(0);
-        if (len > 0) {
-            bytes32 label = name.keccak(offset + 1, len);
-            bytes32 parentNode = _getNode(name, offset + len + 1);
-            node = keccak256(abi.encodePacked(parentNode, label));
-        }
-        return node;
     }
 
     function _getLabel(bytes calldata name)
