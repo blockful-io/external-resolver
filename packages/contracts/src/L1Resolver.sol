@@ -103,8 +103,7 @@ contract L1Resolver is
 
     /**
      * Forwards the registering of a subdomain to the L2 contracts
-     * @param -parentNode namehash of the parent node
-     * @param -label The name to be registered.
+     * @param -name The DNS-encoded name to be registered.
      * @param -owner Owner of the domain
      * @param -duration duration The duration in seconds of the registration.
      * @param -secret The secret to be used for the registration based on commit/reveal
@@ -115,8 +114,7 @@ contract L1Resolver is
      * @param -extraData any encoded additional data
      */
     function register(
-        bytes32, /* parentNode */
-        string calldata, /* label */
+        bytes calldata, /* name */
         address, /* owner */
         uint256, /* duration */
         bytes32, /* secret */

@@ -21,6 +21,7 @@ import {StaticMetadataService} from
     "@ens-contracts/wrapper/StaticMetadataService.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {PublicResolver} from "@ens-contracts/resolvers/PublicResolver.sol";
+import {NameEncoder} from "@ens-contracts/utils/NameEncoder.sol";
 
 import {ENSHelper} from "../ENSHelper.sol";
 import {SubdomainController} from "../../src/SubdomainController.sol";
@@ -81,9 +82,7 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         uint256 subdomainPrice = 0.001 ether;
         uint256 commitTime = 0;
         SubdomainController subdomainController = new SubdomainController(
-            address(nameWrapper),
-            subdomainPrice,
-            commitTime
+            address(nameWrapper), subdomainPrice, commitTime
         );
         nameWrapper.setApprovalForAll(address(subdomainController), true);
 
@@ -101,16 +100,16 @@ contract L2ArbitrumResolver is Script, ENSHelper {
             "arb", msg.sender, 31556952000, address(arbResolver), 1
         );
 
+        (bytes memory name, bytes32 node) =
+            NameEncoder.dnsEncodeName("blockful.arb.eth");
+
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeWithSelector(
-            TextResolver.setText.selector,
-            namehash("blockful.arb.eth"),
-            "com.twitter",
-            "@blockful"
+            TextResolver.setText.selector, node, "com.twitter", "@blockful"
         );
+
         subdomainController.register{value: subdomainController.price()}(
-            namehash("arb.eth"),
-            "blockful",
+            name,
             msg.sender,
             31556952000,
             keccak256("secret"),

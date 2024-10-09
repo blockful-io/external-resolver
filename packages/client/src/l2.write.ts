@@ -20,12 +20,7 @@ import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
-import {
-  getRevertErrorData,
-  getChain,
-  extractLabelFromName,
-  extractParentFromName,
-} from './client'
+import { getRevertErrorData, getChain } from './client'
 
 config({
   path: process.env.ENV_FILE || '../.env',
@@ -58,7 +53,7 @@ const _ = (async () => {
     throw new Error('RESOLVER_ADDRESS is required')
   }
 
-  const name = normalize('gibi.blockful.eth')
+  const name = normalize('gibi.arb.eth')
   const node = namehash(name)
   const signer = privateKeyToAccount(privateKey as Hex)
 
@@ -112,8 +107,7 @@ const _ = (async () => {
     functionName: 'register',
     abi: l1Abi,
     args: [
-      namehash(extractParentFromName(name)), // parent
-      extractLabelFromName(name), // label
+      toHex(name), // name
       signer.address, // owner
       duration,
       `0x${'a'.repeat(64)}` as Hex, // secret

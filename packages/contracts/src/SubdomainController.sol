@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "forge-std/console.sol";
+
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
+import {BytesUtils} from "@ens-contracts/utils/BytesUtils.sol";
 
 import {ENSHelper} from "../script/ENSHelper.sol";
 import {OffchainRegister} from "./interfaces/OffchainResolver.sol";
 
 contract SubdomainController is OffchainRegister, ENSHelper {
+
+    using BytesUtils for bytes;
 
     uint256 public price;
     uint256 public commitTime;
@@ -24,10 +29,9 @@ contract SubdomainController is OffchainRegister, ENSHelper {
     }
 
     function register(
-        bytes32 parentNode,
-        string calldata label,
+        bytes calldata name,
         address owner,
-        uint256 duration,     
+        uint256 duration,
         bytes32, /* secret */
         address resolver,
         bytes[] calldata data,
@@ -39,7 +43,11 @@ contract SubdomainController is OffchainRegister, ENSHelper {
         payable
         override
     {
-        bytes32 node = keccak256(abi.encodePacked(parentNode, labelhash(label)));
+        bytes32 node = _getNode(name);
+        string memory label = _getLabel(name);
+
+        (, uint256 offset) = name.readLabel(0);
+        bytes32 parentNode = name.namehash(offset);
 
         require(
             nameWrapper.ownerOf(uint256(node)) == address(0),
@@ -54,6 +62,38 @@ contract SubdomainController is OffchainRegister, ENSHelper {
         if (data.length > 0) {
             Resolver(resolver).multicallWithNodeCheck(node, data);
         }
+    }
+
+    function _getNode(bytes memory name) private pure returns (bytes32 node) {
+        return _getNode(name, 0);
+    }
+
+    function _getNode(
+        bytes memory name,
+        uint256 offset
+    )
+        private
+        pure
+        returns (bytes32 node)
+    {
+        uint256 len = name.readUint8(offset);
+        node = bytes32(0);
+        if (len > 0) {
+            bytes32 label = name.keccak(offset + 1, len);
+            bytes32 parentNode = _getNode(name, offset + len + 1);
+            node = keccak256(abi.encodePacked(parentNode, label));
+        }
+        return node;
+    }
+
+    function _getLabel(bytes calldata name)
+        private
+        pure
+        returns (string memory)
+    {
+        uint256 labelLength = uint256(uint8(name[0]));
+        if (labelLength == 0) return "";
+        return string(name[1:labelLength + 1]);
     }
 
 }
