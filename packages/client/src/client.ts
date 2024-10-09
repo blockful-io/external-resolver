@@ -73,7 +73,7 @@ export async function handleDBStorage({
   })
 }
 
-export function getChain(chainId: number) {
+export function getChain(chainId: number): chains.Chain | undefined {
   return [
     ...Object.values(chains),
     defineChain({
@@ -91,4 +91,16 @@ export function getChain(chainId: number) {
       },
     }),
   ].find((chain) => chain.id === chainId)
+}
+
+// gather the first part of the domain (e.g. floripa.blockful.eth -> floripa)
+export function extractLabelFromName(name: string): string {
+  const [, label] = /^(\w+)/.exec(name) || []
+  return label
+}
+
+// gather the last part of the domain (e.g. floripa.blockful.eth -> blockful.eth)
+export function extractParentFromName(name: string): string {
+  const [, parent] = /\w*\.(.*)$/.exec(name) || []
+  return parent
 }

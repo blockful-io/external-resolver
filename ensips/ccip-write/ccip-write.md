@@ -47,7 +47,7 @@ The function has the following signature:
 
 ```solidity
 function registerParams(
-    bytes memory name,
+    bytes calldata name,
     uint256 duration
 )
     external
@@ -89,7 +89,8 @@ Aiming to integrate with the already existing interface of domain registration, 
 
 ```solidity
 function register(
-    string calldata name,
+    bytes32 parentNode,
+    string calldata label,
     address owner,
     uint256 duration,
     bytes32 secret,
@@ -103,7 +104,8 @@ function register(
 
 Parameters:
 
-- `name`: DNS-encoded name to be registered
+- `parentNode`: namehash of the parent domain
+- `label`: DNS-encoded name to be registered
 - `owner`: subdomain owner's address
 - `duration`: the duration in miliseconds of the registration
 - `secret`: random seed to be used for commit/reveal
@@ -278,7 +280,8 @@ interface OffchainRegister {
 
     /**
      * Forwards the registering of a domain to the L2 contracts
-     * @param name The DNS-encoded name to resolve.
+     * @param parentNode namehash of the parent domain
+     * @param label The DNS-encoded name to resolve.
      * @param owner Owner of the domain
      * @param duration duration The duration in seconds of the registration.
      * @param resolver The address of the resolver to set for this name.
@@ -287,7 +290,8 @@ interface OffchainRegister {
      * @param extraData any encoded additional data
      */
     function register(
-        string calldata name,
+        bytes32 parentNode,
+        string calldata label,
         address owner,
         uint256 duration,
         bytes32 secret,
@@ -336,10 +340,10 @@ interface OffchainMulticallable {
 
 interface OffchainCommitable {
 
-		/**
-		 * @notice produces the commit hash from the register calldata
-		 * @returns the hash of the commit to be used
-		 */
+    /**
+    * @notice produces the commit hash from the register calldata
+    * @returns the hash of the commit to be used
+    */
     function makeCommitment(
         string calldata name,
         address owner,
