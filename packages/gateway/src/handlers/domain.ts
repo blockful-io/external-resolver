@@ -1,4 +1,4 @@
-import { hexToString, namehash } from 'viem'
+import { namehash } from 'viem'
 
 import * as ccip from '@blockful/ccip-server'
 
@@ -17,6 +17,7 @@ import {
   parseEncodedTextCalls,
 } from '../services'
 import { Domain } from '../entities'
+import { decodeDNSName, extractParentFromName } from '../utils'
 
 interface WriteRepository {
   register(params: RegisterDomainProps)
@@ -33,13 +34,13 @@ export function withRegisterDomain(
   repo: WriteRepository & ReadRepository,
 ): ccip.HandlerDescription {
   return {
-    type: 'register(bytes memory name, uint32 ttl, address owner, bytes[] calldata data)',
+    type: 'register(bytes calldata name, address owner, uint256 duration, bytes32 secret, address resolver, bytes[] calldata data, bool reverseRecord, uint16 fuses, bytes memory extraData)',
     func: async (
-      { name, ttl, owner, data },
+      { name, duration: ttl, owner, data },
       { signature }: { signature: TypedSignature },
     ) => {
       try {
-        name = hexToString(name)
+        name = decodeDNSName(name)
         const node = namehash(name)
 
         const existingDomain = await repo.getDomain({ node })
@@ -47,18 +48,15 @@ export function withRegisterDomain(
           return { error: { message: 'Domain already exists', status: 400 } }
         }
 
-        const [, parent] = /\w*\.(.*)$/.exec(name) || []
-        const parentHash = namehash(parent)
-
         const addresses = parseEncodedAddressCalls(data, signature)
         const texts = parseEncodedTextCalls(data, signature)
 
         await repo.register({
           name,
           node,
-          ttl,
+          ttl: ttl.toString(),
           owner,
-          parent: parentHash,
+          parent: namehash(extractParentFromName(name)),
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
           addresses,
@@ -138,7 +136,10 @@ export function withGetContentHash(
     func: async ({ node }) => {
       const content = await repo.getContentHash({ node })
       if (content)
-        return { data: [content.value], extraData: formatTTL(content.ttl) }
+        return {
+          data: [content.value],
+          extraData: formatTTL(parseInt(content.ttl)),
+        }
     },
   }
 }

@@ -3,6 +3,7 @@ import { normalize } from 'viem/ens'
 
 import { DomainMetadata, NodeProps, GetDomainProps } from '../types'
 import { Address, Domain, Text } from '../entities'
+import { extractLabelFromName, extractParentFromName } from '../utils'
 
 interface ReadRepository {
   getDomain(params: GetDomainProps): Promise<Domain | null>
@@ -110,18 +111,6 @@ export async function domainResolver({
       })),
     },
   }
-}
-
-// gather the first part of the domain (e.g. floripa.blockful.eth -> floripa)
-const extractLabelFromName = (name: string): string => {
-  const [, label] = /^(\w+)/.exec(name) || []
-  return label
-}
-
-// gather the last part of the domain (e.g. floripa.blockful.eth -> blockful.eth)
-const extractParentFromName = (name: string): string => {
-  const [, parent] = /\w*\.(.*)$/.exec(name) || []
-  return parent
 }
 
 // eslint-disable-next-line  @typescript-eslint/no-explicit-any

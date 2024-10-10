@@ -19,24 +19,9 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "db write client",
+      "name": "write client",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/packages/client/src/db.write.ts",
-      "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
-      "env": {
-        "NODE_ENV": "development",
-        "TS_NODE_PROJECT": "${workspaceFolder}/packages/client/tsconfig.json",
-        "ENV_FILE": "${workspaceFolder}/.env"
-      },
-      "console": "integratedTerminal",
-      "outFiles": ["${workspaceFolder}/**/*.js", "!**/node_modules/**"]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "l2 write client",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/packages/client/src/l2.write.ts",
+      "program": "${workspaceFolder}/packages/client/src/write.ts",
       "runtimeArgs": ["-r", "ts-node/register", "-r", "tsconfig-paths/register"],
       "env": {
         "NODE_ENV": "development",

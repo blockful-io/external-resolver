@@ -3,7 +3,7 @@ import { ApolloServer } from '@apollo/server'
 import { startStandaloneServer } from '@apollo/server/standalone'
 import { Hex, createPublicClient, getChainContractAddress, http } from 'viem'
 
-import { getChain } from '../src/chain'
+import { getChain } from '../src/utils'
 import { NewDataSource } from '../src/datasources/postgres'
 import { domainResolver } from '../src/resolvers'
 import { EthereumClient } from '../src/services'

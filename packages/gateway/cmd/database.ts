@@ -1,6 +1,3 @@
-/**
- * Script for running the server locally exposing the API
- */
 import 'reflect-metadata'
 import { config } from 'dotenv'
 import { Hex, createPublicClient, getChainContractAddress, http } from 'viem'
@@ -25,7 +22,7 @@ import {
   withTransferDomain,
 } from '../src/handlers'
 import { abi } from '../src/abi'
-import { getChain } from '../src/chain'
+import { getChain } from '../src/utils'
 import { PostgresRepository } from '../src/repositories'
 import { withLogger, withSigner } from '../src/middlewares'
 import { NewDataSource } from '../src/datasources/postgres'

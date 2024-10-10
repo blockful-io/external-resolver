@@ -19,8 +19,9 @@ import {
   toHex,
   Address as viemAddress,
   stringToHex,
+  zeroHash,
 } from 'viem'
-import { namehash } from 'viem/ens'
+import { namehash, packetToBytes } from 'viem/ens'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 import request from 'supertest'
 
@@ -74,7 +75,7 @@ describe('Gateway API', () => {
       node: namehash('public.eth'),
       parent: namehash('eth'),
       owner,
-      ttl: 300,
+      ttl: '300',
       contenthash:
         '0x4d1ae8fa44de34a527a9c6973d37dfda8befc18ca6ec73fd97535b4cf02189c6', // public goods
       addresses: [],
@@ -109,12 +110,22 @@ describe('Gateway API', () => {
           resolver: TEST_ADDRESS,
           resolverVersion: '1',
           owner,
-          ttl: 300,
+          ttl: '300',
           addresses: [],
           texts: [],
         }
 
-        const args = [toHex(domain.name), domain.ttl, owner, []]
+        const args = [
+          toHex(packetToBytes(domain.name)),
+          owner,
+          300n,
+          zeroHash,
+          TEST_ADDRESS,
+          [],
+          false,
+          0,
+          zeroHash,
+        ]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -150,7 +161,17 @@ describe('Gateway API', () => {
         server.add(serverAbi, withRegisterDomain(repo))
         const app = server.makeApp('/')
 
-        const args = [toHex(domain.name), domain.ttl, owner, []]
+        const args = [
+          toHex(packetToBytes(domain.name)),
+          owner,
+          300n,
+          zeroHash,
+          TEST_ADDRESS,
+          [],
+          false,
+          0,
+          zeroHash,
+        ]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -197,12 +218,22 @@ describe('Gateway API', () => {
           resolver: TEST_ADDRESS,
           resolverVersion: '1',
           owner: newOwner,
-          ttl: 300,
+          ttl: '300',
           addresses: [],
           texts: [],
         }
 
-        const args = [toHex(domain.name), domain.ttl, newOwner, []]
+        const args = [
+          toHex(packetToBytes(domain.name)),
+          newOwner,
+          300n,
+          zeroHash,
+          TEST_ADDRESS,
+          [],
+          false,
+          0,
+          zeroHash,
+        ]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -248,7 +279,7 @@ describe('Gateway API', () => {
           resolver: TEST_ADDRESS,
           resolverVersion: '1',
           owner,
-          ttl: 300,
+          ttl: '300',
           addresses: [
             {
               address: '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0',
@@ -297,7 +328,17 @@ describe('Gateway API', () => {
             ],
           }),
         ]
-        const args = [toHex(domain.name), domain.ttl, owner, calldata]
+        const args = [
+          toHex(packetToBytes(domain.name)),
+          owner,
+          300n,
+          zeroHash,
+          TEST_ADDRESS,
+          calldata,
+          false,
+          0,
+          zeroHash,
+        ]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
@@ -491,7 +532,7 @@ describe('Gateway API', () => {
           }),
         ).toEqual(domain.contenthash)
         expect(parseInt(ttl.toString())).toBeCloseTo(
-          parseInt(formatTTL(domain.ttl)),
+          parseInt(formatTTL(parseInt(domain.ttl))),
         )
       })
     })

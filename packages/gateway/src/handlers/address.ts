@@ -89,7 +89,7 @@ export function withGetAddr(repo: ReadRepository): ccip.HandlerDescription {
       if (addr)
         return {
           data: [addr.value],
-          extraData: formatTTL(addr.ttl),
+          extraData: formatTTL(parseInt(addr.ttl)),
         }
     },
   }
@@ -102,7 +102,8 @@ export function withGetAddrByCoin(
     type: 'addr(bytes32 node, uint256 coinType)',
     func: async ({ node, coinType: coin }) => {
       const addr = await repo.getAddr({ node, coin: coin.toString() })
-      if (addr) return { data: [addr.value], extraData: formatTTL(addr.ttl) }
+      if (addr)
+        return { data: [addr.value], extraData: formatTTL(parseInt(addr.ttl)) }
     },
   }
 }

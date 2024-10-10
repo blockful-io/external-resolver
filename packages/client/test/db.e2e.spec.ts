@@ -280,42 +280,55 @@ describe('DatabaseResolver', () => {
   describe('Subdomain created on database', async () => {
     const name = normalize('database.eth')
     const node = namehash(name)
+    const resolver = '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2'
 
     beforeEach(async () => {
       let domain = new Domain()
       domain.node = node
       domain.name = name
       domain.parent = namehash('eth')
-      domain.resolver = '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2'
+      domain.resolver = resolver
       domain.resolverVersion = '1'
       domain.owner = owner.address
-      domain.ttl = 300
+      domain.ttl = '300'
       domain = await datasource.manager.save(domain)
     })
 
     it('should register new domain', async () => {
       const name = normalize('newdomain.eth')
+      const dnsName = toHex(packetToBytes(name))
       const node = namehash(name)
       const response = await offchainWriting({
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [toHex(name), 300, owner.address, []],
+        args: [
+          dnsName,
+          owner.address,
+          300n,
+          zeroHash,
+          resolver,
+          [],
+          false,
+          0,
+          zeroHash,
+        ],
         universalResolverAddress,
         signer: owner,
       })
 
       expect(response?.status).equal(200)
 
-      const d = await datasource.getRepository(Domain).countBy({
+      const actual = await datasource.getRepository(Domain).countBy({
         node,
         owner: owner.address,
       })
-      expect(d).eq(1)
+      expect(actual).eq(1)
     })
 
     it('should register new domain with records', async () => {
       const name = normalize('newdomain.eth')
+      const dnsName = toHex(packetToBytes(name))
       const node = namehash(name)
       const calldata = [
         encodeFunctionData({
@@ -338,7 +351,17 @@ describe('DatabaseResolver', () => {
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [toHex(name), 300, owner.address, calldata],
+        args: [
+          dnsName,
+          owner.address,
+          300n,
+          zeroHash,
+          resolver,
+          calldata,
+          false,
+          0,
+          zeroHash,
+        ],
         universalResolverAddress,
         signer: owner,
       })
@@ -373,11 +396,22 @@ describe('DatabaseResolver', () => {
     })
 
     it('should block register of duplicated domain with same owner', async () => {
+      const dnsName = toHex(packetToBytes(name))
       const response = await offchainWriting({
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [toHex(name), 300, owner.address, []],
+        args: [
+          dnsName,
+          owner.address,
+          300n,
+          zeroHash,
+          resolver,
+          [],
+          false,
+          0,
+          zeroHash,
+        ],
         universalResolverAddress,
         signer: owner,
       })
@@ -393,11 +427,22 @@ describe('DatabaseResolver', () => {
 
     it('should block register of duplicated domain with different owner', async () => {
       const newOwner = privateKeyToAccount(generatePrivateKey())
+      const dnsName = toHex(packetToBytes(name))
       const response = await offchainWriting({
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [toHex(name), 300, newOwner.address, []],
+        args: [
+          dnsName,
+          newOwner.address,
+          300n,
+          zeroHash,
+          resolver,
+          [],
+          false,
+          0,
+          zeroHash,
+        ],
         universalResolverAddress,
         signer: newOwner,
       })
@@ -425,12 +470,23 @@ describe('DatabaseResolver', () => {
     it('should allow register a domain with different owner', async () => {
       const newOwner = privateKeyToAddress(generatePrivateKey())
       const name = normalize('newdomain.eth')
+      const dnsName = toHex(packetToBytes(name))
       const node = namehash(name)
       const response = await offchainWriting({
         name,
         functionName: 'register',
         abi: abiDBResolver,
-        args: [toHex(name), 300, newOwner, []],
+        args: [
+          dnsName,
+          newOwner,
+          300n,
+          zeroHash,
+          resolver,
+          [],
+          false,
+          0,
+          zeroHash,
+        ],
         universalResolverAddress,
         signer: owner,
       })
@@ -1124,7 +1180,7 @@ describe('DatabaseResolver', () => {
         const d = new Domain()
         d.name = 'd1.public.eth'
         d.node = namehash('d1')
-        d.ttl = 300
+        d.ttl = '300'
         d.parent = node
         d.resolver = '0xresolver'
         d.resolverVersion = '1'

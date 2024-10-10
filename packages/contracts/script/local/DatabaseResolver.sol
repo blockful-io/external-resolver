@@ -38,6 +38,8 @@ contract DatabaseResolverScript is Script, ENSHelper {
             9999999999
         );
         vm.stopBroadcast();
+
+        console.log("DatabaseResolver deployed at", address(resolver));
     }
 
 }
