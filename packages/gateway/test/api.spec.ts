@@ -75,8 +75,6 @@ describe('Gateway API', () => {
       parent: namehash('eth'),
       owner,
       ttl: 300,
-      contenthash:
-        '0x4d1ae8fa44de34a527a9c6973d37dfda8befc18ca6ec73fd97535b4cf02189c6', // public goods
       addresses: [],
       texts: [],
       resolver: TEST_ADDRESS,
@@ -444,14 +442,22 @@ describe('Gateway API', () => {
           })
 
         const response = await repo.getContentHash({
-          node: domain.node as `0x${string}`,
-          coin: '60',
+          node: domain.node,
         })
         expect(response?.value).toEqual(contenthash)
         expect(response?.ttl).toEqual(domain.ttl)
       })
 
       it('should handle GET contenthash', async () => {
+        const expected =
+          '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
+        await repo.setContentHash({
+          node: domain.node,
+          contenthash: expected,
+          resolver: TEST_ADDRESS,
+          resolverVersion: '1',
+        })
+
         const server = new ccip.Server()
         server.app.use(withSigner(pvtKey))
         server.add(serverAbi, withGetContentHash(repo))
@@ -489,7 +495,7 @@ describe('Gateway API', () => {
             functionName: 'contenthash',
             data,
           }),
-        ).toEqual(domain.contenthash)
+        ).toEqual(expected)
         expect(parseInt(ttl.toString())).toBeCloseTo(
           parseInt(formatTTL(domain.ttl)),
         )
