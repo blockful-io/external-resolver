@@ -13,7 +13,7 @@ import {
   NodeProps,
   GetDomainProps,
 } from '../types'
-import { Address, Text, Domain } from '../entities'
+import { Address, Text, Domain, Contenthash } from '../entities'
 
 /* The `InMemoryRepository` is a repository implementation that
 stores domains, addresses, and texts in memory and provides methods for changing values
@@ -22,11 +22,13 @@ export class InMemoryRepository {
   private domains: Map<string, Domain>
   private addresses: Map<string, Address>
   private texts: Map<string, Text>
+  private contenthashes: Map<string, Contenthash>
 
   constructor() {
     this.domains = new Map()
     this.addresses = new Map()
     this.texts = new Map()
+    this.contenthashes = new Map()
   }
 
   clear() {
@@ -147,20 +149,30 @@ export class InMemoryRepository {
     )
   }
 
-  async setContentHash({ node, contenthash }: SetContentHashProps) {
-    const domain = this.domains.get(node)
-    if (!domain) {
-      throw new Error('Domain not found')
-    }
-    domain.contenthash = contenthash
+  async setContentHash({
+    node,
+    contenthash,
+    resolver,
+    resolverVersion,
+  }: SetContentHashProps) {
+    this.contenthashes.set(node, {
+      domain: node,
+      contenthash,
+      resolver,
+      resolverVersion,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
   }
 
-  async getContentHash({
-    node,
-  }: GetAddressProps): Promise<Response | undefined> {
+  async getContentHash({ node }: NodeProps): Promise<Response | undefined> {
     const domain = this.domains.get(node)
-    if (!domain) return
-    return { value: domain.contenthash as string, ttl: domain.ttl }
+    const contenthash = this.contenthashes.get(node)
+    if (contenthash)
+      return {
+        value: contenthash.contenthash,
+        ttl: domain?.ttl || 600,
+      }
   }
 
   async setAddr({

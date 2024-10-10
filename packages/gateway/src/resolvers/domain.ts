@@ -64,7 +64,7 @@ export async function domainResolver({
         context: sd.owner,
         address: sd.resolver,
         addr: ethAddr,
-        contentHash: sd.contenthash,
+        contentHash: sd.contenthash?.contenthash,
         texts: sd.texts.map((t) => ({ key: t.key, value: t.value })),
         addresses: sd.addresses.map((addr) => ({
           address: addr.address,
@@ -102,7 +102,7 @@ export async function domainResolver({
       context: owner,
       address: resolver,
       addr: ethAddr,
-      contentHash: domain?.contenthash,
+      contentHash: domain?.contenthash?.contenthash,
       texts: texts.map((t) => ({ key: t.key, value: t.value })),
       addresses: addresses.map((addr) => ({
         address: addr.address,

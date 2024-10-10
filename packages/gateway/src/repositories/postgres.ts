@@ -16,7 +16,7 @@ import {
   NodeProps,
   GetDomainProps,
 } from '../types'
-import { Address, Text, Domain } from '../entities'
+import { Address, Text, Domain, Contenthash } from '../entities'
 import { zeroAddress } from 'viem'
 
 /* The PostgresRepository class provides methods for setting and getting content
@@ -47,6 +47,7 @@ export class PostgresRepository {
     resolverVersion,
     addresses,
     texts,
+    contenthash,
   }: RegisterDomainProps) {
     await this.client.getRepository(Domain).insert({
       name,
@@ -66,6 +67,10 @@ export class PostgresRepository {
     if (texts) {
       await this.client.getRepository(Text).insert(texts)
     }
+
+    if (contenthash) {
+      await this.client.getRepository(Contenthash).insert(contenthash)
+    }
   }
 
   async transfer({ node, owner }: TransferDomainProps) {
@@ -80,6 +85,12 @@ export class PostgresRepository {
       .getRepository(Domain)
       .createQueryBuilder('domain')
       .where('domain.node = :node', { node })
+      .leftJoinAndMapOne(
+        'domain.contenthash',
+        Contenthash,
+        'contenthash',
+        'contenthash.domain = domain.node',
+      )
 
     if (includeRelations) {
       query
@@ -120,27 +131,48 @@ export class PostgresRepository {
         'text',
         'text.domain = domain.node AND length(text.value) > 0',
       )
+      .leftJoinAndMapOne(
+        'domain.contenthash',
+        Contenthash,
+        'contenthash',
+        'contenthash.domain = domain.node',
+      )
       .getMany()
   }
 
-  async setContentHash({ node, contenthash }: SetContentHashProps) {
-    await this.client.getRepository(Domain).update(
-      { node },
-      {
-        contenthash,
-      },
-    )
+  async setContentHash({
+    node,
+    contenthash,
+    resolver,
+    resolverVersion,
+  }: SetContentHashProps) {
+    await this.client
+      .getRepository(Contenthash)
+      .upsert(
+        { domain: node, contenthash, resolver, resolverVersion },
+        { conflictPaths: ['domain'], skipUpdateIfNoValuesChanged: true },
+      )
   }
 
   async getContentHash({ node }: NodeProps): Promise<Response | undefined> {
-    const domain = await this.client
-      .getRepository(Domain)
-      .createQueryBuilder('domain')
-      .where('domain.node = :node ', { node })
-      .select(['domain.contenthash', 'domain.ttl'])
-      .getOne()
+    const contenthash = await this.client
+      .getRepository(Contenthash)
+      .createQueryBuilder('contenthash')
+      .leftJoinAndMapOne(
+        'contenthash.domain',
+        Domain,
+        'domain',
+        'contenthash.domain = domain.node',
+      )
+      .where('contenthash.domain = :node ', { node })
+      .select(['contenthash.contenthash', 'domain.ttl'])
+      .getRawOne()
 
-    if (domain) return { value: domain.contenthash as string, ttl: domain.ttl }
+    if (contenthash)
+      return {
+        value: contenthash.contenthash_contenthash as string,
+        ttl: contenthash.domain_ttl,
+      }
   }
 
   async setAddr({

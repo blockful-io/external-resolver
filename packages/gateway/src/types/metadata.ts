@@ -62,7 +62,7 @@ export interface Resolver {
   context: string
   address: `0x${string}`
   addr?: string
-  contentHash?: `0x${string}`
+  contentHash?: string
   texts: Text[]
   addresses: Address[]
 }

@@ -20,7 +20,7 @@ import { Hex, labelhash, zeroAddress } from 'viem'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
 import { PostgresRepository } from '../src/repositories'
-import { Address, Text, Domain } from '../src/entities'
+import { Address, Text, Domain, Contenthash } from '../src/entities'
 import { DomainMetadata, typeDefs } from '../src/types'
 import { ApolloServer } from '@apollo/server'
 import { domainResolver } from '../src/resolvers'
@@ -36,7 +36,7 @@ describe('Metadata API', () => {
     datasource = new DataSource({
       type: 'better-sqlite3',
       database: './metadata.test.db',
-      entities: [Text, Domain, Address],
+      entities: [Text, Domain, Address, Contenthash],
       synchronize: true,
     })
     repo = new PostgresRepository(await datasource.initialize())
@@ -67,7 +67,14 @@ describe('Metadata API', () => {
     domain.parent = namehash('eth')
     domain.resolver = '0xresolver'
     domain.resolverVersion = '1'
-    domain.contenthash = '0xcontenthash'
+    domain.contenthash = {
+      contenthash: '0xcontenthash',
+      domain: node,
+      resolver: '0xresolver',
+      resolverVersion: '1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
     domain.owner = privateKeyToAddress(pvtKey)
     domain.texts = [
       {
@@ -206,7 +213,7 @@ describe('Metadata API', () => {
     expect(actual.resolver.context).toEqual(domain.owner)
     expect(actual.resolver.address).toEqual(domain.resolver)
     expect(actual.resolver.addr).toEqual('0x2')
-    expect(actual.resolver.contentHash).toEqual(domain.contenthash)
+    expect(actual.resolver.contentHash).toEqual(domain.contenthash?.contenthash)
     expect(actual.resolver.texts).toEqual([
       {
         key: '1key',
@@ -241,6 +248,7 @@ describe('Metadata API', () => {
     d.owner = privateKeyToAddress(generatePrivateKey())
     d.createdAt = new Date()
     d.updatedAt = new Date()
+    d.contenthash = { ...domain.contenthash!, domain: node }
     d.texts = domain.texts.map((t) => ({ ...t, domain: node }))
     d.addresses = domain.addresses.map((t) => ({ ...t, domain: node }))
     await datasource.manager.save(d)
@@ -305,7 +313,7 @@ describe('Metadata API', () => {
         context: d.owner,
         address: d.resolver,
         addr: '0x2',
-        contentHash: d.contenthash,
+        contentHash: d.contenthash?.contenthash,
         texts: [
           {
             key: '1key',
