@@ -416,7 +416,7 @@ describe('Gateway API', () => {
         server.add(serverAbi, withSetContentHash(repo, validator))
         const app = server.makeApp('/')
 
-        const args = [domain.node, contenthash]
+        const args = [domain.node, stringToHex(contenthash)]
         const data = encodeFunctionData({
           abi,
           functionName: 'setContenthash',
@@ -495,7 +495,7 @@ describe('Gateway API', () => {
             functionName: 'contenthash',
             data,
           }),
-        ).toEqual(expected)
+        ).toEqual(stringToHex(expected))
         expect(parseInt(ttl.toString())).toBeCloseTo(
           parseInt(formatTTL(domain.ttl)),
         )

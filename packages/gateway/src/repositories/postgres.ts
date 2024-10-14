@@ -170,8 +170,8 @@ export class PostgresRepository {
 
     if (contenthash)
       return {
-        value: contenthash.contenthash_contenthash as string,
-        ttl: contenthash.domain_ttl,
+        value: contenthash?.contenthash_contenthash,
+        ttl: contenthash?.domain_ttl || 600,
       }
   }
 
@@ -217,7 +217,7 @@ export class PostgresRepository {
       .select(['addr.address', 'domain.ttl'])
       .getRawOne()
 
-    if (addr) return { value: addr.addr_address, ttl: addr.domain_ttl || 300 } // default ttl value
+    if (addr) return { value: addr.addr_address, ttl: addr.domain_ttl || 600 }
   }
 
   async getAddresses({ node }: NodeProps): Promise<Address[]> {
@@ -268,7 +268,7 @@ export class PostgresRepository {
       .select(['text.value', 'domain.ttl'])
       .getRawOne()
 
-    if (text) return { value: text.text_value, ttl: text.domain_ttl || 300 } // default ttl value
+    if (text) return { value: text.text_value, ttl: text.domain_ttl || 600 }
   }
 
   async setPubkey({ node, x, y, resolver, resolverVersion }: SetPubkeyProps) {

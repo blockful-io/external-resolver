@@ -16,7 +16,14 @@ import {
   assert,
 } from 'vitest'
 import * as ccip from '@blockful/ccip-server'
-import { Hex, encodeFunctionData, pad, parseAbi, toHex } from 'viem'
+import {
+  Hex,
+  encodeFunctionData,
+  pad,
+  parseAbi,
+  stringToHex,
+  toHex,
+} from 'viem'
 import { namehash } from 'viem/ens'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
@@ -279,7 +286,8 @@ describe('Gateway Database', () => {
         await datasource.manager.save(domain)
 
         const contenthash =
-          '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
+          'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450'
+
         const server = new ccip.Server()
         server.add(abi, withSetContentHash(repo, validator))
         const result = await doCall({
@@ -288,7 +296,7 @@ describe('Gateway Database', () => {
           sender: TEST_ADDRESS,
           method: 'setContenthash',
           pvtKey,
-          args: [domain.node, contenthash],
+          args: [domain.node, stringToHex(contenthash)],
         })
 
         expect(result.data.length).toEqual(0)
@@ -331,7 +339,7 @@ describe('Gateway Database', () => {
 
         expect(result.data.length).toEqual(1)
         const [value] = result.data
-        expect(value).toEqual(expected)
+        expect(value).toEqual(toHex(expected))
         expect(parseInt(result.ttl!)).toBeCloseTo(parseInt(formatTTL(300)))
       })
 
