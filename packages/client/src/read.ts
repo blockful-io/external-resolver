@@ -12,6 +12,8 @@ import {
   namehash,
   toHex,
   getChainContractAddress,
+  decodeFunctionResult,
+  hexToString,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
 import { getChain } from './client'
@@ -84,12 +86,20 @@ const _ = (async () => {
     args: [toHex(packetToBytes(publicAddress))],
   })) as Address[]
 
-  const contentHash = (await client.readContract({
+  const encodedContentHash = (await client.readContract({
     address: resolverAddr,
     functionName: 'contenthash',
     args: [namehash(publicAddress)],
     abi: dbAbi,
   })) as Hex
+
+  const contentHash = hexToString(
+    decodeFunctionResult({
+      abi: dbAbi,
+      functionName: 'contenthash',
+      data: encodedContentHash,
+    }) as Hex,
+  )
 
   console.log({
     twitter,

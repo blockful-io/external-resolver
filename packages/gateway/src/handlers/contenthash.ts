@@ -1,4 +1,4 @@
-import { hexToString } from 'viem'
+import { hexToString, toHex } from 'viem'
 import * as ccip from '@blockful/ccip-server'
 
 import {
@@ -61,7 +61,7 @@ export function withGetContentHash(
       const content = await repo.getContentHash({ node })
       if (content)
         return {
-          data: [content.value],
+          data: [toHex(content.value)],
           extraData: formatTTL(content.ttl),
         }
     },

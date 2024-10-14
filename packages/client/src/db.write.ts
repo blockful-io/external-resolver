@@ -12,6 +12,7 @@ import {
   getChainContractAddress,
   http,
   namehash,
+  stringToHex,
   toHex,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
