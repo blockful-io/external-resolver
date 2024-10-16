@@ -1,14 +1,6 @@
 import { ponder } from '@/generated'
-import { config } from 'dotenv'
 import { zeroAddress, zeroHash } from 'viem'
 import { namehash } from 'viem/ens'
-
-config({
-  path: process.env.ENV_FILE || '../../../.env',
-})
-
-const registryAddress = process.env.REGISTRY_ADDRESS
-if (!registryAddress) throw new Error('REGISTRY_ADDRESS is required')
 
 ponder.on(
   'ETHRegistrarController:NameRegistered',
