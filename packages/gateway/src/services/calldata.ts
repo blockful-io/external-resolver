@@ -1,8 +1,8 @@
-import { Hex, decodeFunctionData, parseAbi } from 'viem'
+import { Hex, decodeFunctionData, hexToString, parseAbi } from 'viem'
 
 import { abi } from '../abi'
 import { TypedSignature } from '../types'
-import { Text, Address } from '../entities'
+import { Text, Address, Contenthash } from '../entities'
 
 export function parseEncodedTextCalls(data: Hex[], signature: TypedSignature) {
   const callData = data.map((d: Hex) =>
@@ -53,4 +53,27 @@ export function parseEncodedAddressCalls(
         resolverVersion: signature.domain.version,
       }
     })
+}
+
+export function parseEncodedContentHashCall(
+  data: Hex[],
+  signature: TypedSignature,
+): Omit<Contenthash, 'id' | 'createdAt' | 'updatedAt'> | undefined {
+  const callData = data.map((d: Hex) =>
+    decodeFunctionData({ abi: parseAbi(abi), data: d }),
+  )
+
+  const calls = callData
+    .filter((d) => d.functionName === 'setContenthash')
+    .map(({ args }): Omit<Contenthash, 'id' | 'createdAt' | 'updatedAt'> => {
+      const [domain, contenthash] = args as [Hex, Hex]
+      return {
+        domain,
+        contenthash: hexToString(contenthash),
+        resolver: signature.domain.verifyingContract,
+        resolverVersion: signature.domain.version,
+      }
+    })
+
+  if (calls.length > 0) return calls[0]
 }

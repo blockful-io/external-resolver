@@ -1,4 +1,5 @@
 export * from './address'
+export * from './contenthash'
 export * from './text'
 export * from './domain'
 export * from './query'

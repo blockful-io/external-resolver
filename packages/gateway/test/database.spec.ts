@@ -16,7 +16,14 @@ import {
   assert,
 } from 'vitest'
 import * as ccip from '@blockful/ccip-server'
-import { Hex, encodeFunctionData, pad, parseAbi, toHex } from 'viem'
+import {
+  Hex,
+  encodeFunctionData,
+  pad,
+  parseAbi,
+  stringToHex,
+  toHex,
+} from 'viem'
 import { namehash } from 'viem/ens'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
@@ -37,7 +44,7 @@ import {
   withTransferDomain,
 } from '../src/handlers'
 import { PostgresRepository } from '../src/repositories'
-import { Address, Text, Domain } from '../src/entities'
+import { Address, Text, Domain, Contenthash } from '../src/entities'
 import {
   OwnershipValidator,
   SignatureRecover,
@@ -56,7 +63,7 @@ describe('Gateway Database', () => {
     datasource = new DataSource({
       type: 'better-sqlite3',
       database: './test.db',
-      entities: [Text, Domain, Address],
+      entities: [Text, Domain, Address, Contenthash],
       synchronize: true,
     })
     repo = new PostgresRepository(await datasource.initialize())
@@ -279,7 +286,8 @@ describe('Gateway Database', () => {
         await datasource.manager.save(domain)
 
         const contenthash =
-          '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909' // blockful
+          'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450'
+
         const server = new ccip.Server()
         server.add(abi, withSetContentHash(repo, validator))
         const result = await doCall({
@@ -288,17 +296,15 @@ describe('Gateway Database', () => {
           sender: TEST_ADDRESS,
           method: 'setContenthash',
           pvtKey,
-          args: [domain.node, contenthash],
+          args: [domain.node, stringToHex(contenthash)],
         })
 
         expect(result.data.length).toEqual(0)
 
-        const d = await datasource.getRepository(Domain).findOneBy({
-          node: domain.node,
-          contenthash,
+        const d = await datasource.getRepository(Contenthash).findOneBy({
+          domain: domain.node,
         })
         assert(d !== null)
-        expect(d.node).toEqual(domain.node)
         expect(d.contenthash).toEqual(contenthash)
       })
 
@@ -306,17 +312,20 @@ describe('Gateway Database', () => {
       it('should query contenthash', async () => {
         const domain = new Domain()
         domain.name = 'public.eth'
-        domain.node = namehash(domain.name)
+        domain.node = namehash('public.eth')
         domain.parent = namehash('eth')
         domain.resolver = TEST_ADDRESS
         domain.resolverVersion = '1'
         domain.ttl = 300
         domain.owner = privateKeyToAddress(generatePrivateKey())
         await datasource.manager.save(domain)
-        const content =
+
+        const content = new Contenthash()
+        const expected =
           '0x1e583a944ea6750b0904b8f95a72f593f070ecac52e8d5bc959fa38d745a3909'
-        domain.contenthash = content
-        await datasource.manager.save(domain)
+        content.contenthash = expected
+        content.domain = domain.node
+        await datasource.manager.save(content)
 
         const server = new ccip.Server()
         server.add(abi, withGetContentHash(repo))
@@ -325,15 +334,13 @@ describe('Gateway Database', () => {
           abi,
           sender: TEST_ADDRESS,
           method: 'contenthash',
-          args: [domain.node],
+          args: [content.domain],
         })
 
         expect(result.data.length).toEqual(1)
         const [value] = result.data
-        expect(value).toEqual(content)
-        expect(parseInt(result.ttl!)).toBeCloseTo(
-          parseInt(formatTTL(domain.ttl)),
-        )
+        expect(value).toEqual(toHex(expected))
+        expect(parseInt(result.ttl!)).toBeCloseTo(parseInt(formatTTL(300)))
       })
 
       // Attempt to set a content hash for an invalid domain

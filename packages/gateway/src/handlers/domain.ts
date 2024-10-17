@@ -4,16 +4,14 @@ import * as ccip from '@blockful/ccip-server'
 
 import {
   NodeProps,
-  Response,
-  SetContentHashProps,
   RegisterDomainProps,
   OwnershipValidator,
   TypedSignature,
   TransferDomainProps,
 } from '../types'
 import {
-  formatTTL,
   parseEncodedAddressCalls,
+  parseEncodedContentHashCall,
   parseEncodedTextCalls,
 } from '../services'
 import { Domain } from '../entities'
@@ -21,11 +19,9 @@ import { Domain } from '../entities'
 interface WriteRepository {
   register(params: RegisterDomainProps)
   transfer(params: TransferDomainProps)
-  setContentHash(params: SetContentHashProps)
 }
 
 interface ReadRepository {
-  getContentHash(params: NodeProps): Promise<Response | undefined>
   getDomain(params: NodeProps): Promise<Domain | null>
 }
 
@@ -52,12 +48,14 @@ export function withRegisterDomain(
 
         const addresses = parseEncodedAddressCalls(data, signature)
         const texts = parseEncodedTextCalls(data, signature)
+        const contenthash = parseEncodedContentHashCall(data, signature)
 
         await repo.register({
           name,
           node,
           ttl,
           owner,
+          contenthash,
           parent: parentHash,
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
@@ -97,48 +95,6 @@ export function withTransferDomain(
           error: { message: 'Unable to transfer domain', status: 400 },
         }
       }
-    },
-  }
-}
-
-export function withSetContentHash(
-  repo: WriteRepository,
-  validator: OwnershipValidator,
-): ccip.HandlerDescription {
-  return {
-    type: 'setContenthash(bytes32 node, bytes calldata contenthash)',
-    func: async (
-      { node, contenthash },
-      { signature }: { signature: TypedSignature },
-    ) => {
-      try {
-        const isOwner = await validator.verifyOwnership({
-          node,
-          signature,
-        })
-        if (!isOwner) {
-          return { error: { message: 'Unauthorized', status: 401 } }
-        }
-
-        await repo.setContentHash({ node, contenthash })
-      } catch (err) {
-        return {
-          error: { message: 'Unable to save contenthash', status: 400 },
-        }
-      }
-    },
-  }
-}
-
-export function withGetContentHash(
-  repo: ReadRepository,
-): ccip.HandlerDescription {
-  return {
-    type: 'contenthash',
-    func: async ({ node }) => {
-      const content = await repo.getContentHash({ node })
-      if (content)
-        return { data: [content.value], extraData: formatTTL(content.ttl) }
     },
   }
 }

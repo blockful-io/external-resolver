@@ -43,6 +43,8 @@ import {
   Hex,
   PrivateKeyAccount,
   toHex,
+  stringToHex,
+  decodeFunctionResult,
 } from 'viem'
 import { assert, expect } from 'chai'
 import { ApolloServer } from '@apollo/server'
@@ -61,6 +63,7 @@ import {
   withSetAddr,
   withSetText,
   withRegisterDomain,
+  withSetContentHash,
 } from '@blockful/gateway/src/handlers'
 import {
   DomainData,
@@ -70,7 +73,12 @@ import {
 } from '@blockful/gateway/src/types'
 import { domainResolver } from '@blockful/gateway/src/resolvers'
 import { PostgresRepository } from '@blockful/gateway/src/repositories'
-import { Text, Domain, Address } from '@blockful/gateway/src/entities'
+import {
+  Text,
+  Domain,
+  Address,
+  Contenthash,
+} from '@blockful/gateway/src/entities'
 import { withSigner } from '@blockful/gateway/src/middlewares'
 import {
   EthereumClient,
@@ -190,6 +198,7 @@ function setupGateway(
     withGetAddr(repo),
     withSetAddr(repo, validator),
     withGetContentHash(repo),
+    withSetContentHash(repo, validator),
   )
   server.makeApp('/').listen('3000')
 }
@@ -256,7 +265,7 @@ describe('DatabaseResolver', () => {
     datasource = new DataSource({
       type: 'better-sqlite3',
       database: './test.db',
-      entities: [Text, Domain, Address],
+      entities: [Text, Domain, Address, Contenthash],
       synchronize: true,
     })
     repo = new PostgresRepository(await datasource.initialize())
@@ -267,7 +276,7 @@ describe('DatabaseResolver', () => {
   })
 
   beforeEach(async () => {
-    for (const entity of ['Text', 'Address', 'Domain']) {
+    for (const entity of ['Text', 'Address', 'Domain', 'Contenthash']) {
       await datasource.getRepository(entity).clear()
     }
   })
@@ -716,6 +725,45 @@ describe('DatabaseResolver', () => {
     const name = normalize('l1domain.eth')
     const node = namehash(name)
 
+    it('should set and read contenthash from database', async () => {
+      const contentHash =
+        'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450'
+
+      const response = await offchainWriting({
+        name,
+        functionName: 'setContenthash',
+        abi: abiDBResolver,
+        args: [node, stringToHex(contentHash)],
+        universalResolverAddress,
+        signer: owner,
+      })
+
+      expect(response?.status).equal(200)
+
+      const [r] = (await client.readContract({
+        address: universalResolverAddress as Hex,
+        functionName: 'resolve',
+        abi: abiUniversalResolver,
+        args: [
+          toHex(packetToBytes(name)),
+          encodeFunctionData({
+            abi: abiDBResolver,
+            functionName: 'contenthash',
+            args: [node],
+          }),
+        ],
+      })) as [Hex]
+
+      const actual = decodeFunctionResult({
+        abi: abiDBResolver,
+        functionName: 'contenthash',
+        data: r,
+        args: [node],
+      })
+
+      expect(actual).equal(stringToHex(contentHash))
+    })
+
     it('should read the avatar from database', async () => {
       const text = new Text()
       text.domain = node
@@ -1151,6 +1199,14 @@ describe('DatabaseResolver', () => {
         a.updatedAt = new Date()
         await datasource.manager.save(a)
 
+        const ch = new Contenthash()
+        ch.domain = d.node
+        ch.contenthash =
+          'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450'
+        ch.resolver = '0x1resolver'
+        ch.resolverVersion = '1'
+        await datasource.manager.save(ch)
+
         const response = await server.executeOperation({
           query: `query Domain($name: String!) {
             domain(name: $name) {
@@ -1218,7 +1274,7 @@ describe('DatabaseResolver', () => {
         expect(subdomain.resolver).to.have.property('addr', '0x1')
         expect(subdomain.resolver).to.have.property(
           'contentHash',
-          d.contenthash,
+          ch.contenthash,
         )
         expect(subdomain.resolver.texts).to.eql([
           { key: t.key, value: t.value },
