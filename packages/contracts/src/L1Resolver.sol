@@ -8,10 +8,10 @@ import {IAddrResolver} from
     "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
 import {IAddressResolver} from
     "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
-import {ITextResolver} from
-    "@ens-contracts/resolvers/profiles/ITextResolver.sol";
-import {IContentHashResolver} from
-    "@ens-contracts/resolvers/profiles/IContentHashResolver.sol";
+import {AddrResolver} from "@ens-contracts/resolvers/profiles/AddrResolver.sol";
+import {TextResolver} from "@ens-contracts/resolvers/profiles/TextResolver.sol";
+import {ContentHashResolver} from
+    "@ens-contracts/resolvers/profiles/ContentHashResolver.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {ENSIP16} from "./ENSIP16.sol";
@@ -208,12 +208,12 @@ contract L1Resolver is
                 abi.decode(data[4:], (bytes32, uint256));
             return _addr(node, cointype);
         }
-        if (selector == ITextResolver.text.selector) {
+        if (selector == TextResolver.text.selector) {
             (bytes32 node, string memory key) =
                 abi.decode(data[4:], (bytes32, string));
             return bytes(_text(node, key));
         }
-        if (selector == IContentHashResolver.contenthash.selector) {
+        if (selector == ContentHashResolver.contenthash.selector) {
             bytes32 node = abi.decode(data[4:], (bytes32));
             return _contenthash(node);
         }
@@ -229,6 +229,10 @@ contract L1Resolver is
      */
     function setAddr(bytes32, /* name */ address /* a */ ) external view {
         _offChainStorage(targets[TARGET_RESOLVER]);
+    }
+
+    function addr(bytes32 node) public view returns (address payable) {
+        _addr(node);
     }
 
     function _addr(bytes32 node) private view returns (bytes memory) {
@@ -268,6 +272,17 @@ contract L1Resolver is
         view
     {
         _offChainStorage(targets[TARGET_RESOLVER]);
+    }
+
+    function addr(
+        bytes32 node,
+        uint256 coinType
+    )
+        public
+        view
+        returns (bytes memory)
+    {
+        _addr(node, coinType);
     }
 
     function _addr(
@@ -316,6 +331,17 @@ contract L1Resolver is
         _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
+    function text(
+        bytes32 node,
+        string memory key
+    )
+        public
+        view
+        returns (string memory)
+    {
+        _text(node, key);
+    }
+
     function _text(
         bytes32 node,
         string memory key
@@ -359,6 +385,10 @@ contract L1Resolver is
         _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
+    function contenthash(bytes32 node) public view returns (bytes memory) {
+        _contenthash(node);
+    }
+
     function _contenthash(bytes32 node) private view returns (bytes memory) {
         EVMFetcher.newFetchRequest(verifier, targets[TARGET_RESOLVER]).getStatic(
             RECORD_VERSIONS_SLOT
@@ -374,7 +404,7 @@ contract L1Resolver is
         pure
         returns (bytes memory)
     {
-        return abi.encode(values[1]);
+        return values[1];
     }
 
     //////// ENS WRITE DEFERRAL RESOLVER (EIP-5559) ////////
@@ -396,8 +426,14 @@ contract L1Resolver is
     {
         return interfaceID == type(IExtendedResolver).interfaceId
             || interfaceID == type(IWriteDeferral).interfaceId
-            || interfaceID == type(IERC165).interfaceId
             || interfaceID == type(EVMFetchTarget).interfaceId
+            || interfaceID == type(OffchainRegister).interfaceId
+            || interfaceID == type(OffchainMulticallable).interfaceId
+            || interfaceID == type(OffchainRegisterParams).interfaceId
+            || interfaceID == type(IERC165).interfaceId
+            || interfaceID == type(AddrResolver).interfaceId
+            || interfaceID == type(TextResolver).interfaceId
+            || interfaceID == type(ContentHashResolver).interfaceId
             || super.supportsInterface(interfaceID);
     }
 
