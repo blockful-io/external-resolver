@@ -5,21 +5,16 @@
 
 import { config } from 'dotenv'
 import {
-  Address,
   Hex,
   createPublicClient,
   http,
   namehash,
-  toHex,
-  getChainContractAddress,
   decodeFunctionResult,
   hexToString,
 } from 'viem'
-import { normalize, packetToBytes } from 'viem/ens'
+import { normalize } from 'viem/ens'
 import { getChain } from './client'
-import { abi as dbAbi } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
-import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
-
+import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
 config({
   path: process.env.ENV_FILE || '../.env',
 })
@@ -28,8 +23,8 @@ const {
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   GATEWAY_URL: gateway = 'http://127.0.0.1:3000/{sender}/{data}.json',
+  UNIVERSAL_RESOLVER_ADDRESS: universalResolverAddress,
 } = process.env
-let { UNIVERSAL_RESOLVER_ADDRESS: universalResolverAddress } = process.env
 
 const chain = getChain(parseInt(chainId))
 console.log(`Connecting to ${chain?.name}.`)
@@ -41,61 +36,51 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const publicAddress = normalize('blockful.eth')
-
-  if (!universalResolverAddress) {
-    universalResolverAddress = getChainContractAddress({
-      chain: client.chain,
-      contract: 'ensUniversalResolver',
-    })
-  }
+  const name = normalize('lucas.arb.eth')
 
   const twitter = await client.getEnsText({
-    name: publicAddress,
+    name,
     key: 'com.twitter',
     universalResolverAddress: universalResolverAddress as Hex,
     gatewayUrls: [gateway],
   })
   const avatar = await client.getEnsAvatar({
-    name: publicAddress,
+    name,
     universalResolverAddress: universalResolverAddress as Hex,
     gatewayUrls: [gateway],
   })
 
   const address = await client.getEnsAddress({
-    name: publicAddress,
+    name,
     universalResolverAddress: universalResolverAddress as Hex,
     gatewayUrls: [gateway],
   })
   const addressBtc = await client.getEnsAddress({
-    name: publicAddress,
+    name,
     coinType: 1,
     universalResolverAddress: universalResolverAddress as Hex,
     gatewayUrls: [gateway],
   })
-  const name = await client.getEnsName({
+  const domainName = await client.getEnsName({
     address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
     universalResolverAddress: universalResolverAddress as Hex,
     gatewayUrls: [gateway],
   })
 
-  const [resolverAddr] = (await client.readContract({
-    address: universalResolverAddress as Hex,
-    functionName: 'findResolver',
-    abi: uAbi,
-    args: [toHex(packetToBytes(publicAddress))],
-  })) as Address[]
-
+  const resolver = await client.getEnsResolver({
+    name,
+    universalResolverAddress: universalResolverAddress as Hex,
+  })
   const encodedContentHash = (await client.readContract({
-    address: resolverAddr,
+    address: resolver,
     functionName: 'contenthash',
-    args: [namehash(publicAddress)],
-    abi: dbAbi,
+    abi: l1Abi,
+    args: [namehash(name)],
   })) as Hex
 
   const contentHash = hexToString(
     decodeFunctionResult({
-      abi: dbAbi,
+      abi: l1Abi,
       functionName: 'contenthash',
       data: encodedContentHash,
     }) as Hex,
@@ -106,7 +91,7 @@ const _ = (async () => {
     avatar,
     address,
     addressBtc,
-    name,
+    name: domainName,
     contentHash,
   })
 })()

@@ -5,20 +5,18 @@
 
 import { config } from 'dotenv'
 import {
-  Hash,
   Hex,
   createPublicClient,
   encodeFunctionData,
-  getChainContractAddress,
   http,
   namehash,
+  stringToHex,
   toHex,
   walletActions,
 } from 'viem'
-import { normalize, packetToBytes } from 'viem/ens'
+import { normalize } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
-import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
 import { getRevertErrorData, getChain } from './client'
 
@@ -26,14 +24,13 @@ config({
   path: process.env.ENV_FILE || '../.env',
 })
 
-let {
+const {
   UNIVERSAL_RESOLVER_ADDRESS: resolver,
   L2_RESOLVER_ADDRESS: l2Resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   L2_RPC_URL: providerL2 = 'http://127.0.0.1:8547',
-  PRIVATE_KEY:
-    privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
+  PRIVATE_KEY: privateKey,
 } = process.env
 
 const chain = getChain(parseInt(chainId))
@@ -50,26 +47,16 @@ const _ = (async () => {
     throw new Error('L2_RESOLVER_ADDRESS is required')
   }
 
-  const publicAddress = normalize('lucas.arb.eth')
-  const node = namehash(publicAddress)
   const signer = privateKeyToAccount(privateKey as Hex)
-
-  if (!resolver) {
-    resolver = getChainContractAddress({
-      chain: client.chain,
-      contract: 'ensUniversalResolver',
-    })
-  }
-
-  const [resolverAddr] = (await client.readContract({
-    address: resolver as Hex,
-    functionName: 'findResolver',
-    abi: uAbi,
-    args: [toHex(packetToBytes(publicAddress))],
-  })) as Hash[]
-
-  const name = extractLabelFromName(publicAddress)
+  const name = normalize('lucas.arb.eth')
+  const node = namehash(name)
+  const label = extractLabelFromName(name)
   const duration = 31556952000n
+
+  const resolverAddr = await client.getEnsResolver({
+    name,
+    universalResolverAddress: resolver as Hex,
+  })
 
   // SUBDOMAIN PRICING
 
@@ -78,7 +65,7 @@ const _ = (async () => {
       address: resolverAddr,
       abi: l1Abi,
       functionName: 'registerParams',
-      args: [toHex(name), duration],
+      args: [toHex(label), duration],
     })) as [bigint, bigint, Hex]
 
   // REGISTER NEW SUBDOMAIN
@@ -87,7 +74,7 @@ const _ = (async () => {
     encodeFunctionData({
       functionName: 'setText',
       abi: l1Abi,
-      args: [node, 'com.twitter', '@lucas'],
+      args: [node, 'com.twitter', `@${label}`],
     }),
     encodeFunctionData({
       functionName: 'setAddr',
@@ -99,13 +86,23 @@ const _ = (async () => {
       abi: l1Abi,
       args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
     }),
+    encodeFunctionData({
+      functionName: 'setContenthash',
+      abi: l1Abi,
+      args: [
+        node,
+        stringToHex(
+          'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450',
+        ),
+      ],
+    }),
   ]
 
   const calldata = {
     functionName: 'register',
     abi: l1Abi,
     args: [
-      name,
+      label,
       signer.address, // owner
       duration,
       `0x${'a'.repeat(64)}` as Hex, // secret

@@ -15,12 +15,11 @@ import {
   stringToHex,
   toHex,
 } from 'viem'
-import { normalize, packetToBytes } from 'viem/ens'
+import { normalize } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
 import { MessageData, DomainData } from '@blockful/gateway/src/types'
 import { abi as dbAbi } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
-import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { getRevertErrorData, handleDBStorage, getChain } from './client'
 
 config({
@@ -31,8 +30,7 @@ let {
   UNIVERSAL_RESOLVER_ADDRESS: resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
-  PRIVATE_KEY:
-    privateKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // anvil PK
+  PRIVATE_KEY: privateKey,
 } = process.env
 
 const chain = getChain(parseInt(chainId))
@@ -55,13 +53,6 @@ const _ = (async () => {
       contract: 'ensUniversalResolver',
     })
   }
-
-  const [resolverAddr] = (await client.readContract({
-    address: resolver as Hex,
-    functionName: 'findResolver',
-    abi: uAbi,
-    args: [toHex(packetToBytes(name))],
-  })) as Hash[]
 
   const data: Hash[] = [
     encodeFunctionData({
@@ -93,6 +84,11 @@ const _ = (async () => {
 
   // REGISTER NEW DOMAIN
   try {
+    const resolverAddr = await client.getEnsResolver({
+      name,
+      universalResolverAddress: resolver as Hex,
+    })
+
     await client.simulateContract({
       functionName: 'register',
       abi: dbAbi,
