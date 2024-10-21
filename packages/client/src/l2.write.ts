@@ -32,8 +32,7 @@ let {
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   L2_RPC_URL: providerL2 = 'http://127.0.0.1:8547',
-  PRIVATE_KEY:
-    privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
+  PRIVATE_KEY: privateKey,
 } = process.env
 
 const chain = getChain(parseInt(chainId))
@@ -54,7 +53,7 @@ const _ = (async () => {
   }
 
   const name = normalize('gibi.arb.eth')
-  const dnsName = toHex(packetToBytes(name))
+  const encodedName = toHex(packetToBytes(name))
   const node = namehash(name)
   const signer = privateKeyToAccount(privateKey as Hex)
 
@@ -69,7 +68,7 @@ const _ = (async () => {
     address: universalResolver as Hex,
     functionName: 'findResolver',
     abi: uAbi,
-    args: [dnsName],
+    args: [encodedName],
   })) as Hash[]
 
   const duration = 31556952000n
@@ -108,7 +107,7 @@ const _ = (async () => {
     functionName: 'register',
     abi: l1Abi,
     args: [
-      dnsName, // name
+      encodedName, // name
       signer.address, // owner
       duration,
       `0x${'a'.repeat(64)}` as Hex, // secret
