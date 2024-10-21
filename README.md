@@ -17,6 +17,28 @@ This project not only makes ENS more efficient and cost-effective but also opens
 - **Increase Usability**: Make ENS more user-friendly and accessible.
 - **Reference implementation**: Create a reference on how to implement off-chain storage and management.
 
+## Deployments
+
+### Mainnet
+
+| Contract         | Network  | Address                                                                                                               |
+| ---------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| DatabaseResolver | Ethereum | [0xBF3F57862717099319285c1E2664Cd583f35E333](https://etherscan.io/address/0xBF3F57862717099319285c1E2664Cd583f35E333) |
+
+### Sepolia
+
+| Contract                    | Network  | Address                                                                                                                       |
+| --------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| ArbitrumVerifier            | Ethereum | [0x8fc4a214705e3c40032e99f867d964c012bf8efb](https://sepolia.etherscan.io/address/0x8fc4a214705e3c40032e99f867d964c012bf8efb) |
+| L1Resolver                  | Ethereum | [0xF0c1d78C73B2fCBF17e1c4DbBBD9df30a9556BB8](https://sepolia.etherscan.io/address/0xF0c1d78C73B2fCBF17e1c4DbBBD9df30a9556BB8) |
+| ENSRegistry                 | Arbitrum | [0x8d55e297c37993ebbd2e7a8d7688f7e5b35f1b50](https://sepolia.arbiscan.io/address/0x8d55e297c37993ebbd2e7a8d7688f7e5b35f1b50)  |
+| ReverseRegistrar            | Arbitrum | [0xb3c9ff08671bbadddd0436cc46fbfa005c8da0a7](https://sepolia.arbiscan.io/address/0xb3c9ff08671bbadddd0436cc46fbfa005c8da0a7)  |
+| BaseRegistrarImplementation | Arbitrum | [0x41eedE073217084A30f6f3Bc2c546BDa1F08b5ca](https://sepolia.arbiscan.io/address/0x41eedE073217084A30f6f3Bc2c546BDa1F08b5ca)  |
+| NameWrapper                 | Arbitrum | [0xff4f34ac12a84de527cf9e24856fc8d7c42cc379](https://sepolia.arbiscan.io/address/0xff4f34ac12a84de527cf9e24856fc8d7c42cc379)  |
+| ETHRegistrarController      | Arbitrum | [0x263c644d8f5d4bdb44cfab020491ec6fc4ca5271](https://sepolia.arbiscan.io/address/0x263c644d8f5d4bdb44cfab020491ec6fc4ca5271)  |
+| SubdomainController         | Arbitrum | [0x41eede073217084a30f6f3bc2c546bda1f08b5ca](https://sepolia.arbiscan.io/address/0x41eede073217084a30f6f3bc2c546bda1f08b5ca)  |
+| PublicResolver              | Arbitrum | [0x0a33f065c9c8f0F5c56BB84b1593631725F0f3af](https://sepolia.arbiscan.io/address/0x0a33f065c9c8f0F5c56BB84b1593631725F0f3af)  |
+
 ## Components
 
 The External Resolver consists of three main components, each of them is a self-contained project with its own set of files and logic, ensuring seamless integration and collaboration between them. This modular architecture allows for flexibility and customization, making the External Resolver a versatile solution for various use cases.

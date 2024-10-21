@@ -27,48 +27,50 @@ config({
 })
 
 let {
-  UNIVERSAL_RESOLVER_ADDRESS: resolver,
-  L2_RESOLVER_ADDRESS: l2Resolver,
+  UNIVERSAL_RESOLVER_ADDRESS: universalResolver,
+  RESOLVER_ADDRESS: resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   L2_RPC_URL: providerL2 = 'http://127.0.0.1:8547',
-  PRIVATE_KEY:
-    privateKey = '0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659', // local arbitrum PK
+  PRIVATE_KEY: privateKey,
 } = process.env
 
 const chain = getChain(parseInt(chainId))
-console.log(`Connecting to ${chain?.name}.`)
+if (!chain) {
+  throw new Error('Chain not found')
+}
 
 const client = createPublicClient({
   chain,
   transport: http(provider),
 }).extend(walletActions)
+console.log(`Connecting to ${chain?.name}.`)
 
 // eslint-disable-next-line
 const _ = (async () => {
-  if (!l2Resolver) {
-    throw new Error('L2_RESOLVER_ADDRESS is required')
+  if (!resolver) {
+    throw new Error('RESOLVER_ADDRESS is required')
   }
 
-  const publicAddress = normalize('lucas.arb.eth')
-  const node = namehash(publicAddress)
+  const name = normalize('gibi.arb.eth')
+  const encodedName = toHex(packetToBytes(name))
+  const node = namehash(name)
   const signer = privateKeyToAccount(privateKey as Hex)
 
-  if (!resolver) {
-    resolver = getChainContractAddress({
+  if (!universalResolver) {
+    universalResolver = getChainContractAddress({
       chain: client.chain,
       contract: 'ensUniversalResolver',
     })
   }
 
   const [resolverAddr] = (await client.readContract({
-    address: resolver as Hex,
+    address: universalResolver as Hex,
     functionName: 'findResolver',
     abi: uAbi,
-    args: [toHex(packetToBytes(publicAddress))],
+    args: [encodedName],
   })) as Hash[]
 
-  const name = extractLabelFromName(publicAddress)
   const duration = 31556952000n
 
   // SUBDOMAIN PRICING
@@ -105,13 +107,13 @@ const _ = (async () => {
     functionName: 'register',
     abi: l1Abi,
     args: [
-      name,
+      encodedName, // name
       signer.address, // owner
       duration,
       `0x${'a'.repeat(64)}` as Hex, // secret
-      l2Resolver, // resolver
-      data, // calldata
-      false, // primaryName
+      resolver,
+      data, // records calldata
+      false, // reverseRecord
       0, // fuses
       `0x${'a'.repeat(64)}` as Hex, // extraData
     ],
@@ -124,33 +126,28 @@ const _ = (async () => {
     await client.simulateContract(calldata)
   } catch (err) {
     const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByL2') {
-      const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
+    switch (data?.errorName) {
+      case 'StorageHandledByL2': {
+        const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
-      const l2Client = createPublicClient({
-        chain: getChain(Number(chainId)),
-        transport: http(providerL2),
-      }).extend(walletActions)
+        const l2Client = createPublicClient({
+          chain: getChain(Number(chainId)),
+          transport: http(providerL2),
+        }).extend(walletActions)
 
-      try {
-        const { request } = await l2Client.simulateContract({
-          ...calldata,
-          address: contractAddress,
-        })
-        await l2Client.writeContract(request)
-      } catch (err) {
-        console.log('error while trying to make the request: ', { err })
+        try {
+          const { request } = await l2Client.simulateContract({
+            ...calldata,
+            address: contractAddress,
+          })
+          await l2Client.writeContract(request)
+        } catch (err) {
+          console.log('error while trying to make the request: ', { err })
+        }
+        return
       }
-    } else if (data) {
-      console.error('error registering domain: ', data.errorName)
-    } else {
-      console.error('error registering domain: ', { err })
+      default:
+        console.error('error registering domain: ', { err })
     }
   }
 })()
-
-// gather the first part of the domain (e.g. floripa.blockful.eth -> floripa)
-function extractLabelFromName(name: string): string {
-  const [, label] = /^(\w+)/.exec(name) || []
-  return label
-}
