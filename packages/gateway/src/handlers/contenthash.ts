@@ -62,7 +62,7 @@ export function withGetContentHash(
       if (content)
         return {
           data: [toHex(content.value)],
-          extraData: formatTTL(content.ttl),
+          extraData: formatTTL(parseInt(content.ttl)),
         }
     },
   }

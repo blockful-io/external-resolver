@@ -23,8 +23,9 @@ import {
   parseAbi,
   stringToHex,
   toHex,
+  zeroHash,
 } from 'viem'
-import { namehash } from 'viem/ens'
+import { namehash, packetToBytes } from 'viem/ens'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
 import { doCall } from './helper'
@@ -93,7 +94,17 @@ describe('Gateway Database', () => {
           sender: TEST_ADDRESS,
           method: 'register',
           pvtKey,
-          args: [toHex(name), 300, owner, []],
+          args: [
+            toHex(packetToBytes(name)),
+            owner,
+            300n,
+            zeroHash,
+            TEST_ADDRESS,
+            [],
+            false,
+            0,
+            zeroHash,
+          ],
         })
 
         const d = await datasource.getRepository(Domain).findOneBy({
@@ -113,7 +124,7 @@ describe('Gateway Database', () => {
         const domain = new Domain()
         domain.name = 'public.eth'
         domain.node = namehash('public.eth')
-        domain.ttl = 300
+        domain.ttl = '300'
         domain.owner = owner
         domain.parent = namehash('eth')
         domain.resolver = TEST_ADDRESS
@@ -128,7 +139,17 @@ describe('Gateway Database', () => {
           sender: TEST_ADDRESS,
           method: 'register',
           pvtKey,
-          args: [toHex(domain.name), 400, owner, []],
+          args: [
+            toHex(packetToBytes(domain.name)),
+            owner,
+            300n,
+            zeroHash,
+            TEST_ADDRESS,
+            [],
+            false,
+            0,
+            zeroHash,
+          ],
         })
 
         expect(result.data.length).toEqual(0)
@@ -171,7 +192,17 @@ describe('Gateway Database', () => {
           sender: TEST_ADDRESS,
           method: 'register',
           pvtKey,
-          args: [toHex(name), 300, owner, calldata],
+          args: [
+            toHex(packetToBytes(name)),
+            owner,
+            300n,
+            zeroHash,
+            TEST_ADDRESS,
+            calldata,
+            false,
+            0,
+            zeroHash,
+          ],
         })
 
         const actual = await datasource.getRepository(Domain).findOneBy({
@@ -215,7 +246,7 @@ describe('Gateway Database', () => {
         domain.parent = namehash('eth')
         domain.resolver = TEST_ADDRESS
         domain.resolverVersion = '1'
-        domain.ttl = 300
+        domain.ttl = '300'
         domain.owner = privateKeyToAddress(pvtKey)
         await datasource.manager.save(domain)
 
@@ -281,7 +312,7 @@ describe('Gateway Database', () => {
         domain.parent = namehash('eth')
         domain.resolver = TEST_ADDRESS
         domain.resolverVersion = '1'
-        domain.ttl = 300
+        domain.ttl = '300'
         domain.owner = privateKeyToAddress(pvtKey)
         await datasource.manager.save(domain)
 
@@ -316,7 +347,7 @@ describe('Gateway Database', () => {
         domain.parent = namehash('eth')
         domain.resolver = TEST_ADDRESS
         domain.resolverVersion = '1'
-        domain.ttl = 300
+        domain.ttl = '300'
         domain.owner = privateKeyToAddress(generatePrivateKey())
         await datasource.manager.save(domain)
 
@@ -340,7 +371,9 @@ describe('Gateway Database', () => {
         expect(result.data.length).toEqual(1)
         const [value] = result.data
         expect(value).toEqual(toHex(expected))
-        expect(parseInt(result.ttl!)).toBeCloseTo(parseInt(formatTTL(300)))
+        expect(parseInt(result.ttl!)).toBeCloseTo(
+          parseInt(formatTTL(parseInt(domain.ttl))),
+        )
       })
 
       // Attempt to set a content hash for an invalid domain
@@ -369,7 +402,7 @@ describe('Gateway Database', () => {
       domain = new Domain()
       domain.name = 'public.eth'
       domain.node = namehash(domain.name)
-      domain.ttl = 300
+      domain.ttl = '300'
       domain.parent = namehash('eth')
       domain.resolver = TEST_ADDRESS
       domain.resolverVersion = '1'
@@ -521,7 +554,7 @@ describe('Gateway Database', () => {
       const [avatar] = result.data
       expect(avatar).toEqual('blockful.png')
       expect(parseInt(result.ttl!)).toBeCloseTo(
-        parseInt(formatTTL(domain.ttl)),
+        parseInt(formatTTL(parseInt(domain.ttl))),
         2,
       )
     })
@@ -585,7 +618,7 @@ describe('Gateway Database', () => {
       domain.parent = namehash('eth')
       domain.resolver = TEST_ADDRESS
       domain.resolverVersion = '1'
-      domain.ttl = 300
+      domain.ttl = '300'
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
       await datasource.manager.save(domain)
@@ -709,7 +742,9 @@ describe('Gateway Database', () => {
       expect(result.data.length).toEqual(1)
       const [value] = result.data
       expect(value).toEqual('0x1234567890123456789012345678901234567890')
-      expect(parseInt(result.ttl!)).toBeCloseTo(parseInt(formatTTL(domain.ttl)))
+      expect(parseInt(result.ttl!)).toBeCloseTo(
+        parseInt(formatTTL(parseInt(domain.ttl))),
+      )
     })
   })
 
@@ -723,7 +758,7 @@ describe('Gateway Database', () => {
       domain.parent = namehash('eth')
       domain.resolver = TEST_ADDRESS
       domain.resolverVersion = '1'
-      domain.ttl = 2000
+      domain.ttl = '300'
       pvtKey = generatePrivateKey()
       domain.owner = privateKeyToAddress(pvtKey)
       domain = await datasource.manager.save(domain)
@@ -842,7 +877,7 @@ describe('Gateway Database', () => {
     beforeEach(async () => {
       domain = new Domain()
       domain.node = namehash('public.eth') as `0x${string}`
-      domain.ttl = 2000
+      domain.ttl = '300'
       domain.name = 'public.eth'
       domain.parent = namehash('eth')
       domain.resolver = TEST_ADDRESS

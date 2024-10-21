@@ -5,16 +5,18 @@ interface OffchainRegister {
 
     /**
      * Forwards the registering of a domain to the L2 contracts
-     * @param name The DNS-encoded name to resolve.
+     * @param name DNS-encoded name to be registered.
      * @param owner Owner of the domain
      * @param duration duration The duration in seconds of the registration.
+     * @param secret The secret to be used for the registration based on commit/reveal
      * @param resolver The address of the resolver to set for this name.
      * @param data Multicallable data bytes for setting records in the associated resolver upon reigstration.
+     * @param reverseRecord Whether this name is the primary name
      * @param fuses The fuses to set for this name.
      * @param extraData any encoded additional data
      */
     function register(
-        string calldata name,
+        bytes calldata name,
         address owner,
         uint256 duration,
         bytes32 secret,
@@ -40,7 +42,7 @@ interface OffchainRegisterParams {
      * @return extraData any given structure in an ABI encoded format
      */
     function registerParams(
-        bytes memory name,
+        bytes calldata name,
         uint256 duration
     )
         external
