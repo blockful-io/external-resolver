@@ -36,21 +36,38 @@ export function withLogger({
       return next()
     }
 
-    const func = decodeFunctionData({ abi: parseAbi(abi), data: callData })
+    try {
+      const func = decodeFunctionData({ abi: parseAbi(abi), data: callData })
 
-    next()
+      next()
 
-    logger.log({
-      level: 'info',
-      message: JSON.stringify(
-        {
-          method: req.method,
-          function: func.functionName,
-          args: func.args,
-          status: res.statusCode,
-        },
-        (_, value) => (typeof value === 'bigint' ? value.toString() : value),
-      ),
-    })
+      logger.log({
+        level: 'info',
+        message: JSON.stringify(
+          {
+            method: req.method,
+            function: func.functionName,
+            args: func.args,
+            status: res.statusCode,
+          },
+          (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+        ),
+      })
+    } catch (error) {
+      logger.log({
+        level: 'error',
+        message: JSON.stringify(
+          {
+            method: req.method,
+            callData,
+            error,
+            status: res.statusCode,
+          },
+          (_, value) => (typeof value === 'bigint' ? value.toString() : value),
+        ),
+      })
+
+      next()
+    }
   }
 }

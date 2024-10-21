@@ -5,13 +5,12 @@
 
 import { config } from 'dotenv'
 import {
-  Hash,
   Hex,
   createPublicClient,
   encodeFunctionData,
-  getChainContractAddress,
   http,
   namehash,
+  stringToHex,
   toHex,
   walletActions,
   zeroHash,
@@ -19,7 +18,6 @@ import {
 import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
-import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
 import { MessageData, DomainData } from '@blockful/gateway/src/types'
 import { getRevertErrorData, getChain, handleDBStorage } from './client'
@@ -28,7 +26,7 @@ config({
   path: process.env.ENV_FILE || '../.env',
 })
 
-let {
+const {
   UNIVERSAL_RESOLVER_ADDRESS: universalResolver,
   RESOLVER_ADDRESS: resolver,
   CHAIN_ID: chainId = '31337',
@@ -54,26 +52,17 @@ const _ = (async () => {
     throw new Error('RESOLVER_ADDRESS is required')
   }
 
-  const name = normalize('gibi.blockful.eth')
+  const name = normalize('gibi.arb.eth')
   const encodedName = toHex(packetToBytes(name))
   const node = namehash(name)
   const signer = privateKeyToAccount(privateKey as Hex)
 
-  if (!universalResolver) {
-    universalResolver = getChainContractAddress({
-      chain: client.chain,
-      contract: 'ensUniversalResolver',
-    })
-  }
-
-  const [resolverAddr] = (await client.readContract({
-    address: universalResolver as Hex,
-    functionName: 'findResolver',
-    abi: uAbi,
-    args: [encodedName],
-  })) as Hash[]
-
   const duration = 31556952000n
+
+  const resolverAddr = await client.getEnsResolver({
+    name,
+    universalResolverAddress: universalResolver as Hex,
+  })
 
   // SUBDOMAIN PRICING
 
@@ -97,7 +86,7 @@ const _ = (async () => {
     encodeFunctionData({
       functionName: 'setText',
       abi: l1Abi,
-      args: [node, 'com.twitter', '@lucas'],
+      args: [node, 'com.twitter', `@${name}`],
     }),
     encodeFunctionData({
       functionName: 'setAddr',
@@ -108,6 +97,16 @@ const _ = (async () => {
       functionName: 'setAddr',
       abi: l1Abi,
       args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
+    }),
+    encodeFunctionData({
+      functionName: 'setContenthash',
+      abi: l1Abi,
+      args: [
+        node,
+        stringToHex(
+          'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450',
+        ),
+      ],
     }),
   ]
 

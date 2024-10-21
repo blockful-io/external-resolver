@@ -74,7 +74,9 @@ const _ = (async () => {
       }),
   )
 
-  const dbclient = await NewDataSource(dbUrl).initialize()
+  const dbclient = await NewDataSource(dbUrl, {
+    debug: DEBUG === 'true',
+  }).initialize()
   const repo = new PostgresRepository(dbclient)
 
   const signatureRecover = new SignatureRecover()
