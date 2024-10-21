@@ -14,13 +14,15 @@ import {
   namehash,
   toHex,
   walletActions,
+  zeroHash,
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi as uAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
-import { getRevertErrorData, getChain } from './client'
+import { MessageData, DomainData } from '@blockful/gateway/src/types'
+import { getRevertErrorData, getChain, handleDBStorage } from './client'
 
 config({
   path: process.env.ENV_FILE || '../.env',
@@ -52,7 +54,7 @@ const _ = (async () => {
     throw new Error('RESOLVER_ADDRESS is required')
   }
 
-  const name = normalize('gibi.arb.eth')
+  const name = normalize('gibi.blockful.eth')
   const encodedName = toHex(packetToBytes(name))
   const node = namehash(name)
   const signer = privateKeyToAccount(privateKey as Hex)
@@ -75,13 +77,19 @@ const _ = (async () => {
 
   // SUBDOMAIN PRICING
 
-  const [value /* commitTime */ /* extraData */, ,] =
-    (await client.readContract({
-      address: resolverAddr,
-      abi: l1Abi,
-      functionName: 'registerParams',
-      args: [toHex(name), duration],
-    })) as [bigint, bigint, Hex]
+  let value = 0n
+  try {
+    const [_value /* commitTime */ /* extraData */, ,] =
+      (await client.readContract({
+        address: resolverAddr,
+        abi: l1Abi,
+        functionName: 'registerParams',
+        args: [toHex(name), duration],
+      })) as [bigint, bigint, Hex]
+    value = _value
+  } catch {
+    // interface not implemented by the resolver
+  }
 
   // REGISTER NEW SUBDOMAIN
 
@@ -107,15 +115,15 @@ const _ = (async () => {
     functionName: 'register',
     abi: l1Abi,
     args: [
-      encodedName, // name
+      encodedName,
       signer.address, // owner
       duration,
-      `0x${'a'.repeat(64)}` as Hex, // secret
+      zeroHash,
       resolver,
       data, // records calldata
       false, // reverseRecord
       0, // fuses
-      `0x${'a'.repeat(64)}` as Hex, // extraData
+      zeroHash,
     ],
     address: resolverAddr,
     account: signer,
@@ -127,6 +135,15 @@ const _ = (async () => {
   } catch (err) {
     const data = getRevertErrorData(err)
     switch (data?.errorName) {
+      case 'StorageHandledByOffChainDatabase': {
+        const [domain, url, message] = data.args as [
+          DomainData,
+          string,
+          MessageData,
+        ]
+        await handleDBStorage({ domain, url, message, signer })
+        return
+      }
       case 'StorageHandledByL2': {
         const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 

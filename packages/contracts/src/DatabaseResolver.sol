@@ -20,6 +20,10 @@ import {ENSIP16} from "./ENSIP16.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
 import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
+import {
+    OffchainRegister,
+    OffchainMulticallable
+} from "./interfaces/OffchainResolver.sol";
 
 /**
  * Implements an ENS resolver that directs all queries to a CCIP read gateway.
@@ -36,6 +40,8 @@ contract DatabaseResolver is
     TextResolver,
     ContentHashResolver,
     NameResolver,
+    OffchainRegister,
+    OffchainMulticallable,
     Ownable
 {
 
@@ -106,19 +112,31 @@ contract DatabaseResolver is
     //////// OFFCHAIN STORAGE REGISTER DOMAIN ////////
 
     /**
-     * Resolves a name, as specified by ENSIP 10 (wildcard).
-     * @param -name The DNS-encoded name to be registered.
-     * @param -ttl Expiration timestamp of the domain
-     * @param -owner address of the owner of the domain
+     * Forwards the registering of a domain to the L2 contracts
+     * @param -name DNS-encoded name to be registered.
+     * @param -owner Owner of the domain
+     * @param -duration duration The duration in seconds of the registration.
+     * @param -secret The secret to be used for the registration based on commit/reveal
+     * @param -resolver The address of the resolver to set for this name.
+     * @param -data Multicallable data bytes for setting records in the associated resolver upon reigstration.
+     * @param -reverseRecord Whether this name is the primary name
+     * @param -fuses The fuses to set for this name.
+     * @param -extraData any encoded additional data
      */
     function register(
-        bytes memory, /* name */
-        uint32, /* ttl */
+        bytes calldata, /* name */
         address, /* owner */
-        bytes[] calldata /* data */
+        uint256, /* duration */
+        bytes32, /* secret */
+        address, /* resolver */
+        bytes[] calldata, /* data */
+        bool, /* reverseRecord */
+        uint16, /* fuses */
+        bytes memory /* extraData */
     )
         external
-        view
+        payable
+        override
     {
         _offChainStorage();
     }
