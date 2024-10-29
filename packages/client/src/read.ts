@@ -4,19 +4,26 @@
  */
 
 import { config } from 'dotenv'
-import { Hex, createPublicClient, http } from 'viem'
+import {
+  Hex,
+  createPublicClient,
+  http,
+  namehash,
+  decodeFunctionResult,
+  hexToString,
+} from 'viem'
 import { normalize } from 'viem/ens'
 import { getChain } from './client'
-
+import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
 config({
   path: process.env.ENV_FILE || '../.env',
 })
 
 const {
-  UNIVERSAL_RESOLVER_ADDRESS: resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
   GATEWAY_URL: gateway = 'http://127.0.0.1:3000/{sender}/{data}.json',
+  UNIVERSAL_RESOLVER_ADDRESS: universalResolverAddress,
 } = process.env
 
 const chain = getChain(parseInt(chainId))
@@ -29,42 +36,62 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const publicAddress = normalize('blockful.eth')
+  const name = normalize('lucas.arb.eth')
 
   const twitter = await client.getEnsText({
-    name: publicAddress,
+    name,
     key: 'com.twitter',
-    universalResolverAddress: resolver as Hex,
+    universalResolverAddress: universalResolverAddress as Hex,
     gatewayUrls: [gateway],
   })
   const avatar = await client.getEnsAvatar({
-    name: publicAddress,
-    universalResolverAddress: resolver as Hex,
+    name,
+    universalResolverAddress: universalResolverAddress as Hex,
     gatewayUrls: [gateway],
   })
 
   const address = await client.getEnsAddress({
-    name: publicAddress,
-    universalResolverAddress: resolver as Hex,
+    name,
+    universalResolverAddress: universalResolverAddress as Hex,
     gatewayUrls: [gateway],
   })
   const addressBtc = await client.getEnsAddress({
-    name: publicAddress,
+    name,
     coinType: 1,
-    universalResolverAddress: resolver as Hex,
+    universalResolverAddress: universalResolverAddress as Hex,
     gatewayUrls: [gateway],
   })
-  const name = await client.getEnsName({
+  const domainName = await client.getEnsName({
     address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-    universalResolverAddress: resolver as Hex,
+    universalResolverAddress: universalResolverAddress as Hex,
     gatewayUrls: [gateway],
   })
+
+  const resolver = await client.getEnsResolver({
+    name,
+    universalResolverAddress: universalResolverAddress as Hex,
+  })
+  const encodedContentHash = (await client.readContract({
+    address: resolver,
+    functionName: 'contenthash',
+    abi: l1Abi,
+    args: [namehash(name)],
+  })) as Hex
+
+  const contentHash = hexToString(
+    decodeFunctionResult({
+      abi: l1Abi,
+      functionName: 'contenthash',
+      data: encodedContentHash,
+    }) as Hex,
+  )
 
   console.log({
     twitter,
     avatar,
     address,
     addressBtc,
-    name,
+    name: domainName,
+    contentHash,
   })
 })()

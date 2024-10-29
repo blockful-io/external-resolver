@@ -6,10 +6,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  OneToOne,
 } from 'typeorm'
 
 import { Address } from './address'
 import { Text } from './text'
+import { Contenthash } from './contenthash'
 
 /**
  * Represents the aggregation of ENS properties on the database.
@@ -26,8 +28,12 @@ export class Domain {
   @Column()
   parent: `0x${string}`
 
-  @Column({ nullable: true, length: 32 })
-  contenthash?: `0x${string}`
+  @OneToOne(() => Contenthash, (contenthash) => contenthash.domain, {
+    cascade: true,
+    createForeignKeyConstraints: false,
+    nullable: true,
+  })
+  contenthash?: Contenthash
 
   @Column({ type: 'bigint' })
   ttl: string
