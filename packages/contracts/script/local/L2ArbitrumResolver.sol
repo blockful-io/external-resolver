@@ -25,6 +25,7 @@ import {NameEncoder} from "@ens-contracts/utils/NameEncoder.sol";
 
 import {ENSHelper} from "../ENSHelper.sol";
 import {SubdomainController} from "../../src/SubdomainController.sol";
+import {OffchainRegister} from "../../src/interfaces/OffchainResolver.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper {
 
@@ -80,10 +81,8 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         nameWrapper.setController(msg.sender, true);
 
         uint256 subdomainPrice = 0.001 ether;
-        uint256 commitTime = 0;
-        SubdomainController subdomainController = new SubdomainController(
-            address(nameWrapper), subdomainPrice, commitTime
-        );
+        SubdomainController subdomainController =
+            new SubdomainController(address(nameWrapper), subdomainPrice);
         nameWrapper.setApprovalForAll(address(subdomainController), true);
 
         PublicResolver arbResolver = new PublicResolver(
@@ -109,21 +108,23 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         );
 
         subdomainController.register{value: subdomainController.price()}(
-            name,
-            msg.sender,
-            31556952000,
-            keccak256("secret"),
-            address(arbResolver),
-            data,
-            false,
-            0,
-            bytes("")
+            OffchainRegister.RegisterRequest(
+                name,
+                msg.sender,
+                31556952000,
+                address(arbResolver),
+                data,
+                false,
+                0,
+                bytes("")
+            )
         );
 
         vm.stopBroadcast();
 
         console.log("Registry deployed at", address(registry));
         console.log("NameWrapper deployed at", address(nameWrapper));
+        console.log("BaseRegistrar deployed at", address(baseRegistrar));
         console.log(
             "SubdomainController deployed at", address(subdomainController)
         );
