@@ -25,7 +25,10 @@ import {NameEncoder} from "@ens-contracts/utils/NameEncoder.sol";
 
 import {ENSHelper} from "../ENSHelper.sol";
 import {SubdomainController} from "../../src/SubdomainController.sol";
-import {OffchainRegister} from "../../src/interfaces/OffchainResolver.sol";
+import {
+    OffchainRegister,
+    RegisterRequest
+} from "../../src/interfaces/OffchainResolver.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper {
 
@@ -108,10 +111,11 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         );
 
         subdomainController.register{value: subdomainController.price()}(
-            OffchainRegister.RegisterRequest(
+            RegisterRequest(
                 name,
                 msg.sender,
                 31556952000,
+                keccak256(abi.encode("secret")),
                 address(arbResolver),
                 data,
                 false,
