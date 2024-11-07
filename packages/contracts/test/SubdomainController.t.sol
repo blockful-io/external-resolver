@@ -82,13 +82,11 @@ contract SubdomainControllerTest is Test, ENSHelper {
     DummyResolver public resolver;
 
     uint256 constant PRICE = 0.1 ether;
-    uint256 constant COMMIT_TIME = 1 days;
 
     function setUp() public {
         nameWrapper = new DummyNameWrapper();
         resolver = new DummyResolver();
-        controller =
-            new SubdomainController(address(nameWrapper), PRICE, COMMIT_TIME);
+        controller = new SubdomainController(address(nameWrapper), PRICE);
     }
 
     function testRegister() public {
@@ -115,15 +113,17 @@ contract SubdomainControllerTest is Test, ENSHelper {
 
         vm.deal(address(this), PRICE);
         controller.register{value: PRICE}(
-            name,
-            owner,
-            duration,
-            secret,
-            address(resolver),
-            data,
-            false,
-            0,
-            abi.encode("")
+            RegisterRequest(
+                name,
+                owner,
+                duration,
+                secret,
+                address(resolver),
+                data,
+                false,
+                0,
+                bytes("")
+            )
         );
 
         assertEq(
@@ -144,15 +144,17 @@ contract SubdomainControllerTest is Test, ENSHelper {
         vm.expectRevert("insufficient funds");
 
         controller.register{value: PRICE - 1}(
-            name,
-            owner,
-            duration,
-            secret,
-            address(resolver),
-            data,
-            false,
-            0,
-            abi.encode("")
+            RegisterRequest(
+                name,
+                owner,
+                duration,
+                secret,
+                address(resolver),
+                data,
+                false,
+                0,
+                bytes("")
+            )
         );
     }
 
@@ -179,15 +181,17 @@ contract SubdomainControllerTest is Test, ENSHelper {
 
         vm.deal(address(this), PRICE);
         controller.register{value: PRICE}(
-            name,
-            owner,
-            duration,
-            secret,
-            address(resolver),
-            data,
-            false,
-            0,
-            abi.encode("")
+            RegisterRequest(
+                name,
+                owner,
+                duration,
+                secret,
+                address(resolver),
+                data,
+                false,
+                0,
+                bytes("")
+            )
         );
     }
 
@@ -226,15 +230,17 @@ contract SubdomainControllerTest is Test, ENSHelper {
 
         vm.deal(address(this), PRICE);
         controller.register{value: PRICE}(
-            name,
-            owner,
-            duration,
-            secret,
-            address(resolver),
-            data,
-            false,
-            0,
-            abi.encode("")
+            RegisterRequest(
+                name,
+                owner,
+                duration,
+                secret,
+                address(resolver),
+                data,
+                false,
+                0,
+                bytes("")
+            )
         );
 
         assertEq(
