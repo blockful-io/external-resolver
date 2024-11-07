@@ -5,6 +5,7 @@
 
 import { config } from 'dotenv'
 import {
+  Address,
   Hex,
   createPublicClient,
   decodeErrorResult,
@@ -97,6 +98,7 @@ const _ = (async () => {
         name: encodedName,
         owner: signer.address,
         duration,
+        secret: zeroHash,
         resolver,
         data,
         reverseRecord: false,
