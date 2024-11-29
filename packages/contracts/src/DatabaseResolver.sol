@@ -18,12 +18,8 @@ import {ContentHashResolver} from
 
 import {ENSIP16} from "./ENSIP16.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
-import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
+import {WriteDeferral, DBWriteDeferral} from "./interfaces/WriteDeferral.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
-import {
-    OffchainRegister,
-    OffchainMulticallable
-} from "./interfaces/OffchainResolver.sol";
 
 /**
  * Implements an ENS resolver that directs all queries to a CCIP read gateway.
@@ -33,15 +29,13 @@ contract DatabaseResolver is
     ERC165,
     ENSIP16,
     IExtendedResolver,
-    IWriteDeferral,
+    DBWriteDeferral,
     AddrResolver,
     ABIResolver,
     PubkeyResolver,
     TextResolver,
     ContentHashResolver,
     NameResolver,
-    OffchainRegister,
-    OffchainMulticallable,
     Ownable
 {
 
@@ -109,53 +103,20 @@ contract DatabaseResolver is
         return true;
     }
 
-    //////// OFFCHAIN STORAGE REGISTER DOMAIN ////////
+    //////// ENSIP Wildcard Writing ////////
 
     /**
-     * Forwards the registering of a domain to the L2 contracts
-     * @param -name DNS-encoded name to be registered.
-     * @param -owner Owner of the domain
-     * @param -duration duration The duration in seconds of the registration.
-     * @param -secret The secret to be used for the registration based on commit/reveal
-     * @param -resolver The address of the resolver to set for this name.
-     * @param -data Multicallable data bytes for setting records in the associated resolver upon reigstration.
-     * @param -reverseRecord Whether this name is the primary name
-     * @param -fuses The fuses to set for this name.
-     * @param -extraData any encoded additional data
+     * @notice Validates and processes write parameters for deferred storage mutations
+     * @param -name The encoded name or identifier of the write operation
+     * @param -data The encoded data to be written
+     * @dev This function reverts with StorageHandledByL2 error to indicate L2 deferral
      */
-    function register(
+    function writeParams(
         bytes calldata, /* name */
-        address, /* owner */
-        uint256, /* duration */
-        bytes32, /* secret */
-        address, /* resolver */
-        bytes[] calldata, /* data */
-        bool, /* reverseRecord */
-        uint16, /* fuses */
-        bytes memory /* extraData */
+        bytes calldata /* data */
     )
         external
-        payable
-        override
-    {
-        _offChainStorage();
-    }
-
-    //////// OFFCHAIN STORAGE TRANSFER DOMAIN ////////
-
-    /**
-     * Transfer a domain to a new owner
-     * @param -node The DNS-encoded name to resolve.
-     * @param -owner The address of the new owner
-     */
-    function transfer(bytes32, /* node */ address /* owner */ ) external view {
-        _offChainStorage();
-    }
-
-    function multicall(bytes[] calldata /* datas  */ )
-        external
         view
-        returns (bytes[] memory /* results */ )
     {
         _offChainStorage();
     }
@@ -439,14 +400,14 @@ contract DatabaseResolver is
      */
     function _offChainStorage() private view {
         revert StorageHandledByOffChainDatabase(
-            IWriteDeferral.domainData({
+            DBWriteDeferral.domainData({
                 name: _WRITE_DEFERRAL_DOMAIN_NAME,
                 version: _WRITE_DEFERRAL_DOMAIN_VERSION,
                 chainId: _CHAIN_ID,
                 verifyingContract: address(this)
             }),
             gatewayUrl,
-            IWriteDeferral.messageData({
+            DBWriteDeferral.messageData({
                 callData: msg.data,
                 sender: msg.sender,
                 expirationTimestamp: block.timestamp
@@ -585,7 +546,7 @@ contract DatabaseResolver is
         )
         returns (bool)
     {
-        return interfaceID == type(IWriteDeferral).interfaceId
+        return interfaceID == type(WriteDeferral).interfaceId
             || interfaceID == type(IExtendedResolver).interfaceId
             || super.supportsInterface(interfaceID);
     }

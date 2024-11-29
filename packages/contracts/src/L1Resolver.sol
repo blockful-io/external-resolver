@@ -18,22 +18,15 @@ import {ENSIP16} from "./ENSIP16.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
-import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
-import {
-    OffchainRegister,
-    OffchainMulticallable,
-    OffchainRegisterParams
-} from "./interfaces/OffchainResolver.sol";
+import {L2WriteDeferral} from "./interfaces/WriteDeferral.sol";
+import {OffchainRegister} from "./interfaces/OffchainResolver.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
     IExtendedResolver,
     IERC165,
-    IWriteDeferral,
+    L2WriteDeferral,
     Ownable,
-    OffchainRegister,
-    OffchainMulticallable,
-    OffchainRegisterParams,
     ENSIP16
 {
 
@@ -47,7 +40,7 @@ contract L1Resolver is
     //////// CONTRACT IMMUTABLE STATE ////////
 
     // id of chain that is storing the domains
-    uint256 immutable chainId;
+    uint256 public immutable chainId;
     // EVM Verifier to handle data validation based on Merkle Proof
     IEVMVerifier immutable verifier;
 
@@ -64,8 +57,8 @@ contract L1Resolver is
     uint256 constant EXTRA_DATA_SLOT = 2;
 
     /// Contract targets
-    bytes32 constant TARGET_RESOLVER = keccak256("resolver");
-    bytes32 constant TARGET_REGISTRAR = keccak256("registrar");
+    bytes32 public constant TARGET_RESOLVER = keccak256("resolver");
+    bytes32 public constant TARGET_REGISTRAR = keccak256("registrar");
 
     //////// INITIALIZER ////////
 
@@ -99,94 +92,41 @@ contract L1Resolver is
         setTarget(TARGET_REGISTRAR, _target_registrar);
     }
 
-    //////// OFFCHAIN STORAGE REGISTER SUBDOMAIN ////////
+    //////// ENSIP Wildcard Writing ////////
 
     /**
-     * Forwards the registering of a subdomain to the L2 contracts
-     * @param -name The DNS-encoded name to be registered.
-     * @param -owner Owner of the domain
-     * @param -duration duration The duration in seconds of the registration.
-     * @param -secret The secret to be used for the registration based on commit/reveal
-     * @param -resolver The address of the resolver to set for this name.
-     * @param -data Multicallable data bytes for setting records in the associated resolver upon reigstration.
-     * @param -reverseRecord Whether this name is the primary name
-     * @param -fuses The fuses to set for this name.
-     * @param -extraData any encoded additional data
+     * @notice Validates and processes write parameters for deferred storage mutations
+     * @param -name The encoded name or identifier of the write operation
+     * @param data The encoded data to be written
+     * @dev This function reverts with StorageHandledByL2 error to indicate L2 deferral
      */
-    function register(
+    function writeParams(
         bytes calldata, /* name */
-        address, /* owner */
-        uint256, /* duration */
-        bytes32, /* secret */
-        address, /* resolver */
-        bytes[] calldata, /* data */
-        bool, /* reverseRecord */
-        uint16, /* fuses */
-        bytes memory /* extraData */
-    )
-        external
-        payable
-    {
-        _offChainStorage(targets[TARGET_REGISTRAR]);
-    }
-
-    /**
-     * @notice Returns the registration parameters for a given name and duration
-     * @param -name The DNS-encoded name to query
-     * @param -duration The duration in seconds for the registration
-     * @return price The price of the registration in wei per second
-     * @return commitTime the amount of time the commit should wait before being revealed
-     * @return extraData any given structure in an ABI encoded format
-     */
-    function registerParams(
-        bytes calldata, /* name */
-        uint256 /* duration */
+        bytes calldata data
     )
         external
         view
-        override
-        returns (
-            uint256, /* price */
-            uint256, /* commitTime */
-            bytes memory /* extraData */
-        )
     {
-        EVMFetcher.newFetchRequest(verifier, targets[TARGET_REGISTRAR])
-            .getStatic(PRICE_SLOT).getStatic(COMMIT_SLOT).fetch(
-            this.registerParamsCallback.selector, ""
-        );
-    }
+        bytes4 selector = bytes4(data);
 
-    function registerParamsCallback(
-        bytes[] memory values,
-        bytes memory
-    )
-        public
-        pure
-        returns (uint256 price, uint256 commitTime, bytes memory extraData)
-    {
-        price = abi.decode(values[0], (uint256));
-        commitTime = abi.decode(values[1], (uint256));
-        return (price, commitTime, abi.encode(""));
-    }
+        if (selector == OffchainRegister.register.selector) {
+            _offChainStorage(targets[TARGET_REGISTRAR]);
+        }
 
-    /**
-     * @notice Executes multiple calls in a single transaction.
-     * @param -data An array of encoded function call data.
-     */
-    function multicall(bytes[] calldata /* data */ )
-        external
-        view
-        override
-        returns (bytes[] memory)
-    {
-        _offChainStorage(targets[TARGET_RESOLVER]);
+        if (
+            selector == bytes4(keccak256("setAddr(bytes32,address)"))
+                || selector == bytes4(keccak256("setAddr(bytes32,uint256,bytes)"))
+                || selector == TextResolver.setText.selector
+                || selector == ContentHashResolver.setContenthash.selector
+        ) _offChainStorage(targets[TARGET_RESOLVER]);
+
+        revert FunctionNotSupported();
     }
 
     //////// ENSIP 10 ////////
 
     /**
-     * @dev Resolve and verify a record stored in l2 target address. It supports subname by fetching target recursively to the nearlest parent.
+     * @dev Resolve and verify a record stored in l2 target address. It supports subdomain by fetching target recursively to the nearest parent.
      * @param -name DNS encoded ENS name to query
      * @param data The actual calldata
      * @return result result of the call
@@ -427,12 +367,10 @@ contract L1Resolver is
         returns (bool)
     {
         return interfaceID == type(IExtendedResolver).interfaceId
-            || interfaceID == type(IWriteDeferral).interfaceId
+            || interfaceID == type(L2WriteDeferral).interfaceId
             || interfaceID == type(EVMFetchTarget).interfaceId
-            || interfaceID == type(OffchainRegister).interfaceId
-            || interfaceID == type(OffchainMulticallable).interfaceId
-            || interfaceID == type(OffchainRegisterParams).interfaceId
             || interfaceID == type(IERC165).interfaceId
+            || interfaceID == type(ENSIP16).interfaceId
             || interfaceID == type(AddrResolver).interfaceId
             || interfaceID == type(TextResolver).interfaceId
             || interfaceID == type(ContentHashResolver).interfaceId
