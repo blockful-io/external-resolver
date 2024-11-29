@@ -7,6 +7,7 @@ import { config } from 'dotenv'
 import {
   Hex,
   createPublicClient,
+  decodeErrorResult,
   encodeFunctionData,
   http,
   namehash,
@@ -19,6 +20,8 @@ import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
+import { abi as universalResolverResolveAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
+import { abi as scAbi } from '@blockful/contracts/out/SubdomainController.sol/SubdomainController.json'
 import { MessageData, DomainData } from '@blockful/gateway/src/types'
 import { getRevertErrorData, getChain, handleDBStorage } from './client'
 
@@ -57,31 +60,6 @@ const _ = (async () => {
   const node = namehash(name)
   const signer = privateKeyToAccount(privateKey as Hex)
 
-  const duration = 31556952000n
-
-  const resolverAddr = await client.getEnsResolver({
-    name,
-    universalResolverAddress: universalResolver as Hex,
-  })
-
-  // SUBDOMAIN PRICING
-
-  let value = 0n
-  try {
-    const [_value /* commitTime */ /* extraData */, ,] =
-      (await client.readContract({
-        address: resolverAddr,
-        abi: l1Abi,
-        functionName: 'registerParams',
-        args: [toHex(name), duration],
-      })) as [bigint, bigint, Hex]
-    value = _value
-  } catch {
-    // interface not implemented by the resolver
-  }
-
-  // REGISTER NEW SUBDOMAIN
-
   const data: Hex[] = [
     encodeFunctionData({
       functionName: 'setText',
@@ -110,9 +88,10 @@ const _ = (async () => {
     }),
   ]
 
+  const duration = 31556952000n
   const calldata = {
     functionName: 'register',
-    abi: l1Abi,
+    abi: scAbi,
     args: [
       encodedName,
       signer.address, // owner
@@ -124,18 +103,35 @@ const _ = (async () => {
       0, // fuses
       zeroHash,
     ],
-    address: resolverAddr,
     account: signer,
-    value,
   }
 
   try {
-    await client.simulateContract(calldata)
+    await client.readContract({
+      address: universalResolver as Hex,
+      abi: universalResolverResolveAbi,
+      functionName: 'resolve',
+      args: [
+        encodedName,
+        encodeFunctionData({
+          functionName: 'writeParams',
+          abi: l1Abi,
+          args: [encodedName, encodeFunctionData(calldata)],
+        }),
+      ],
+    })
   } catch (err) {
     const data = getRevertErrorData(err)
-    switch (data?.errorName) {
+    if (!data || data.args.length === 0) return
+
+    const [params] = data.args
+    const errorResult = decodeErrorResult({
+      abi: l1Abi,
+      data: params as Hex,
+    })
+    switch (errorResult?.errorName) {
       case 'StorageHandledByOffChainDatabase': {
-        const [domain, url, message] = data.args as [
+        const [domain, url, message] = errorResult.args as [
           DomainData,
           string,
           MessageData,
@@ -144,17 +140,37 @@ const _ = (async () => {
         return
       }
       case 'StorageHandledByL2': {
-        const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
+        const [chainId, contractAddress] = errorResult.args as [
+          bigint,
+          `0x${string}`,
+        ]
 
         const l2Client = createPublicClient({
           chain: getChain(Number(chainId)),
           transport: http(providerL2),
         }).extend(walletActions)
 
+        // SUBDOMAIN PRICING
+
+        let value = 0n
+        try {
+          const [_value /* commitTime */ /* extraData */, ,] =
+            (await client.readContract({
+              address: contractAddress,
+              abi: scAbi,
+              functionName: 'registerParams',
+              args: [encodedName, duration],
+            })) as [bigint, bigint, Hex]
+          value = _value
+        } catch {
+          // interface not implemented by the resolver
+        }
+
         try {
           const { request } = await l2Client.simulateContract({
             ...calldata,
             address: contractAddress,
+            value,
           })
           await l2Client.writeContract(request)
         } catch (err) {

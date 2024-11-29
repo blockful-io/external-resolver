@@ -4,11 +4,20 @@ pragma solidity ^0.8.17;
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
 import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 import {BytesUtils} from "@ens-contracts/utils/BytesUtils.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {ENSHelper} from "../script/ENSHelper.sol";
-import {OffchainRegister} from "./interfaces/OffchainResolver.sol";
+import {
+    OffchainRegister,
+    OffchainRegisterParams
+} from "./interfaces/OffchainResolver.sol";
 
-contract SubdomainController is OffchainRegister, ENSHelper {
+contract SubdomainController is
+    IERC165,
+    OffchainRegister,
+    OffchainRegisterParams,
+    ENSHelper
+{
 
     using BytesUtils for bytes;
 
@@ -24,6 +33,17 @@ contract SubdomainController is OffchainRegister, ENSHelper {
         commitTime = _commitTime;
         price = _price;
         nameWrapper = INameWrapper(_nameWrapperAddress);
+    }
+
+    function registerParams(
+        bytes calldata, /* name */
+        uint256 /* duration */
+    )
+        external
+        view
+        returns (uint256, uint256, bytes memory)
+    {
+        return (price, commitTime, "");
     }
 
     function register(
@@ -70,6 +90,12 @@ contract SubdomainController is OffchainRegister, ENSHelper {
         uint256 labelLength = uint256(uint8(name[0]));
         if (labelLength == 0) return "";
         return string(name[1:labelLength + 1]);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+        return interfaceId == type(IERC165).interfaceId
+            || interfaceId == type(OffchainRegister).interfaceId
+            || interfaceId == type(OffchainRegisterParams).interfaceId;
     }
 
 }

@@ -104,7 +104,7 @@ contract L1Resolver is
         bytes calldata, /* name */
         bytes calldata data
     )
-        external
+        public
         view
     {
         bytes4 selector = bytes4(data);
@@ -158,6 +158,11 @@ contract L1Resolver is
         if (selector == ContentHashResolver.contenthash.selector) {
             bytes32 node = abi.decode(data[4:], (bytes32));
             return _contenthash(node);
+        }
+        if (selector == this.writeParams.selector) {
+            (bytes memory name, bytes memory _data) =
+                abi.decode(data[4:], (bytes, bytes));
+            this.writeParams(name, _data);
         }
     }
 
