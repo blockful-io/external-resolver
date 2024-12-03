@@ -106,19 +106,21 @@ contract DatabaseResolver is
     //////// ENSIP Wildcard Writing ////////
 
     /**
-     * @notice Validates and processes write parameters for deferred storage mutations
+     * @notice Read call for fetching the required parameters for the offchain call
+     * @notice avoiding multiple transactions
      * @param -name The encoded name or identifier of the write operation
-     * @param -data The encoded data to be written
+     * @param data The encoded data to be written
      * @dev This function reverts with StorageHandledByL2 error to indicate L2 deferral
      */
     function writeParams(
         bytes calldata, /* name */
-        bytes calldata /* data */
+        bytes calldata data
     )
-        external
+        public
         view
+        override
     {
-        _offChainStorage();
+        _offChainStorage(data);
     }
 
     //////// ENSIP 10 ////////
@@ -139,10 +141,17 @@ contract DatabaseResolver is
         override
         returns (bytes memory)
     {
-        if (bytes4(data[:4]) == this.name.selector) {
-            // name(bytes32) should be handled on-chain
-            (, bytes memory result) = address(this).staticcall(data);
-            return result;
+        // EIP-181 `name(bytes32)` should be handled on-chain because the ENS
+        // contracts call it during
+        if (bytes4(data[:4]) == NameResolver.name.selector) {
+            (bytes32 node) = abi.decode(data[4:], (bytes32));
+            return bytes(this.name(node));
+        }
+
+        if (bytes4(data[:4]) == this.writeParams.selector) {
+            (bytes memory name, bytes memory _data) =
+                abi.decode(data[4:], (bytes, bytes));
+            this.writeParams(name, _data);
         }
 
         _offChainLookup(data);
@@ -152,7 +161,6 @@ contract DatabaseResolver is
 
     /**
      * Sets the address associated with an ENS node.
-     * May only be called by the owner of that node in the ENS registry.
      * @param -node The node to update.
      * @param -a The address to set.
      */
@@ -164,7 +172,7 @@ contract DatabaseResolver is
         view
         override
     {
-        _offChainStorage();
+        _offChainStorage(msg.data);
     }
 
     /**
@@ -186,7 +194,6 @@ contract DatabaseResolver is
 
     /**
      * Sets the address associated with an ENS node.
-     * May only be called by the owner of that node in the ENS registry.
      * @param -node The node to update.
      * @param -coinType The constant used to define the coin type of the corresponding address.
      * @param -a The address to set.
@@ -200,7 +207,7 @@ contract DatabaseResolver is
         view
         override
     {
-        _offChainStorage();
+        _offChainStorage(msg.data);
     }
 
     /**
@@ -225,7 +232,6 @@ contract DatabaseResolver is
 
     /**
      * Sets the text data associated with an ENS node and key.
-     * May only be called by the owner of that node in the ENS registry.
      * @param -node The node to update.
      * @param -key The key to set.
      * @param -value The text data value to set.
@@ -239,7 +245,7 @@ contract DatabaseResolver is
         view
         override
     {
-        _offChainStorage();
+        _offChainStorage(msg.data);
     }
 
     /**
@@ -264,7 +270,6 @@ contract DatabaseResolver is
 
     /**
      * Sets the contenthash associated with an ENS node.
-     * May only be called by the owner of that node in the ENS registry.
      * @param -node The node to update.
      * @param -hash The contenthash to set
      */
@@ -276,7 +281,7 @@ contract DatabaseResolver is
         view
         override
     {
-        _offChainStorage();
+        _offChainStorage(msg.data);
     }
 
     /**
@@ -322,7 +327,7 @@ contract DatabaseResolver is
         view
         override
     {
-        _offChainStorage();
+        _offChainStorage(msg.data);
     }
 
     //////// ENS ERC-619 LOGIC ////////
@@ -345,7 +350,7 @@ contract DatabaseResolver is
         view
         override
     {
-        _offChainStorage();
+        _offChainStorage(msg.data);
     }
 
     //////// CCIP READ (EIP-3668) ////////
@@ -398,7 +403,7 @@ contract DatabaseResolver is
     /**
      * @notice Builds an StorageHandledByOffChainDatabase error.
      */
-    function _offChainStorage() private view {
+    function _offChainStorage(bytes calldata callData) private view {
         revert StorageHandledByOffChainDatabase(
             DBWriteDeferral.domainData({
                 name: _WRITE_DEFERRAL_DOMAIN_NAME,
@@ -408,7 +413,7 @@ contract DatabaseResolver is
             }),
             gatewayUrl,
             DBWriteDeferral.messageData({
-                callData: msg.data,
+                callData: callData,
                 sender: msg.sender,
                 expirationTimestamp: block.timestamp
                     + gatewayDatabaseTimeoutDuration
