@@ -19,7 +19,7 @@ import {
 import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
-import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
+import { abi } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import { abi as universalResolverResolveAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as scAbi } from '@blockful/contracts/out/SubdomainController.sol/SubdomainController.json'
 import { MessageData, DomainData } from '@blockful/gateway/src/types'
@@ -63,22 +63,22 @@ const _ = (async () => {
   const data: Hex[] = [
     encodeFunctionData({
       functionName: 'setText',
-      abi: l1Abi,
+      abi,
       args: [node, 'com.twitter', `@${name}`],
     }),
     encodeFunctionData({
       functionName: 'setAddr',
-      abi: l1Abi,
+      abi,
       args: [node, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
     }),
     encodeFunctionData({
       functionName: 'setAddr',
-      abi: l1Abi,
+      abi,
       args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
     }),
     encodeFunctionData({
       functionName: 'setContenthash',
-      abi: l1Abi,
+      abi,
       args: [
         node,
         stringToHex(
@@ -115,18 +115,18 @@ const _ = (async () => {
         encodedName,
         encodeFunctionData({
           functionName: 'writeParams',
-          abi: l1Abi,
+          abi,
           args: [encodedName, encodeFunctionData(calldata)],
         }),
       ],
     })
   } catch (err) {
     const data = getRevertErrorData(err)
-    if (!data || data.args.length === 0) return
+    if (!data || !data.args || data.args?.length === 0) return
 
     const [params] = data.args
     const errorResult = decodeErrorResult({
-      abi: l1Abi,
+      abi,
       data: params as Hex,
     })
     switch (errorResult?.errorName) {

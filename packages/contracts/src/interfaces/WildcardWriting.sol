@@ -1,6 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+interface WildcardWriting {
+
+    /// @notice Validates and processes write parameters for deferred storage mutations
+    /// @param name The encoded name or identifier of the write operation
+    /// @param data The encoded data to be written
+    /// @dev This function should revert with appropriate errors when write operations need to be deferred
+    function writeParams(
+        bytes calldata name,
+        bytes calldata data
+    )
+        external
+        view;
+
+}
+
 interface OffchainRegister {
 
     /**

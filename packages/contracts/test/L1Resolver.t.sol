@@ -15,13 +15,11 @@ import {IAddressResolver} from
 import {IExtendedResolver} from
     "@ens-contracts/resolvers/profiles/IExtendedResolver.sol";
 
-import {OffchainRegister} from "../src/interfaces/OffchainResolver.sol";
+import {OffchainRegister} from "../src/interfaces/WildcardWriting.sol";
 import {IEVMVerifier} from "../src/evmgateway/IEVMVerifier.sol";
 import {L1Verifier} from "../src/evmgateway/L1Verifier.sol";
 import {L1Resolver} from "../src/L1Resolver.sol";
-import {
-    WriteDeferral, L2WriteDeferral
-} from "../src/interfaces/WriteDeferral.sol";
+import {IWriteDeferral} from "../src/interfaces/IWriteDeferral.sol";
 import {ENSHelper} from "../script/ENSHelper.sol";
 import {ENSIP16} from "../src/ENSIP16.sol";
 

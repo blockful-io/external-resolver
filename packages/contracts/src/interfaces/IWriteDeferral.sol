@@ -1,30 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-interface WriteDeferral {
-
-    /// @notice Validates and processes write parameters for deferred storage mutations
-    /// @param name The encoded name or identifier of the write operation
-    /// @param data The encoded data to be written
-    /// @dev This function should revert with appropriate errors when write operations need to be deferred
-    function writeParams(
-        bytes calldata name,
-        bytes calldata data
-    )
-        external
-        view;
-
-    /*//////////////////////////////////////////////////////////////
-                                 ERRORS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Error thrown when an unsupported function is called
-    /// @dev Used to indicate when a function call is not implemented or allowed
-    error FunctionNotSupported();
-
-}
-
-interface L2WriteDeferral is WriteDeferral {
+interface IWriteDeferral {
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
@@ -34,32 +11,12 @@ interface L2WriteDeferral is WriteDeferral {
     event L2HandlerDefaultChainIdChanged(
         uint256 indexed previousChainId, uint256 indexed newChainId
     );
-
     /// @notice Event raised when the contractAddress is changed for the L2 handler corresponding to chainId.
     event L2HandlerContractAddressChanged(
         uint256 indexed chainId,
         address indexed previousContractAddress,
         address indexed newContractAddress
     );
-
-    /*//////////////////////////////////////////////////////////////
-                                 ERRORS
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     * @dev Error to raise when mutations are being deferred to an L2.
-     * @param chainId Chain ID to perform the deferred mutation to.
-     * @param contractAddress Contract Address at which the deferred mutation should transact with.
-     */
-    error StorageHandledByL2(uint256 chainId, address contractAddress);
-
-}
-
-interface DBWriteDeferral is WriteDeferral {
-
-    /*//////////////////////////////////////////////////////////////
-                                 EVENTS
-    //////////////////////////////////////////////////////////////*/
 
     /// @notice Event raised when the url is changed for the corresponding Off-Chain Database handler.
     event OffChainDatabaseHandlerURLChanged(
@@ -99,6 +56,13 @@ interface DBWriteDeferral is WriteDeferral {
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @dev Error to raise when mutations are being deferred to an L2.
+     * @param chainId Chain ID to perform the deferred mutation to.
+     * @param contractAddress Contract Address at which the deferred mutation should transact with.
+     */
+    error StorageHandledByL2(uint256 chainId, address contractAddress);
 
     /**
      * @dev Error to raise when mutations are being deferred to an Off-Chain Database.

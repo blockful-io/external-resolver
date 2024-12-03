@@ -18,7 +18,8 @@ import {ContentHashResolver} from
 
 import {ENSIP16} from "./ENSIP16.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
-import {WriteDeferral, DBWriteDeferral} from "./interfaces/WriteDeferral.sol";
+import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
+import {WildcardWriting} from "./interfaces/WildcardWriting.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 /**
@@ -29,7 +30,8 @@ contract DatabaseResolver is
     ERC165,
     ENSIP16,
     IExtendedResolver,
-    DBWriteDeferral,
+    IWriteDeferral,
+    WildcardWriting,
     AddrResolver,
     ABIResolver,
     PubkeyResolver,
@@ -405,14 +407,14 @@ contract DatabaseResolver is
      */
     function _offChainStorage(bytes calldata callData) private view {
         revert StorageHandledByOffChainDatabase(
-            DBWriteDeferral.domainData({
+            IWriteDeferral.domainData({
                 name: _WRITE_DEFERRAL_DOMAIN_NAME,
                 version: _WRITE_DEFERRAL_DOMAIN_VERSION,
                 chainId: _CHAIN_ID,
                 verifyingContract: address(this)
             }),
             gatewayUrl,
-            DBWriteDeferral.messageData({
+            IWriteDeferral.messageData({
                 callData: callData,
                 sender: msg.sender,
                 expirationTimestamp: block.timestamp
@@ -551,8 +553,9 @@ contract DatabaseResolver is
         )
         returns (bool)
     {
-        return interfaceID == type(WriteDeferral).interfaceId
+        return interfaceID == type(IWriteDeferral).interfaceId
             || interfaceID == type(IExtendedResolver).interfaceId
+            || interfaceID == type(WildcardWriting).interfaceId
             || super.supportsInterface(interfaceID);
     }
 

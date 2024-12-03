@@ -18,19 +18,27 @@ import {ENSIP16} from "./ENSIP16.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
-import {L2WriteDeferral} from "./interfaces/WriteDeferral.sol";
-import {OffchainRegister} from "./interfaces/OffchainResolver.sol";
+import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
+import {
+    WildcardWriting, OffchainRegister
+} from "./interfaces/WildcardWriting.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
     IExtendedResolver,
     IERC165,
-    L2WriteDeferral,
+    IWriteDeferral,
     Ownable,
     ENSIP16
 {
 
     using EVMFetcher for EVMFetcher.EVMFetchRequest;
+
+    //////// ERRORS ////////
+
+    /// @notice Error thrown when an unsupported function is called
+    /// @dev Used to indicate when a function call is not implemented or allowed
+    error FunctionNotSupported();
 
     //////// CONTRACT VARIABLE STATE ////////
 
@@ -372,7 +380,8 @@ contract L1Resolver is
         returns (bool)
     {
         return interfaceID == type(IExtendedResolver).interfaceId
-            || interfaceID == type(L2WriteDeferral).interfaceId
+            || interfaceID == type(IWriteDeferral).interfaceId
+            || interfaceID == type(WildcardWriting).interfaceId
             || interfaceID == type(EVMFetchTarget).interfaceId
             || interfaceID == type(IERC165).interfaceId
             || interfaceID == type(ENSIP16).interfaceId

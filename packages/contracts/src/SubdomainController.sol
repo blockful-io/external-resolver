@@ -10,7 +10,7 @@ import {ENSHelper} from "../script/ENSHelper.sol";
 import {
     OffchainRegister,
     OffchainRegisterParams
-} from "./interfaces/OffchainResolver.sol";
+} from "./interfaces/WildcardWriting.sol";
 
 contract SubdomainController is
     IERC165,
