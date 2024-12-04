@@ -4,9 +4,17 @@
  */
 
 import { config } from 'dotenv'
-import { Hex, createPublicClient, http } from 'viem'
+import {
+  Hex,
+  createPublicClient,
+  http,
+  namehash,
+  decodeFunctionResult,
+  hexToString,
+} from 'viem'
 import { normalize } from 'viem/ens'
 import { getChain } from './client'
+import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
 
 config({
   path: process.env.ENV_FILE || '../.env',
@@ -29,7 +37,7 @@ const client = createPublicClient({
 
 // eslint-disable-next-line
 const _ = (async () => {
-  const name = normalize('gibi.arb.eth')
+  const name = normalize('lucas.arb.eth')
 
   const twitter = await client.getEnsText({
     name,
@@ -60,11 +68,31 @@ const _ = (async () => {
     gatewayUrls: [gateway],
   })
 
+  const resolver = await client.getEnsResolver({
+    name,
+    universalResolverAddress: universalResolverAddress as Hex,
+  })
+  const encodedContentHash = (await client.readContract({
+    address: resolver,
+    functionName: 'contenthash',
+    abi: l1Abi,
+    args: [namehash(name)],
+  })) as Hex
+
+  const contentHash = hexToString(
+    decodeFunctionResult({
+      abi: l1Abi,
+      functionName: 'contenthash',
+      data: encodedContentHash,
+    }) as Hex,
+  )
+
   console.log({
     twitter,
     avatar,
     address,
     addressBtc,
     name: domainName,
+    contentHash,
   })
 })()
