@@ -9,39 +9,23 @@
 import 'reflect-metadata'
 
 // Importing abi and bytecode from contracts folder
-import {
-  abi as abiDBResolver,
-  bytecode as bytecodeDBResolver,
-} from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
+import { abi as abiDBResolver } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import { abi as abiOffchainRegister } from '@blockful/contracts/out/WildcardWriting.sol/OffchainRegister.json'
 import { abi as abiWriteDeferral } from '@blockful/contracts/out/IWriteDeferral.sol/IWriteDeferral.json'
 import { abi as abiWildcardWriting } from '@blockful/contracts/out/WildcardWriting.sol/WildcardWriting.json'
-import {
-  abi as abiRegistry,
-  bytecode as bytecodeRegistry,
-} from '@blockful/contracts/out/ENSRegistry.sol/ENSRegistry.json'
-import {
-  abi as abiRegistrar,
-  bytecode as bytecodeRegistrar,
-} from '@blockful/contracts/out/BaseRegistrarImplementation.sol/BaseRegistrarImplementation.json'
-import {
-  abi as abiUniversalResolver,
-  bytecode as bytecodeUniversalResolver,
-} from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
+
+import { abi as abiUniversalResolver } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
 import { DataSource } from 'typeorm'
 import { ChildProcess, spawn } from 'child_process'
-import { normalize, labelhash, namehash, packetToBytes } from 'viem/ens'
+import { normalize, namehash, packetToBytes } from 'viem/ens'
 import { anvil, sepolia } from 'viem/chains'
 import {
   createTestClient,
   http,
   publicActions,
-  Hash,
-  getContractAddress,
   walletActions,
   zeroHash,
-  getContract,
   encodeFunctionData,
   Hex,
   PrivateKeyAccount,
@@ -50,33 +34,14 @@ import {
   decodeFunctionResult,
   decodeErrorResult,
 } from 'viem'
-import { assert, expect } from 'chai'
-import { ApolloServer } from '@apollo/server'
+import { expect } from 'chai'
 import {
   generatePrivateKey,
   privateKeyToAccount,
   privateKeyToAddress,
 } from 'viem/accounts'
 
-import { abi } from '@blockful/gateway/src/abi'
-import * as ccip from '@blockful/ccip-server'
-import {
-  withGetAddr,
-  withGetContentHash,
-  withGetText,
-  withQuery,
-  withSetAddr,
-  withSetText,
-  withRegisterDomain,
-  withSetContentHash,
-} from '@blockful/gateway/src/handlers'
-import {
-  DomainData,
-  MessageData,
-  typeDefs,
-  DomainMetadata,
-} from '@blockful/gateway/src/types'
-import { domainResolver } from '@blockful/gateway/src/resolvers'
+import { DomainData, MessageData } from '@blockful/gateway/src/types'
 import { PostgresRepository } from '@blockful/gateway/src/repositories'
 import {
   Text,
@@ -84,21 +49,8 @@ import {
   Address,
   Contenthash,
 } from '@blockful/gateway/src/entities'
-import { withSigner } from '@blockful/gateway/src/middlewares'
-import {
-  EthereumClient,
-  OwnershipValidator,
-  SignatureRecover,
-} from '@blockful/gateway/src/services'
 import { getRevertErrorData, handleDBStorage } from '../src/client'
-
-const GATEWAY_URL = 'http://127.0.0.1:3000/{sender}/{data}.json'
-const GRAPHQL_URL = 'http://127.0.0.1:4000'
-
-let universalResolverAddress: Hash,
-  registryAddr: Hash,
-  dbResolverAddr: Hash,
-  registrarAddr: Hash
+import { deployContracts, setupGateway } from './helpers'
 
 const client = createTestClient({
   chain: anvil,
@@ -107,104 +59,6 @@ const client = createTestClient({
 })
   .extend(publicActions)
   .extend(walletActions)
-
-async function deployContract({
-  abi,
-  bytecode,
-  account,
-  args,
-}: {
-  abi: unknown[]
-  bytecode: Hash
-  account: Hash
-  args?: unknown[]
-}): Promise<Hash> {
-  const txHash = await client.deployContract({
-    abi,
-    bytecode,
-    account,
-    args,
-  })
-
-  const { nonce } = await client.getTransaction({
-    hash: txHash,
-  })
-
-  return await getContractAddress({
-    from: account,
-    nonce: BigInt(nonce),
-  })
-}
-
-async function deployContracts(signer: Hash) {
-  registryAddr = await deployContract({
-    abi: abiRegistry,
-    bytecode: bytecodeRegistry.object as Hash,
-    account: signer,
-  })
-
-  const registry = await getContract({
-    abi: abiRegistry,
-    address: registryAddr,
-    client,
-  })
-
-  universalResolverAddress = await deployContract({
-    abi: abiUniversalResolver,
-    bytecode: bytecodeUniversalResolver.object as Hash,
-    account: signer,
-    args: [registryAddr, [GATEWAY_URL]],
-  })
-
-  registrarAddr = await deployContract({
-    abi: abiRegistrar,
-    bytecode: bytecodeRegistrar.object as Hash,
-    account: signer,
-    args: [registryAddr, namehash('eth')],
-  })
-
-  dbResolverAddr = await deployContract({
-    abi: abiDBResolver,
-    bytecode: bytecodeDBResolver.object as Hash,
-    account: signer,
-    args: [GATEWAY_URL, GRAPHQL_URL, 600, [signer]],
-  })
-
-  await registry.write.setSubnodeRecord(
-    [zeroHash, labelhash('eth'), signer, dbResolverAddr, 10000000],
-    { account: signer },
-  )
-  await registry.write.setSubnodeRecord(
-    [namehash('eth'), labelhash('l1domain'), signer, dbResolverAddr, 10000000],
-    { account: signer },
-  )
-}
-
-function setupGateway(
-  privateKey: `0x${string}`,
-  { repo }: { repo: PostgresRepository },
-) {
-  const signatureRecover = new SignatureRecover()
-  const ethClient = new EthereumClient(client, registryAddr, registrarAddr)
-  const validator = new OwnershipValidator(anvil.id, signatureRecover, [
-    ethClient,
-    repo,
-  ])
-  const server = new ccip.Server()
-  server.app.use(withSigner(privateKey))
-  server.add(
-    abi,
-    withQuery(),
-    withGetText(repo),
-    withRegisterDomain(repo),
-    withSetText(repo, validator),
-    withGetAddr(repo),
-    withSetAddr(repo, validator),
-    withGetContentHash(repo),
-    withSetContentHash(repo, validator),
-  )
-  server.makeApp('/').listen('3000')
-}
 
 async function offchainWriting({
   encodedName,
@@ -269,17 +123,27 @@ async function offchainWriting({
   }
 }
 
-describe('DatabaseResolver', () => {
+describe('DatabaseResolver', async () => {
   let repo: PostgresRepository, datasource: DataSource
   const owner = privateKeyToAccount(
     '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
   )
   let localNode: ChildProcess
+  let registryAddr: Hex, universalResolverAddress: Hex, registrarAddr: Hex
 
   before(async () => {
     localNode = spawn('anvil')
 
-    await deployContracts(owner.address)
+    const {
+      registryAddr: _registryAddr,
+      universalResolverAddr: _universalResolverAddress,
+      registrarAddr: _registrarAddr,
+    } = await deployContracts(owner.address)
+
+    registryAddr = _registryAddr
+    universalResolverAddress = _universalResolverAddress
+    registrarAddr = _registrarAddr
+
     datasource = new DataSource({
       type: 'better-sqlite3',
       database: './test.db',
@@ -290,6 +154,8 @@ describe('DatabaseResolver', () => {
     setupGateway(
       '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
       { repo },
+      registryAddr,
+      registrarAddr,
     )
   })
 
@@ -1104,270 +970,6 @@ describe('DatabaseResolver', () => {
         universalResolverAddress,
       })
       expect(address).eq(null)
-    })
-
-    describe('Metadata API', async () => {
-      let server: ApolloServer
-
-      before(async () => {
-        const ethClient = new EthereumClient(
-          client,
-          registryAddr,
-          registrarAddr,
-        )
-        server = new ApolloServer({
-          typeDefs,
-          resolvers: {
-            Query: {
-              domain: async (_, name) =>
-                await domainResolver({
-                  name,
-                  repo,
-                  client: ethClient,
-                  resolverAddress: dbResolverAddr,
-                }),
-            },
-          },
-        })
-      })
-
-      it('should fetch 2LD properties with no subdomains', async () => {
-        const t1 = new Text()
-        t1.domain = node
-        t1.key = '1key'
-        t1.value = '1value'
-        t1.resolver = '0x1resolver'
-        t1.resolverVersion = '1'
-        await datasource.manager.save(t1)
-
-        const t2 = new Text()
-        t2.domain = node
-        t2.key = '2key'
-        t2.value = '2value'
-        t2.resolver = '0x2resolver'
-        t2.resolverVersion = '2'
-        await datasource.manager.save(t2)
-
-        const a1 = new Address()
-        a1.domain = node
-        a1.address = '0x1'
-        a1.coin = '1'
-        a1.resolver = '0x1resolver'
-        a1.resolverVersion = '1'
-        await datasource.manager.save(a1)
-
-        const a2 = new Address()
-        a2.domain = node
-        a2.address = '0x2'
-        a2.coin = '60'
-        a2.resolver = '0x2resolver'
-        a2.resolverVersion = '2'
-        await datasource.manager.save(a2)
-
-        const ch = new Contenthash()
-        ch.domain = node
-        ch.contenthash =
-          'ipfs://QmYwWkU8H6x5xYz1234567890abcdefghijklmnopqrstuvwxyz'
-        ch.resolver = '0x2resolver'
-        ch.resolverVersion = '2'
-        await datasource.manager.save(ch)
-
-        const response = await server.executeOperation({
-          query: `query Domain($name: String!) {
-            domain(name: $name) {
-              id
-              context
-              owner
-              label
-              labelhash
-              parent
-              parentNode
-              name
-              node
-              resolvedAddress
-              subdomainCount
-              resolver {
-                id
-                node
-                addr
-                address
-                contentHash
-                context
-                texts {
-                  key
-                  value
-                }
-                addresses {
-                  address
-                  coin
-                }
-              }
-            }
-          }`,
-          variables: {
-            name,
-          },
-        })
-        assert(response.body.kind === 'single')
-        const actual = response.body.singleResult.data?.domain as DomainMetadata
-
-        assert(actual !== null)
-        expect(actual.id).equal(`${owner.address}-${node}`)
-        expect(actual.context).equal(owner.address)
-        expect(actual.owner).equal(owner.address)
-        expect(actual.label).equal('l1domain')
-        expect(actual.labelhash).equal(labelhash('l1domain'))
-        expect(actual.parent).equal('eth')
-        expect(actual.parentNode).equal(namehash('eth'))
-        expect(actual.name).equal(name)
-        expect(actual.node).equal(node)
-        expect(actual.resolvedAddress).equal('0x2')
-        expect(actual.subdomainCount).equal(0)
-        expect(actual.resolver.id).equal(`${owner.address}-${node}`)
-        expect(actual.resolver.node).equal(node)
-        expect(actual.resolver.context).equal(owner.address)
-        expect(actual.resolver.address).equal(dbResolverAddr)
-        expect(actual.resolver.addr).equal('0x2')
-        expect(actual.resolver.contentHash).equal(
-          'ipfs://QmYwWkU8H6x5xYz1234567890abcdefghijklmnopqrstuvwxyz',
-        )
-        expect(actual.resolver.texts).eql([
-          {
-            key: '1key',
-            value: '1value',
-          },
-          {
-            key: '2key',
-            value: '2value',
-          },
-        ])
-        expect(actual.resolver.addresses).eql([
-          {
-            address: '0x1',
-            coin: '1',
-          },
-          {
-            address: '0x2',
-            coin: '60',
-          },
-        ])
-      })
-
-      it('should fetch 2LD properties with subdomains', async () => {
-        const d = new Domain()
-        d.name = 'd1.public.eth'
-        d.node = namehash('d1')
-        d.ttl = '300'
-        d.parent = node
-        d.resolver = '0xresolver'
-        d.resolverVersion = '1'
-        d.owner = privateKeyToAddress(generatePrivateKey())
-        await datasource.manager.save(d)
-
-        const t = new Text()
-        t.key = '1key'
-        t.value = '1value'
-        t.domain = d.node
-        t.resolver = '0x1resolver'
-        t.resolverVersion = '1'
-        t.createdAt = new Date()
-        t.updatedAt = new Date()
-        await datasource.manager.save(t)
-
-        const a = new Address()
-        a.address = '0x1'
-        a.coin = '60'
-        a.domain = d.node
-        a.resolver = '0x1resolver'
-        a.resolverVersion = '1'
-        a.createdAt = new Date()
-        a.updatedAt = new Date()
-        await datasource.manager.save(a)
-
-        const ch = new Contenthash()
-        ch.domain = d.node
-        ch.contenthash =
-          'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450'
-        ch.resolver = '0x1resolver'
-        ch.resolverVersion = '1'
-        await datasource.manager.save(ch)
-
-        const response = await server.executeOperation({
-          query: `query Domain($name: String!) {
-            domain(name: $name) {
-              subdomains {
-                id
-                context
-                owner
-                name
-                node
-                label
-                labelhash
-                parent
-                parentNode
-                resolvedAddress
-                resolver {
-                  id
-                  node
-                  context
-                  address
-                  addr
-                  contentHash
-                  texts {
-                    key
-                    value
-                  }
-                  addresses {
-                    address
-                    coin
-                  }
-                }
-                expiryDate
-                registerDate
-              }
-              subdomainCount
-            }
-          }`,
-          variables: {
-            name,
-          },
-        })
-        assert(response.body.kind === 'single')
-        const actual = response.body.singleResult.data?.domain as DomainMetadata
-
-        assert(actual !== null)
-        expect(actual.subdomainCount).equal(1)
-        assert(actual.subdomains != null)
-        const subdomain = actual.subdomains[0]
-        expect(subdomain).to.have.property('id', `${d.owner}-${d.node}`)
-        expect(subdomain).to.have.property('context', d.owner)
-        expect(subdomain).to.have.property('owner', d.owner)
-        expect(subdomain).to.have.property('name', d.name)
-        expect(subdomain).to.have.property('label', 'd1')
-        expect(subdomain).to.have.property('labelhash', labelhash('d1'))
-        expect(subdomain).to.have.property('parent', 'public.eth')
-        expect(subdomain).to.have.property('parentNode', namehash('public.eth'))
-        expect(subdomain).to.have.property('node', d.node)
-        expect(subdomain).to.have.property('resolvedAddress', '0x1')
-        expect(subdomain.resolver).to.have.property(
-          'id',
-          `${d.owner}-${d.node}`,
-        )
-        expect(subdomain.resolver).to.have.property('node', d.node)
-        expect(subdomain.resolver).to.have.property('context', d.owner)
-        expect(subdomain.resolver).to.have.property('address', d.resolver)
-        expect(subdomain.resolver).to.have.property('addr', '0x1')
-        expect(subdomain.resolver).to.have.property(
-          'contentHash',
-          ch.contenthash,
-        )
-        expect(subdomain.resolver.texts).to.eql([
-          { key: t.key, value: t.value },
-        ])
-        expect(subdomain.resolver.addresses).to.eql([
-          { address: a.address, coin: a.coin },
-        ])
-      })
     })
   })
 })
