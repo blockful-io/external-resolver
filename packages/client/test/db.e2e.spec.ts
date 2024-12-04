@@ -13,6 +13,9 @@ import {
   abi as abiDBResolver,
   bytecode as bytecodeDBResolver,
 } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
+import { abi as abiOffchainRegister } from '@blockful/contracts/out/WildcardWriting.sol/OffchainRegister.json'
+import { abi as abiWriteDeferral } from '@blockful/contracts/out/IWriteDeferral.sol/IWriteDeferral.json'
+import { abi as abiWildcardWriting } from '@blockful/contracts/out/WildcardWriting.sol/WildcardWriting.json'
 import {
   abi as abiRegistry,
   bytecode as bytecodeRegistry,
@@ -25,8 +28,8 @@ import {
   abi as abiUniversalResolver,
   bytecode as bytecodeUniversalResolver,
 } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
+
 import { DataSource } from 'typeorm'
-import { abi } from '@blockful/gateway/src/abi'
 import { ChildProcess, spawn } from 'child_process'
 import { normalize, labelhash, namehash, packetToBytes } from 'viem/ens'
 import { anvil, sepolia } from 'viem/chains'
@@ -45,6 +48,7 @@ import {
   toHex,
   stringToHex,
   decodeFunctionResult,
+  decodeErrorResult,
 } from 'viem'
 import { assert, expect } from 'chai'
 import { ApolloServer } from '@apollo/server'
@@ -54,6 +58,7 @@ import {
   privateKeyToAddress,
 } from 'viem/accounts'
 
+import { abi } from '@blockful/gateway/src/abi'
 import * as ccip from '@blockful/ccip-server'
 import {
   withGetAddr,
@@ -185,10 +190,8 @@ function setupGateway(
     ethClient,
     repo,
   ])
-
   const server = new ccip.Server()
   server.app.use(withSigner(privateKey))
-
   server.add(
     abi,
     withQuery(),
@@ -204,7 +207,7 @@ function setupGateway(
 }
 
 async function offchainWriting({
-  name,
+  encodedName,
   functionName,
   args,
   signer,
@@ -212,7 +215,7 @@ async function offchainWriting({
   universalResolverAddress,
   chainId,
 }: {
-  name: string
+  encodedName: string
   functionName: string
   signer: PrivateKeyAccount
   abi: unknown[]
@@ -220,29 +223,44 @@ async function offchainWriting({
   universalResolverAddress: Hex
   chainId?: number
 }): Promise<Response | void> {
-  const [resolverAddr] = (await client.readContract({
-    address: universalResolverAddress,
-    functionName: 'findResolver',
-    abi: abiUniversalResolver,
-    args: [toHex(packetToBytes(name))],
-  })) as Hash[]
+  const calldata = {
+    abi,
+    functionName,
+    args,
+    account: signer,
+  }
 
   try {
-    await client.simulateContract({
-      address: resolverAddr,
-      abi,
-      functionName,
-      args,
+    await client.readContract({
+      address: universalResolverAddress,
+      abi: abiUniversalResolver,
+      functionName: 'resolve',
+      args: [
+        encodedName,
+        encodeFunctionData({
+          functionName: 'writeParams',
+          abi: abiWildcardWriting,
+          args: [encodedName, encodeFunctionData(calldata)],
+        }),
+      ],
     })
   } catch (err) {
     const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
-      const [domain, url, message] = data?.args as [
+    if (!data || !data.args || data.args?.length === 0) return
+
+    const [params] = data.args
+    const errorResult = decodeErrorResult({
+      abi: abiWriteDeferral,
+      data: params as Hex,
+    })
+    if (errorResult?.errorName === 'StorageHandledByOffChainDatabase') {
+      const [domain, url, message] = errorResult?.args as [
         DomainData,
         string,
         MessageData,
       ]
 
+      // using for testing the chainId validation
       if (chainId) {
         domain.chainId = chainId
       }
@@ -288,29 +306,25 @@ describe('DatabaseResolver', () => {
 
   describe('Subdomain created on database', async () => {
     const name = normalize('database.eth')
+    const encodedName = toHex(packetToBytes(name))
     const node = namehash(name)
     const resolver = '0x6AEBB4AdC056F3B01d225fE34c20b1FdC21323A2'
 
-    beforeEach(async () => {
-      let domain = new Domain()
-      domain.node = node
-      domain.name = name
-      domain.parent = namehash('eth')
-      domain.resolver = resolver
-      domain.resolverVersion = '1'
-      domain.owner = owner.address
-      domain.ttl = '300'
-      domain = await datasource.manager.save(domain)
-    })
+    // used for testing with a domain already in the db
+    let domain = new Domain()
+    domain.node = node
+    domain.name = name
+    domain.parent = namehash('eth')
+    domain.resolver = resolver
+    domain.resolverVersion = '1'
+    domain.owner = owner.address
+    domain.ttl = '300'
 
     it('should register new domain', async () => {
-      const name = normalize('newdomain.eth')
-      const encodedName = toHex(packetToBytes(name))
-      const node = namehash(name)
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'register',
-        abi: abiDBResolver,
+        abi: abiOffchainRegister,
         args: [
           encodedName,
           owner.address,
@@ -336,9 +350,6 @@ describe('DatabaseResolver', () => {
     })
 
     it('should register new domain with records', async () => {
-      const name = normalize('newdomain.eth')
-      const encodedName = toHex(packetToBytes(name))
-      const node = namehash(name)
       const calldata = [
         encodeFunctionData({
           abi: abiDBResolver,
@@ -357,9 +368,9 @@ describe('DatabaseResolver', () => {
         }),
       ]
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'register',
-        abi: abiDBResolver,
+        abi: abiOffchainRegister,
         args: [
           encodedName,
           owner.address,
@@ -405,11 +416,12 @@ describe('DatabaseResolver', () => {
     })
 
     it('should block register of duplicated domain with same owner', async () => {
-      const encodedName = toHex(packetToBytes(name))
+      domain = await datasource.manager.save(domain)
+
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'register',
-        abi: abiDBResolver,
+        abi: abiOffchainRegister,
         args: [
           encodedName,
           owner.address,
@@ -435,12 +447,13 @@ describe('DatabaseResolver', () => {
     })
 
     it('should block register of duplicated domain with different owner', async () => {
+      domain = await datasource.manager.save(domain)
+
       const newOwner = privateKeyToAccount(generatePrivateKey())
-      const encodedName = toHex(packetToBytes(name))
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'register',
-        abi: abiDBResolver,
+        abi: abiOffchainRegister,
         args: [
           encodedName,
           newOwner.address,
@@ -478,13 +491,10 @@ describe('DatabaseResolver', () => {
 
     it('should allow register a domain with different owner', async () => {
       const newOwner = privateKeyToAddress(generatePrivateKey())
-      const name = normalize('newdomain.eth')
-      const encodedName = toHex(packetToBytes(name))
-      const node = namehash(name)
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'register',
-        abi: abiDBResolver,
+        abi: abiOffchainRegister,
         args: [
           encodedName,
           newOwner,
@@ -546,8 +556,10 @@ describe('DatabaseResolver', () => {
     })
 
     it('should write valid text record onto the database', async () => {
+      domain = await datasource.manager.save(domain)
+
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setText',
         abi: abiDBResolver,
         args: [node, 'com.twitter', '@blockful'],
@@ -568,7 +580,7 @@ describe('DatabaseResolver', () => {
 
     it('should block unauthorized text change', async () => {
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setText',
         abi: abiDBResolver,
         args: [node, 'com.twitter', '@unauthorized'],
@@ -589,7 +601,7 @@ describe('DatabaseResolver', () => {
 
     it('should block writing text record with different chain ID', async () => {
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setText',
         abi: abiDBResolver,
         args: [node, 'com.twitter', '@blockful'],
@@ -656,8 +668,10 @@ describe('DatabaseResolver', () => {
     })
 
     it('should write valid address record onto the database', async () => {
+      domain = await datasource.manager.save(domain)
+
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setAddr',
         abi: abiDBResolver,
         args: [node, '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
@@ -677,7 +691,7 @@ describe('DatabaseResolver', () => {
 
     it('should block unauthorized text change', async () => {
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setAddr',
         abi: abiDBResolver,
         args: [node, '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
@@ -696,6 +710,8 @@ describe('DatabaseResolver', () => {
     })
 
     it('should handle multicall valid write calls', async () => {
+      domain = await datasource.manager.save(domain)
+
       const calls = [
         encodeFunctionData({
           abi: abiDBResolver,
@@ -710,7 +726,7 @@ describe('DatabaseResolver', () => {
       ]
 
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'multicall',
         abi: abiDBResolver,
         args: [calls],
@@ -735,6 +751,8 @@ describe('DatabaseResolver', () => {
     })
 
     it('should handle multicall invalid write calls', async () => {
+      domain = await datasource.manager.save(domain)
+
       const calls = [
         encodeFunctionData({
           abi: abiDBResolver,
@@ -752,7 +770,7 @@ describe('DatabaseResolver', () => {
       ]
 
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'multicall',
         abi: abiDBResolver,
         args: [calls],
@@ -778,7 +796,8 @@ describe('DatabaseResolver', () => {
   })
 
   describe('2nd level domain on L1', () => {
-    const name = normalize('l1domain.eth')
+    const name = 'l1domain.eth'
+    const encodedName = toHex(packetToBytes(name))
     const node = namehash(name)
 
     it('should set and read contenthash from database', async () => {
@@ -786,7 +805,7 @@ describe('DatabaseResolver', () => {
         'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450'
 
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setContenthash',
         abi: abiDBResolver,
         args: [node, stringToHex(contentHash)],
@@ -858,7 +877,7 @@ describe('DatabaseResolver', () => {
 
     it('should write valid text record onto the database', async () => {
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setText',
         abi: abiDBResolver,
         args: [node, 'com.twitter', '@blockful'],
@@ -879,7 +898,7 @@ describe('DatabaseResolver', () => {
 
     it('should block unauthorized text change', async () => {
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setText',
         abi: abiDBResolver,
         args: [node, 'com.twitter', '@unauthorized'],
@@ -936,7 +955,7 @@ describe('DatabaseResolver', () => {
 
     it('should block writing text record with different chain ID', async () => {
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setText',
         abi: abiDBResolver,
         args: [node, 'com.twitter', '@blockful'],
@@ -968,7 +987,7 @@ describe('DatabaseResolver', () => {
 
     it('should write valid address record onto the database', async () => {
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setAddr',
         abi: abiDBResolver,
         args: [node, '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
@@ -988,7 +1007,7 @@ describe('DatabaseResolver', () => {
 
     it('should block unauthorized text change', async () => {
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'setAddr',
         abi: abiDBResolver,
         args: [node, '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5'],
@@ -1021,7 +1040,7 @@ describe('DatabaseResolver', () => {
       ]
 
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'multicall',
         abi: abiDBResolver,
         args: [calls],
@@ -1063,7 +1082,7 @@ describe('DatabaseResolver', () => {
       ]
 
       const response = await offchainWriting({
-        name,
+        encodedName,
         functionName: 'multicall',
         abi: abiDBResolver,
         args: [calls],
@@ -1145,6 +1164,14 @@ describe('DatabaseResolver', () => {
         a2.resolverVersion = '2'
         await datasource.manager.save(a2)
 
+        const ch = new Contenthash()
+        ch.domain = node
+        ch.contenthash =
+          'ipfs://QmYwWkU8H6x5xYz1234567890abcdefghijklmnopqrstuvwxyz'
+        ch.resolver = '0x2resolver'
+        ch.resolverVersion = '2'
+        await datasource.manager.save(ch)
+
         const response = await server.executeOperation({
           query: `query Domain($name: String!) {
             domain(name: $name) {
@@ -1201,7 +1228,9 @@ describe('DatabaseResolver', () => {
         expect(actual.resolver.context).equal(owner.address)
         expect(actual.resolver.address).equal(dbResolverAddr)
         expect(actual.resolver.addr).equal('0x2')
-        expect(actual.resolver.contentHash).equal(null)
+        expect(actual.resolver.contentHash).equal(
+          'ipfs://QmYwWkU8H6x5xYz1234567890abcdefghijklmnopqrstuvwxyz',
+        )
         expect(actual.resolver.texts).eql([
           {
             key: '1key',
