@@ -13,6 +13,7 @@ import {TextResolver} from "@ens-contracts/resolvers/profiles/TextResolver.sol";
 import {ContentHashResolver} from
     "@ens-contracts/resolvers/profiles/ContentHashResolver.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IMulticallable} from "@ens-contracts/resolvers/IMulticallable.sol";
 
 import {ENSIP16} from "./ENSIP16.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
@@ -27,7 +28,9 @@ contract L1Resolver is
     EVMFetchTarget,
     IExtendedResolver,
     IERC165,
+    WildcardWriting,
     IWriteDeferral,
+    IMulticallable,
     Ownable,
     ENSIP16
 {
@@ -388,6 +391,7 @@ contract L1Resolver is
             || interfaceID == type(AddrResolver).interfaceId
             || interfaceID == type(TextResolver).interfaceId
             || interfaceID == type(ContentHashResolver).interfaceId
+            || interfaceID == type(IMulticallable).interfaceId
             || super.supportsInterface(interfaceID);
     }
 
@@ -409,6 +413,27 @@ contract L1Resolver is
         address prevAddr = targets[key];
         targets[key] = target;
         emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
+    }
+
+    function multicall(bytes[] calldata /* data */ )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(targets[TARGET_RESOLVER]);
+    }
+
+    function multicallWithNodeCheck(
+        bytes32,
+        bytes[] calldata /* data */
+    )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
 }

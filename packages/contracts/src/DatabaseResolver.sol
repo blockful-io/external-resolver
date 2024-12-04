@@ -15,6 +15,7 @@ import {PubkeyResolver} from
 import {TextResolver} from "@ens-contracts/resolvers/profiles/TextResolver.sol";
 import {ContentHashResolver} from
     "@ens-contracts/resolvers/profiles/ContentHashResolver.sol";
+import {IMulticallable} from "@ens-contracts/resolvers/IMulticallable.sol";
 
 import {ENSIP16} from "./ENSIP16.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
@@ -38,6 +39,7 @@ contract DatabaseResolver is
     TextResolver,
     ContentHashResolver,
     NameResolver,
+    IMulticallable,
     Ownable
 {
 
@@ -556,7 +558,29 @@ contract DatabaseResolver is
         return interfaceID == type(IWriteDeferral).interfaceId
             || interfaceID == type(IExtendedResolver).interfaceId
             || interfaceID == type(WildcardWriting).interfaceId
+            || interfaceID == type(IMulticallable).interfaceId
             || super.supportsInterface(interfaceID);
+    }
+
+    function multicall(bytes[] calldata /* data */ )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(msg.data);
+    }
+
+    function multicallWithNodeCheck(
+        bytes32,
+        bytes[] calldata /* data */
+    )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(msg.data);
     }
 
 }

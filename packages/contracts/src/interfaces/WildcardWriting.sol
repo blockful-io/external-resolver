@@ -66,18 +66,6 @@ interface OffchainRegisterParams {
 
 }
 
-interface OffchainMulticallable {
-
-    /**
-     * @notice Executes multiple calls in a single transaction.
-     * @param data An array of encoded function call data.
-     */
-    function multicall(bytes[] calldata data)
-        external
-        returns (bytes[] memory);
-
-}
-
 interface OffchainCommitable {
 
     /**
