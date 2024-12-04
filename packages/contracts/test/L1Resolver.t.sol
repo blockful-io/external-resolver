@@ -54,7 +54,7 @@ contract L1ResolverTest is Test, ENSHelper {
     function test_EmitEventOnSetTarget() public {
         address target = address(0x123);
         vm.expectEmit(true, true, true, false);
-        emit L2WriteDeferral.L2HandlerContractAddressChanged(
+        emit IWriteDeferral.L2HandlerContractAddressChanged(
             chainId, TARGET_RESOLVER, target
         );
         l1Resolver.setTarget(l1Resolver.TARGET_RESOLVER(), target);
@@ -87,7 +87,7 @@ contract L1ResolverTest is Test, ENSHelper {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                L2WriteDeferral.StorageHandledByL2.selector,
+                IWriteDeferral.StorageHandledByL2.selector,
                 chainId,
                 TARGET_REGISTRAR
             )
@@ -105,7 +105,7 @@ contract L1ResolverTest is Test, ENSHelper {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                L2WriteDeferral.StorageHandledByL2.selector,
+                IWriteDeferral.StorageHandledByL2.selector,
                 chainId,
                 TARGET_RESOLVER
             )
@@ -124,7 +124,7 @@ contract L1ResolverTest is Test, ENSHelper {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                L2WriteDeferral.StorageHandledByL2.selector,
+                IWriteDeferral.StorageHandledByL2.selector,
                 chainId,
                 TARGET_RESOLVER
             )
@@ -143,7 +143,7 @@ contract L1ResolverTest is Test, ENSHelper {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                L2WriteDeferral.StorageHandledByL2.selector,
+                IWriteDeferral.StorageHandledByL2.selector,
                 chainId,
                 TARGET_RESOLVER
             )
@@ -161,7 +161,7 @@ contract L1ResolverTest is Test, ENSHelper {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                L2WriteDeferral.StorageHandledByL2.selector,
+                IWriteDeferral.StorageHandledByL2.selector,
                 chainId,
                 TARGET_RESOLVER
             )
@@ -175,7 +175,7 @@ contract L1ResolverTest is Test, ENSHelper {
             bytes4(keccak256("unsupportedFunction()")), bytes32(0)
         );
 
-        vm.expectRevert(WriteDeferral.FunctionNotSupported.selector);
+        vm.expectRevert(L1Resolver.FunctionNotSupported.selector);
         l1Resolver.writeParams(name, data);
     }
 
@@ -193,7 +193,7 @@ contract L1ResolverTest is Test, ENSHelper {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                L2WriteDeferral.StorageHandledByL2.selector, chainId, target
+                IWriteDeferral.StorageHandledByL2.selector, chainId, target
             )
         );
         l1Resolver.setText(bytes32(0), "com.twitter", "@blockful");
@@ -215,7 +215,7 @@ contract L1ResolverTest is Test, ENSHelper {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                L2WriteDeferral.StorageHandledByL2.selector, chainId, target
+                IWriteDeferral.StorageHandledByL2.selector, chainId, target
             )
         );
         l1Resolver.setContenthash(bytes32(0), bytes("contenthash"));
@@ -234,7 +234,7 @@ contract L1ResolverTest is Test, ENSHelper {
         l1Resolver.setTarget(l1Resolver.TARGET_RESOLVER(), target);
         vm.expectRevert(
             abi.encodeWithSelector(
-                L2WriteDeferral.StorageHandledByL2.selector, chainId, target
+                IWriteDeferral.StorageHandledByL2.selector, chainId, target
             )
         );
         l1Resolver.setAddr(bytes32(0), address(0x456));
@@ -246,7 +246,7 @@ contract L1ResolverTest is Test, ENSHelper {
         vm.prank(address(0x2024));
         vm.expectRevert(
             abi.encodeWithSelector(
-                L2WriteDeferral.StorageHandledByL2.selector, chainId, target
+                IWriteDeferral.StorageHandledByL2.selector, chainId, target
             )
         );
         l1Resolver.setAddr(bytes32(0), address(0x456));
@@ -284,7 +284,7 @@ contract L1ResolverTest is Test, ENSHelper {
             l1Resolver.supportsInterface(type(IExtendedResolver).interfaceId)
         );
         assertTrue(
-            l1Resolver.supportsInterface(type(L2WriteDeferral).interfaceId)
+            l1Resolver.supportsInterface(type(IWriteDeferral).interfaceId)
         );
         assertTrue(l1Resolver.supportsInterface(type(IERC165).interfaceId));
         assertTrue(l1Resolver.supportsInterface(type(ENSIP16).interfaceId));
