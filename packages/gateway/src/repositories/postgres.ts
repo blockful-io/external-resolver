@@ -85,15 +85,15 @@ export class PostgresRepository {
       .getRepository(Domain)
       .createQueryBuilder('domain')
       .where('domain.node = :node', { node })
-      .leftJoinAndMapOne(
-        'domain.contenthash',
-        Contenthash,
-        'contenthash',
-        'contenthash.domain = domain.node',
-      )
 
     if (includeRelations) {
       query
+        .leftJoinAndMapOne(
+          'domain.contenthash',
+          Contenthash,
+          'contenthash',
+          'contenthash.domain = domain.node',
+        )
         .leftJoinAndMapMany(
           'domain.addresses',
           Address,
