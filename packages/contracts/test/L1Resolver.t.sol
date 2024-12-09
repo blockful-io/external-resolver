@@ -166,7 +166,6 @@ contract L1ResolverTest is Test, ENSHelper {
     }
 
     function test_GetDeferralHandlerUnsupportedFunction() public {
-        bytes memory name = "test.eth";
         bytes memory data = abi.encodeWithSelector(
             bytes4(keccak256("unsupportedFunction()")), bytes32(0)
         );

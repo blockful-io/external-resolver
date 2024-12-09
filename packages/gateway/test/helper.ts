@@ -27,7 +27,7 @@ export async function signData({
     verifyingContract: sender,
   }
   const message: MessageData = {
-    callData: toFunctionHash(func),
+    data: toFunctionHash(func),
     sender,
     expirationTimestamp: 9999999n,
   }
@@ -39,7 +39,7 @@ export async function signData({
       message,
       types: {
         Message: [
-          { name: 'callData', type: 'bytes' },
+          { name: 'data', type: 'bytes' },
           { name: 'sender', type: 'address' },
           { name: 'expirationTimestamp', type: 'uint256' },
         ],
