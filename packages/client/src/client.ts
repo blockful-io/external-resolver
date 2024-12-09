@@ -56,7 +56,7 @@ export async function handleDBStorage({
     message,
     types: {
       Message: [
-        { name: 'callData', type: 'bytes' },
+        { name: 'data', type: 'bytes' },
         { name: 'sender', type: 'address' },
         { name: 'expirationTimestamp', type: 'uint256' },
       ],
@@ -65,7 +65,7 @@ export async function handleDBStorage({
   })
   return await ccipRequest({
     body: {
-      data: message.callData,
+      data: message.data,
       signature: { message, domain, signature },
       sender: message.sender,
     },

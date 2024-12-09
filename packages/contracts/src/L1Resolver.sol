@@ -20,15 +20,12 @@ import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
-import {
-    WildcardWriting, OffchainRegister
-} from "./interfaces/WildcardWriting.sol";
+import {OffchainRegister} from "./interfaces/WildcardWriting.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
     IExtendedResolver,
     IERC165,
-    WildcardWriting,
     IWriteDeferral,
     IMulticallable,
     Ownable,
@@ -107,17 +104,10 @@ contract L1Resolver is
 
     /**
      * @notice Validates and processes write parameters for deferred storage mutations
-     * @param -name The encoded name or identifier of the write operation
      * @param data The encoded data to be written
      * @dev This function reverts with StorageHandledByL2 error to indicate L2 deferral
      */
-    function writeParams(
-        bytes calldata, /* name */
-        bytes calldata data
-    )
-        public
-        view
-    {
+    function getDeferralHandler(bytes calldata data) public view override {
         bytes4 selector = bytes4(data);
 
         if (selector == OffchainRegister.register.selector) {
@@ -170,10 +160,9 @@ contract L1Resolver is
             bytes32 node = abi.decode(data[4:], (bytes32));
             return _contenthash(node);
         }
-        if (selector == this.writeParams.selector) {
-            (bytes memory name, bytes memory _data) =
-                abi.decode(data[4:], (bytes, bytes));
-            this.writeParams(name, _data);
+        if (selector == this.getDeferralHandler.selector) {
+            (bytes memory _data) = abi.decode(data[4:], (bytes));
+            this.getDeferralHandler(_data);
         }
     }
 
@@ -384,7 +373,6 @@ contract L1Resolver is
     {
         return interfaceID == type(IExtendedResolver).interfaceId
             || interfaceID == type(IWriteDeferral).interfaceId
-            || interfaceID == type(WildcardWriting).interfaceId
             || interfaceID == type(EVMFetchTarget).interfaceId
             || interfaceID == type(IERC165).interfaceId
             || interfaceID == type(ENSIP16).interfaceId

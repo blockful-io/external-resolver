@@ -44,11 +44,12 @@ interface IWriteDeferral {
     /**
      * @notice Struct used to define the message context used to construct a typed data signature, defined in EIP-712,
      * to authorize and define the deferred mutation being performed.
-     * @param callData The encoded function call
+     * @param data The original ABI encoded function call
      * @param sender The address of the user performing the mutation (msg.sender).
+     * @param expirationTimestamp The timestamp at which the mutation will expire.
      */
     struct messageData {
-        bytes callData;
+        bytes data;
         address sender;
         uint256 expirationTimestamp;
     }
@@ -86,5 +87,15 @@ interface IWriteDeferral {
     error StorageHandledByOffChainDatabase(
         domainData sender, string url, messageData data
     );
+
+    /*//////////////////////////////////////////////////////////////
+                              VIEW FUNCTIONS 
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice View function that simulates the execution of an encoded function call
+     * @param encodedFunction The ABI encoded function call to simulate
+     */
+    function getDeferralHandler(bytes calldata encodedFunction) external view;
 
 }

@@ -114,9 +114,9 @@ const _ = (async () => {
       args: [
         encodedName,
         encodeFunctionData({
-          functionName: 'writeParams',
+          functionName: 'getDeferralHandler',
           abi,
-          args: [encodedName, encodeFunctionData(calldata)],
+          args: [encodeFunctionData(calldata)],
         }),
       ],
     })

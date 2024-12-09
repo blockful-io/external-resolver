@@ -11,8 +11,6 @@ import 'reflect-metadata'
 // Importing abi and bytecode from contracts folder
 import { abi as abiDBResolver } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import { abi as abiOffchainRegister } from '@blockful/contracts/out/WildcardWriting.sol/OffchainRegister.json'
-import { abi as abiWriteDeferral } from '@blockful/contracts/out/IWriteDeferral.sol/IWriteDeferral.json'
-import { abi as abiWildcardWriting } from '@blockful/contracts/out/WildcardWriting.sol/WildcardWriting.json'
 
 import { abi as abiUniversalResolver } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 
@@ -92,9 +90,9 @@ async function offchainWriting({
       args: [
         encodedName,
         encodeFunctionData({
-          functionName: 'writeParams',
-          abi: abiWildcardWriting,
-          args: [encodedName, encodeFunctionData(calldata)],
+          functionName: 'getDeferralHandler',
+          abi: abiDBResolver,
+          args: [encodeFunctionData(calldata)],
         }),
       ],
     })
@@ -104,7 +102,7 @@ async function offchainWriting({
 
     const [params] = data.args
     const errorResult = decodeErrorResult({
-      abi: abiWriteDeferral,
+      abi: abiDBResolver,
       data: params as Hex,
     })
     if (errorResult?.errorName === 'StorageHandledByOffChainDatabase') {

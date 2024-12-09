@@ -20,7 +20,6 @@ import {IMulticallable} from "@ens-contracts/resolvers/IMulticallable.sol";
 import {ENSIP16} from "./ENSIP16.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
 import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
-import {WildcardWriting} from "./interfaces/WildcardWriting.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 /**
@@ -32,7 +31,6 @@ contract DatabaseResolver is
     ENSIP16,
     IExtendedResolver,
     IWriteDeferral,
-    WildcardWriting,
     AddrResolver,
     ABIResolver,
     PubkeyResolver,
@@ -112,18 +110,10 @@ contract DatabaseResolver is
     /**
      * @notice Read call for fetching the required parameters for the offchain call
      * @notice avoiding multiple transactions
-     * @param -name The encoded name or identifier of the write operation
      * @param data The encoded data to be written
      * @dev This function reverts with StorageHandledByL2 error to indicate L2 deferral
      */
-    function writeParams(
-        bytes calldata, /* name */
-        bytes calldata data
-    )
-        public
-        view
-        override
-    {
+    function getDeferralHandler(bytes calldata data) public view override {
         _offChainStorage(data);
     }
 
@@ -152,10 +142,9 @@ contract DatabaseResolver is
             return bytes(this.name(node));
         }
 
-        if (bytes4(data[:4]) == this.writeParams.selector) {
-            (bytes memory name, bytes memory _data) =
-                abi.decode(data[4:], (bytes, bytes));
-            this.writeParams(name, _data);
+        if (bytes4(data[:4]) == this.getDeferralHandler.selector) {
+            (bytes memory _data) = abi.decode(data[4:], (bytes));
+            this.getDeferralHandler(_data);
         }
 
         _offChainLookup(data);
@@ -417,7 +406,7 @@ contract DatabaseResolver is
             }),
             gatewayUrl,
             IWriteDeferral.messageData({
-                callData: callData,
+                data: callData,
                 sender: msg.sender,
                 expirationTimestamp: block.timestamp
                     + gatewayDatabaseTimeoutDuration
@@ -557,7 +546,6 @@ contract DatabaseResolver is
     {
         return interfaceID == type(IWriteDeferral).interfaceId
             || interfaceID == type(IExtendedResolver).interfaceId
-            || interfaceID == type(WildcardWriting).interfaceId
             || interfaceID == type(IMulticallable).interfaceId
             || super.supportsInterface(interfaceID);
     }
