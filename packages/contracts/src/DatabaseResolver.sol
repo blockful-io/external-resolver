@@ -411,7 +411,7 @@ contract DatabaseResolver is
         override
         returns (bytes[] memory)
     {
-        _offChainStorage();
+        _offChainStorage(msg.data);
     }
 
     function multicallWithNodeCheck(
@@ -423,7 +423,7 @@ contract DatabaseResolver is
         override
         returns (bytes[] memory)
     {
-        _offChainStorage();
+        _offChainStorage(msg.data);
     }
 
     //////// ENS WRITE DEFERRAL RESOLVER (EIP-5559) ////////
@@ -584,27 +584,6 @@ contract DatabaseResolver is
             || interfaceID == type(WildcardWriting).interfaceId
             || interfaceID == type(IMulticallable).interfaceId
             || super.supportsInterface(interfaceID);
-    }
-
-    function multicall(bytes[] calldata /* data */ )
-        external
-        view
-        override
-        returns (bytes[] memory)
-    {
-        _offChainStorage(msg.data);
-    }
-
-    function multicallWithNodeCheck(
-        bytes32,
-        bytes[] calldata /* data */
-    )
-        external
-        view
-        override
-        returns (bytes[] memory)
-    {
-        _offChainStorage(msg.data);
     }
 
 }

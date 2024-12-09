@@ -28,7 +28,7 @@ import {SubdomainController} from "../../src/SubdomainController.sol";
 import {
     OffchainRegister,
     RegisterRequest
-} from "../../src/interfaces/OffchainResolver.sol";
+} from "../../src/interfaces/WildcardWriting.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper {
 
