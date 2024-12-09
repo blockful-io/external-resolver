@@ -71,7 +71,7 @@ contract L1ResolverTest is Test, ENSHelper {
 
     //////// WRITE PARAMS TESTS ////////
 
-    function test_WriteParamsRegister() public {
+    function test_GetDeferralHandlerRegister() public {
         bytes memory name = "test.eth";
         bytes memory data = abi.encodeWithSelector(
             OffchainRegister.register.selector,
@@ -92,11 +92,10 @@ contract L1ResolverTest is Test, ENSHelper {
                 TARGET_REGISTRAR
             )
         );
-        l1Resolver.writeParams(name, data);
+        l1Resolver.getDeferralHandler(data);
     }
 
-    function test_WriteParamsSetAddr() public {
-        bytes memory name = "test.eth";
+    function test_GetDeferralHandlerSetAddr() public {
         bytes memory data = abi.encodeWithSelector(
             bytes4(keccak256("setAddr(bytes32,address)")),
             bytes32(0),
@@ -110,11 +109,10 @@ contract L1ResolverTest is Test, ENSHelper {
                 TARGET_RESOLVER
             )
         );
-        l1Resolver.writeParams(name, data);
+        l1Resolver.getDeferralHandler(data);
     }
 
-    function test_WriteParamsSetAddrWithCoinType() public {
-        bytes memory name = "test.eth";
+    function test_GetDeferralHandlerSetAddrWithCoinType() public {
         bytes memory data = abi.encodeWithSelector(
             bytes4(keccak256("setAddr(bytes32,uint256,bytes)")),
             bytes32(0),
@@ -129,11 +127,10 @@ contract L1ResolverTest is Test, ENSHelper {
                 TARGET_RESOLVER
             )
         );
-        l1Resolver.writeParams(name, data);
+        l1Resolver.getDeferralHandler(data);
     }
 
-    function test_WriteParamsSetText() public {
-        bytes memory name = "test.eth";
+    function test_GetDeferralHandlerSetText() public {
         bytes memory data = abi.encodeWithSelector(
             bytes4(keccak256("setText(bytes32,string,string)")),
             bytes32(0),
@@ -148,11 +145,10 @@ contract L1ResolverTest is Test, ENSHelper {
                 TARGET_RESOLVER
             )
         );
-        l1Resolver.writeParams(name, data);
+        l1Resolver.getDeferralHandler(data);
     }
 
-    function test_WriteParamsSetContenthash() public {
-        bytes memory name = "test.eth";
+    function test_GetDeferralHandlerSetContenthash() public {
         bytes memory data = abi.encodeWithSelector(
             bytes4(keccak256("setContenthash(bytes32,bytes)")),
             bytes32(0),
@@ -166,17 +162,17 @@ contract L1ResolverTest is Test, ENSHelper {
                 TARGET_RESOLVER
             )
         );
-        l1Resolver.writeParams(name, data);
+        l1Resolver.getDeferralHandler(data);
     }
 
-    function test_WriteParamsUnsupportedFunction() public {
+    function test_GetDeferralHandlerUnsupportedFunction() public {
         bytes memory name = "test.eth";
         bytes memory data = abi.encodeWithSelector(
             bytes4(keccak256("unsupportedFunction()")), bytes32(0)
         );
 
         vm.expectRevert(L1Resolver.FunctionNotSupported.selector);
-        l1Resolver.writeParams(name, data);
+        l1Resolver.getDeferralHandler(data);
     }
 
     function test_RevertWhen_GetAddr() public {

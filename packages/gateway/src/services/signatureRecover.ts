@@ -13,7 +13,7 @@ export class SignatureRecover {
       message,
       types: {
         Message: [
-          { name: 'callData', type: 'bytes' },
+          { name: 'data', type: 'bytes' },
           { name: 'sender', type: 'address' },
           { name: 'expirationTimestamp', type: 'uint256' },
         ],
