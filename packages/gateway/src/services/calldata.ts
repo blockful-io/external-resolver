@@ -4,7 +4,11 @@ import { abi } from '../abi'
 import { TypedSignature } from '../types'
 import { Text, Address, Contenthash } from '../entities'
 
-export function parseEncodedTextCalls(data: Hex[], signature: TypedSignature) {
+export function parseEncodedTextCalls(
+  data: Hex[],
+  node: Hex,
+  signature: TypedSignature,
+) {
   const callData = data.map((d: Hex) =>
     decodeFunctionData({ abi: parseAbi(abi), data: d }),
   )
@@ -13,6 +17,10 @@ export function parseEncodedTextCalls(data: Hex[], signature: TypedSignature) {
     .filter((d) => d.functionName === 'setText')
     .map(({ args }): Omit<Text, 'id' | 'createdAt' | 'updatedAt'> => {
       const [domain, key, value] = args as [Hex, string, string]
+
+      if (domain !== node)
+        throw new Error('All records must have a matching namehash')
+
       return {
         key,
         value,
@@ -25,6 +33,7 @@ export function parseEncodedTextCalls(data: Hex[], signature: TypedSignature) {
 
 export function parseEncodedAddressCalls(
   data: Hex[],
+  node: Hex,
   signature: TypedSignature,
 ) {
   const callData = data.map((d: Hex) =>
@@ -36,6 +45,9 @@ export function parseEncodedAddressCalls(
     .map(({ args }): Omit<Address, 'id' | 'createdAt' | 'updatedAt'> => {
       if (args?.length !== 3) {
         const [domain, address] = args as [Hex, string]
+        if (domain !== node)
+          throw new Error('All records must have a matching namehash')
+
         return {
           domain,
           address: address.toLowerCase(),
@@ -45,6 +57,9 @@ export function parseEncodedAddressCalls(
         }
       }
       const [domain, coin, address] = args as [Hex, string, string]
+      if (domain !== node)
+        throw new Error('All records must have a matching namehash')
+
       return {
         domain,
         address,
@@ -57,6 +72,7 @@ export function parseEncodedAddressCalls(
 
 export function parseEncodedContentHashCall(
   data: Hex[],
+  node: Hex,
   signature: TypedSignature,
 ): Omit<Contenthash, 'id' | 'createdAt' | 'updatedAt'> | undefined {
   const callData = data.map((d: Hex) =>
@@ -67,6 +83,10 @@ export function parseEncodedContentHashCall(
     .filter((d) => d.functionName === 'setContenthash')
     .map(({ args }): Omit<Contenthash, 'id' | 'createdAt' | 'updatedAt'> => {
       const [domain, contenthash] = args as [Hex, Hex]
+
+      if (domain !== node)
+        throw new Error('All records must have a matching namehash')
+
       return {
         domain,
         contenthash: hexToString(contenthash),

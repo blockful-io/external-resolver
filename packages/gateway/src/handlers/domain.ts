@@ -44,9 +44,9 @@ export function withRegisterDomain(
           return { error: { message: 'Domain already exists', status: 400 } }
         }
 
-        const addresses = parseEncodedAddressCalls(data, signature)
-        const texts = parseEncodedTextCalls(data, signature)
-        const contenthash = parseEncodedContentHashCall(data, signature)
+        const addresses = parseEncodedAddressCalls(data, node, signature)
+        const texts = parseEncodedTextCalls(data, node, signature)
+        const contenthash = parseEncodedContentHashCall(data, node, signature)
 
         await repo.register({
           name,
