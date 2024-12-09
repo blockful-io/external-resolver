@@ -72,6 +72,7 @@ export class InMemoryRepository {
     resolverVersion,
     addresses,
     texts,
+    contenthash,
   }: RegisterDomainProps) {
     this.domains.set(node, {
       name,
@@ -106,6 +107,16 @@ export class InMemoryRepository {
         })
       })
     }
+    if (contenthash) {
+      this.contenthashes.set(node, {
+        domain: node,
+        contenthash: contenthash.contenthash,
+        resolver,
+        resolverVersion,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+    }
   }
 
   async transfer({ node, owner }: TransferDomainProps) {
@@ -123,17 +134,19 @@ export class InMemoryRepository {
     node,
     includeRelations = false,
   }: GetDomainProps): Promise<Domain | null> {
-    const dbNode = this.domains.get(node)
-    if (!dbNode) return null
-    if (!includeRelations) return dbNode
+    const domain = this.domains.get(node)
+    if (!domain) return null
+    if (!includeRelations) return domain
 
     const addresses = await this.getAddresses({ node })
     const texts = await this.getTexts({ node })
+    const contenthash = await this.getContentHashs({ node })
 
     return {
-      ...dbNode,
+      ...domain,
       addresses,
       texts,
+      contenthash,
     }
   }
 
@@ -168,11 +181,15 @@ export class InMemoryRepository {
   async getContentHash({ node }: NodeProps): Promise<Response | undefined> {
     const domain = this.domains.get(node)
     const contenthash = this.contenthashes.get(node)
-    if (contenthash)
-      return {
-        value: contenthash.contenthash,
-        ttl: domain?.ttl || '600',
-      }
+    if (!contenthash) return
+    return {
+      value: contenthash.contenthash,
+      ttl: domain?.ttl || '600',
+    }
+  }
+
+  async getContentHashs({ node }: NodeProps): Promise<Contenthash | undefined> {
+    return this.contenthashes.get(node)
   }
 
   async setAddr({
