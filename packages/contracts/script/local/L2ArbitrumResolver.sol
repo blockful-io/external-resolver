@@ -17,8 +17,7 @@ import {ETHRegistrarController} from
     "@ens-contracts/ethregistrar/ETHRegistrarController.sol";
 import {DummyOracle} from "@ens-contracts/ethregistrar/DummyOracle.sol";
 import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
-import {StaticMetadataService} from
-    "@ens-contracts/wrapper/StaticMetadataService.sol";
+import {MockMetadataService} from "../mocks/MetadataService.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {PublicResolver} from "@ens-contracts/resolvers/PublicResolver.sol";
 import {NameEncoder} from "@ens-contracts/utils/NameEncoder.sol";
@@ -52,12 +51,11 @@ contract L2ArbitrumResolver is Script, ENSHelper {
             rootNode, labelhash("eth"), address(baseRegistrar)
         );
 
-        StaticMetadataService metadata = new StaticMetadataService(
+        MockMetadataService metadata = new MockMetadataService(
             "http://ens-metadata-service.appspot.com/name/0x{id}"
         );
-        NameWrapper nameWrapper = new NameWrapper(
-            registry, baseRegistrar, IMetadataService(address(metadata))
-        );
+        NameWrapper nameWrapper =
+            new NameWrapper(registry, baseRegistrar, metadata);
         baseRegistrar.addController(address(nameWrapper));
 
         DummyOracle dummyOracle = new DummyOracle(16 gwei);

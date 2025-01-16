@@ -9,17 +9,10 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {ENSHelper} from "../script/ENSHelper.sol";
 import {
-    OffchainRegister,
-    OffchainRegisterParams,
-    RegisterRequest
+    OffchainRegister, RegisterRequest
 } from "./interfaces/WildcardWriting.sol";
 
-contract SubdomainController is
-    IERC165,
-    OffchainRegister,
-    OffchainRegisterParams,
-    ENSHelper
-{
+contract SubdomainController is IERC165, OffchainRegister, ENSHelper {
 
     using BytesUtils for bytes;
 
@@ -96,8 +89,7 @@ contract SubdomainController is
 
     function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
         return interfaceId == type(IERC165).interfaceId
-            || interfaceId == type(OffchainRegister).interfaceId
-            || interfaceId == type(OffchainRegisterParams).interfaceId;
+            || interfaceId == type(OffchainRegister).interfaceId;
     }
 
 }
