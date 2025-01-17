@@ -64,17 +64,11 @@ contract SubdomainController is IERC165, OffchainRegister, ENSHelper {
             parentNode,
             label,
             request.owner,
-            request.resolver,
+            address(0),
             0,
-            request.fuses,
+            0,
             uint64(request.duration)
         );
-
-        if (request.data.length > 0) {
-            Resolver(request.resolver).multicallWithNodeCheck(
-                node, request.data
-            );
-        }
     }
 
     function _getLabel(bytes calldata name)

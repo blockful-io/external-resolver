@@ -23,6 +23,7 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
         uint256 targetChainId;
         address l2Resolver;
         address l2Registrar;
+        address l2NameWrapper;
     }
 
     constructor(uint256 chainId, address sender) {
@@ -39,7 +40,8 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
             l2Resolver: getContractAddress(
                 "L2ArbitrumResolver", "PublicResolver", 42161
             ),
-            l2Registrar: getContractAddress("SubdomainController", 42161)
+            l2Registrar: getContractAddress("SubdomainController", 42161),
+            l2NameWrapper: getContractAddress("NameWrapper", 42161)
         });
     }
 
@@ -51,7 +53,8 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
             l2Resolver: getContractAddress(
                 "L2ArbitrumResolver", "PublicResolver", 421614
             ),
-            l2Registrar: getContractAddress("SubdomainController", 421614)
+            l2Registrar: getContractAddress("SubdomainController", 421614),
+            l2NameWrapper: getContractAddress("NameWrapper", 421614)
         });
     }
 
@@ -90,13 +93,14 @@ contract L1ArbitrumConfig is Script, ENSHelper, DeployHelper {
         return NetworkConfig({
             registry: registry,
             rollup: IRollupCore(0x3fC2B5464aD073036fEA6e396eC2Ac0406A3b058),
-            targetChainId: 412346,
+            targetChainId: 31337,
             l2Resolver: getContractAddress(
-                "L2ArbitrumResolver", "PublicResolver", 412346
+                "L2ArbitrumResolver", "PublicResolver", 31337
             ),
             l2Registrar: getContractAddress(
-                "L2ArbitrumResolver", "SubdomainController", 412346
-            )
+                "L2ArbitrumResolver", "SubdomainController", 31337
+            ),
+            l2NameWrapper: getContractAddress("NameWrapper", 31337)
         });
     }
 

@@ -6,25 +6,24 @@ pragma solidity ^0.8.17;
 /// @param owner The address that will own the registered name
 /// @param duration The length of time in seconds to register the name for
 /// @param secret The secret to be used for the registration based on commit/reveal
-/// @param resolver The address of the resolver contract that will store the name's records
-/// @param data Array of encoded function calls to set records in the resolver after registration
-/// @param reverseRecord Whether to set this name as the primary name for the owner address
-/// @param fuses Permissions to set on the name that control how it can be managed
+/// @param extraData Additional registration data encoded as bytes
 /// @param extraData Additional registration data encoded as bytes
 struct RegisterRequest {
     bytes name;
     address owner;
     uint256 duration;
     bytes32 secret;
-    address resolver;
-    bytes[] data;
-    bool reverseRecord;
-    uint16 fuses;
     bytes extraData;
 }
 
 interface OffchainRegister {
 
+    /// @notice Struct containing registration parameters for a name
+    /// @param price The total price in wei required to register the name
+    /// @param available Whether the name is available for registration
+    /// @param token Token address (ERC-7528 ether address or ERC-20 contract)
+    /// @param commitTime The commit duration in seconds
+    /// @param extraData Additional registration data encoded as bytes
     struct RegisterParams {
         uint256 price;
         bool available;
