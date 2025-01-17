@@ -8,8 +8,10 @@ import {IAddrResolver} from
     "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
 import {IAddressResolver} from
     "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
+import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 import {IMulticallable} from "@ens-contracts/resolvers/IMulticallable.sol";
 import {AddrResolver} from "@ens-contracts/resolvers/profiles/AddrResolver.sol";
+import {NameResolver} from "@ens-contracts/resolvers/profiles/NameResolver.sol";
 import {TextResolver} from "@ens-contracts/resolvers/profiles/TextResolver.sol";
 import {ContentHashResolver} from
     "@ens-contracts/resolvers/profiles/ContentHashResolver.sol";
@@ -66,6 +68,7 @@ contract L1Resolver is
     /// Contract targets
     bytes32 public constant TARGET_RESOLVER = keccak256("resolver");
     bytes32 public constant TARGET_REGISTRAR = keccak256("registrar");
+    bytes32 public constant TARGET_NAME_WRAPPER = keccak256("nameWrapper");
 
     //////// INITIALIZER ////////
 
@@ -77,6 +80,7 @@ contract L1Resolver is
         uint256 _chainId,
         address _target_resolver,
         address _target_registrar,
+        address _target_nameWrapper,
         IEVMVerifier _verifier,
         string memory _metadataUrl
     )
@@ -97,6 +101,7 @@ contract L1Resolver is
         chainId = _chainId;
         setTarget(TARGET_RESOLVER, _target_resolver);
         setTarget(TARGET_REGISTRAR, _target_registrar);
+        setTarget(TARGET_NAME_WRAPPER, _target_nameWrapper);
     }
 
     //////// ENSIP Wildcard Writing ////////
@@ -113,11 +118,16 @@ contract L1Resolver is
             _offChainStorage(targets[TARGET_REGISTRAR]);
         }
 
+        if (selector == NameWrapper.setResolver.selector) {
+            _offChainStorage(targets[TARGET_NAME_WRAPPER]);
+        }
+
         if (
             selector == bytes4(keccak256("setAddr(bytes32,address)"))
                 || selector == bytes4(keccak256("setAddr(bytes32,uint256,bytes)"))
                 || selector == TextResolver.setText.selector
                 || selector == ContentHashResolver.setContenthash.selector
+                || selector == NameResolver.setName.selector
         ) _offChainStorage(targets[TARGET_RESOLVER]);
 
         revert FunctionNotSupported();
