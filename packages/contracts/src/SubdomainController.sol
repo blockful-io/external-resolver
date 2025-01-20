@@ -60,14 +60,8 @@ contract SubdomainController is IERC165, OffchainRegister, ENSHelper {
         );
         require(msg.value >= price, "insufficient funds");
 
-        nameWrapper.setSubnodeRecord(
-            parentNode,
-            label,
-            request.owner,
-            address(0),
-            0,
-            0,
-            uint64(request.duration)
+        nameWrapper.setSubnodeOwner(
+            parentNode, label, request.owner, 0, uint64(request.duration)
         );
     }
 
