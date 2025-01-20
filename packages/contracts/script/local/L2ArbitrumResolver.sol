@@ -117,6 +117,8 @@ contract L2ArbitrumResolver is Script, ENSHelper {
                 bytes("")
             )
         );
+        nameWrapper.setRecord(node, msg.sender, address(arbResolver), 0);
+        arbResolver.multicallWithNodeCheck(node, data);
 
         vm.stopBroadcast();
 

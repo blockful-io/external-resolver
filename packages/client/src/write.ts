@@ -20,8 +20,9 @@ import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
 
 import { abi } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
-import { abi as universalResolverResolveAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
+import { abi as urAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as scAbi } from '@blockful/contracts/out/SubdomainController.sol/SubdomainController.json'
+import { abi as nwAbi } from '@blockful/contracts/out/NameWrapper.sol/NameWrapper.json'
 import { MessageData, DomainData } from '@blockful/gateway/src/types'
 import { getRevertErrorData, getChain, handleDBStorage } from './client'
 
@@ -77,37 +78,46 @@ const _ = (async () => {
     },
     {
       functionName: 'setResolver',
-      abi: scAbi,
+      abi: nwAbi,
       args: [node, resolver],
     },
     {
-      functionName: 'setName',
-      abi,
-      args: [node, name],
-    },
-    {
-      functionName: 'setText',
-      abi,
-      args: [node, 'com.twitter', `@${name}`],
-    },
-    {
-      functionName: 'setAddr',
-      abi,
-      args: [node, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
-    },
-    {
-      functionName: 'setAddr',
-      abi,
-      args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
-    },
-    {
-      functionName: 'setContenthash',
+      functionName: 'multicallWithNodeCheck',
       abi,
       args: [
         node,
-        stringToHex(
-          'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450',
-        ),
+        [
+          encodeFunctionData({
+            functionName: 'setName',
+            abi,
+            args: [node, name],
+          }),
+          encodeFunctionData({
+            functionName: 'setText',
+            abi,
+            args: [node, 'com.twitter', `@${name}`],
+          }),
+          encodeFunctionData({
+            functionName: 'setAddr',
+            abi,
+            args: [node, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
+          }),
+          encodeFunctionData({
+            functionName: 'setAddr',
+            abi,
+            args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
+          }),
+          encodeFunctionData({
+            functionName: 'setContenthash',
+            abi,
+            args: [
+              node,
+              stringToHex(
+                'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450',
+              ),
+            ],
+          }),
+        ],
       ],
     },
   ]
@@ -116,7 +126,7 @@ const _ = (async () => {
     try {
       await client.readContract({
         address: universalResolver as Hex,
-        abi: universalResolverResolveAbi,
+        abi: urAbi,
         functionName: 'resolve',
         args: [
           encodedName,
@@ -135,7 +145,10 @@ const _ = (async () => {
       })
     } catch (err) {
       const data = getRevertErrorData(err)
-      if (!data || !data.args || data.args?.length === 0) return
+      if (!data || !data.args || data.args?.length === 0) {
+        console.log({ err })
+        return
+      }
 
       const [params] = data.args
       const errorResult = decodeErrorResult({
@@ -168,7 +181,7 @@ const _ = (async () => {
           let value = 0n
           if (calldata.functionName === 'register') {
             try {
-              const { price: _value } = (await client.readContract({
+              const registerParams = (await client.readContract({
                 address: contractAddress,
                 abi: scAbi,
                 functionName: 'registerParams',
@@ -180,7 +193,12 @@ const _ = (async () => {
                 available: boolean
                 token: Hex
               }
-              value = _value
+              value = registerParams.price
+
+              if (!registerParams.available) {
+                console.log('Domain unavailable')
+                return
+              }
             } catch {
               // interface not implemented by the resolver
             }
