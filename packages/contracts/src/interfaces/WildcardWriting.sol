@@ -25,21 +25,6 @@ struct RegisterRequest {
 
 interface OffchainRegister {
 
-    /// @notice Registers a domain name
-    /// @param request The registration request details
-    /// @dev Forwards the registration request to the L2 contracts for processing
-    function register(RegisterRequest calldata request) external payable;
-
-}
-
-interface OffchainRegisterParams {
-
-    /// @notice Struct containing registration parameters for a name
-    /// @param price The total price in wei required to register the name
-    /// @param available Whether the name is available for registration
-    /// @param token Token address (ERC-7528 ether address or ERC-20 contract)
-    /// @param commitTime The commit duration in seconds
-    /// @param extraData Additional registration data encoded as bytes
     struct RegisterParams {
         uint256 price;
         bool available;
@@ -60,6 +45,11 @@ interface OffchainRegisterParams {
         external
         view
         returns (RegisterParams memory);
+
+    /// @notice Registers a domain name
+    /// @param request The registration request details
+    /// @dev Forwards the registration request to the L2 contracts for processing
+    function register(RegisterRequest calldata request) external payable;
 
 }
 
