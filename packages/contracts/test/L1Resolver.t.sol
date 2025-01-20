@@ -85,19 +85,16 @@ contract L1ResolverTest is Test, ENSHelper {
             address(0),
             0,
             bytes32(0),
-            address(0),
-            new bytes[](0),
-            false,
-            0
+            new bytes[](0)
         );
 
-        // vm.expectRevert(
-        //     abi.encodeWithSelector(
-        //         IWriteDeferral.StorageHandledByL2.selector,
-        //         chainId,
-        //         TARGET_REGISTRAR
-        //     )
-        // );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IWriteDeferral.StorageHandledByL2.selector,
+                chainId,
+                TARGET_REGISTRAR
+            )
+        );
         l1Resolver.getDeferralHandler(data);
     }
 
