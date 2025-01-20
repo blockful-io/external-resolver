@@ -30,7 +30,7 @@ export type DomainData = {
  * @param sender The address of the user performing the mutation (msg.sender).
  */
 export type MessageData = {
-  callData: `0x${string}`
+  data: `0x${string}`
   sender: `0x${string}`
   expirationTimestamp: bigint
 }

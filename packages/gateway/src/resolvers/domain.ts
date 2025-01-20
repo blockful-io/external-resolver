@@ -1,11 +1,12 @@
 import { Hex, labelhash, namehash, zeroAddress } from 'viem'
 import { normalize } from 'viem/ens'
 
-import { DomainMetadata, NodeProps, GetDomainProps } from '../types'
+import { DomainMetadata, NodeProps, GetDomainProps, Response } from '../types'
 import { Address, Domain, Text } from '../entities'
 import { extractLabelFromName, extractParentFromName } from '../utils'
 
 interface ReadRepository {
+  getContentHash(params: GetDomainProps): Promise<Response | undefined>
   getDomain(params: GetDomainProps): Promise<Domain | null>
   getSubdomains({ node }: NodeProps): Promise<Domain[]>
   getTexts({ node }: NodeProps): Promise<Text[]>
@@ -80,6 +81,9 @@ export async function domainResolver({
     ? domain.addresses
     : await repo.getAddresses({ node })
   const ethAddr = addresses.find((addr) => addr.coin === '60')?.address
+  const contentHash = domain
+    ? domain.contenthash?.contenthash
+    : (await repo.getContentHash({ node }))?.value
 
   const owner = domain?.owner || (await client.getOwner(node))
   return {
@@ -103,7 +107,7 @@ export async function domainResolver({
       context: owner,
       address: resolver,
       addr: ethAddr,
-      contentHash: domain?.contenthash?.contenthash,
+      contentHash,
       texts: texts.map((t) => ({ key: t.key, value: t.value })),
       addresses: addresses.map((addr) => ({
         address: addr.address,

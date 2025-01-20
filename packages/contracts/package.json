@@ -9,6 +9,7 @@
     "lint": "forge fmt",
     "build": "forge build",
     "dev:db": "forge script script/local/DatabaseResolver.sol --rpc-url http://localhost:8545 --broadcast -vvv --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+    "dev:arb": "npm-run-all --sequential dev:arb:l2 dev:arb:l1",
     "dev:arb:l1": "forge script script/local/L1ArbitrumResolver.sol --rpc-url http://localhost:8545 --broadcast -vvv --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
     "dev:arb:l2": "forge script script/local/L2ArbitrumResolver.sol --rpc-url http://localhost:8547 --broadcast -vvv --private-key 0xb6b15c8cb491557369f3c7d2c287b053eb229daa9c22138887752191c9520659"
   },

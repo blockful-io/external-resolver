@@ -15,6 +15,7 @@ import {
 import { normalize } from 'viem/ens'
 import { getChain } from './client'
 import { abi as l1Abi } from '@blockful/contracts/out/L1Resolver.sol/L1Resolver.json'
+
 config({
   path: process.env.ENV_FILE || '../.env',
 })

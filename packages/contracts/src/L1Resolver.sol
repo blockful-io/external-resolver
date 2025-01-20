@@ -13,31 +13,32 @@ import {TextResolver} from "@ens-contracts/resolvers/profiles/TextResolver.sol";
 import {ContentHashResolver} from
     "@ens-contracts/resolvers/profiles/ContentHashResolver.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IMulticallable} from "@ens-contracts/resolvers/IMulticallable.sol";
 
 import {ENSIP16} from "./ENSIP16.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
-import {
-    OffchainRegister,
-    OffchainMulticallable,
-    OffchainRegisterParams
-} from "./interfaces/OffchainResolver.sol";
+import {OffchainRegister} from "./interfaces/WildcardWriting.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
     IExtendedResolver,
     IERC165,
     IWriteDeferral,
+    IMulticallable,
     Ownable,
-    OffchainRegister,
-    OffchainMulticallable,
-    OffchainRegisterParams,
     ENSIP16
 {
 
     using EVMFetcher for EVMFetcher.EVMFetchRequest;
+
+    //////// ERRORS ////////
+
+    /// @notice Error thrown when an unsupported function is called
+    /// @dev Used to indicate when a function call is not implemented or allowed
+    error FunctionNotSupported();
 
     //////// CONTRACT VARIABLE STATE ////////
 
@@ -47,7 +48,7 @@ contract L1Resolver is
     //////// CONTRACT IMMUTABLE STATE ////////
 
     // id of chain that is storing the domains
-    uint256 immutable chainId;
+    uint256 public immutable chainId;
     // EVM Verifier to handle data validation based on Merkle Proof
     IEVMVerifier immutable verifier;
 
@@ -64,8 +65,8 @@ contract L1Resolver is
     uint256 constant EXTRA_DATA_SLOT = 2;
 
     /// Contract targets
-    bytes32 constant TARGET_RESOLVER = keccak256("resolver");
-    bytes32 constant TARGET_REGISTRAR = keccak256("registrar");
+    bytes32 public constant TARGET_RESOLVER = keccak256("resolver");
+    bytes32 public constant TARGET_REGISTRAR = keccak256("registrar");
 
     //////// INITIALIZER ////////
 
@@ -99,94 +100,34 @@ contract L1Resolver is
         setTarget(TARGET_REGISTRAR, _target_registrar);
     }
 
-    //////// OFFCHAIN STORAGE REGISTER SUBDOMAIN ////////
+    //////// ENSIP Wildcard Writing ////////
 
     /**
-     * Forwards the registering of a subdomain to the L2 contracts
-     * @param -name The DNS-encoded name to be registered.
-     * @param -owner Owner of the domain
-     * @param -duration duration The duration in seconds of the registration.
-     * @param -secret The secret to be used for the registration based on commit/reveal
-     * @param -resolver The address of the resolver to set for this name.
-     * @param -data Multicallable data bytes for setting records in the associated resolver upon reigstration.
-     * @param -reverseRecord Whether this name is the primary name
-     * @param -fuses The fuses to set for this name.
-     * @param -extraData any encoded additional data
+     * @notice Validates and processes write parameters for deferred storage mutations
+     * @param data The encoded data to be written
+     * @dev This function reverts with StorageHandledByL2 error to indicate L2 deferral
      */
-    function register(
-        bytes calldata, /* name */
-        address, /* owner */
-        uint256, /* duration */
-        bytes32, /* secret */
-        address, /* resolver */
-        bytes[] calldata, /* data */
-        bool, /* reverseRecord */
-        uint16, /* fuses */
-        bytes memory /* extraData */
-    )
-        external
-        payable
-    {
-        _offChainStorage(targets[TARGET_REGISTRAR]);
-    }
+    function getDeferralHandler(bytes calldata data) public view override {
+        bytes4 selector = bytes4(data);
 
-    /**
-     * @notice Returns the registration parameters for a given name and duration
-     * @param -name The DNS-encoded name to query
-     * @param -duration The duration in seconds for the registration
-     * @return price The price of the registration in wei per second
-     * @return commitTime the amount of time the commit should wait before being revealed
-     * @return extraData any given structure in an ABI encoded format
-     */
-    function registerParams(
-        bytes calldata, /* name */
-        uint256 /* duration */
-    )
-        external
-        view
-        override
-        returns (
-            uint256, /* price */
-            uint256, /* commitTime */
-            bytes memory /* extraData */
-        )
-    {
-        EVMFetcher.newFetchRequest(verifier, targets[TARGET_REGISTRAR])
-            .getStatic(PRICE_SLOT).getStatic(COMMIT_SLOT).fetch(
-            this.registerParamsCallback.selector, ""
-        );
-    }
+        if (selector == OffchainRegister.register.selector) {
+            _offChainStorage(targets[TARGET_REGISTRAR]);
+        }
 
-    function registerParamsCallback(
-        bytes[] memory values,
-        bytes memory
-    )
-        public
-        pure
-        returns (uint256 price, uint256 commitTime, bytes memory extraData)
-    {
-        price = abi.decode(values[0], (uint256));
-        commitTime = abi.decode(values[1], (uint256));
-        return (price, commitTime, abi.encode(""));
-    }
+        if (
+            selector == bytes4(keccak256("setAddr(bytes32,address)"))
+                || selector == bytes4(keccak256("setAddr(bytes32,uint256,bytes)"))
+                || selector == TextResolver.setText.selector
+                || selector == ContentHashResolver.setContenthash.selector
+        ) _offChainStorage(targets[TARGET_RESOLVER]);
 
-    /**
-     * @notice Executes multiple calls in a single transaction.
-     * @param -data An array of encoded function call data.
-     */
-    function multicall(bytes[] calldata /* data */ )
-        external
-        view
-        override
-        returns (bytes[] memory)
-    {
-        _offChainStorage(targets[TARGET_RESOLVER]);
+        revert FunctionNotSupported();
     }
 
     //////// ENSIP 10 ////////
 
     /**
-     * @dev Resolve and verify a record stored in l2 target address. It supports subname by fetching target recursively to the nearlest parent.
+     * @dev Resolve and verify a record stored in l2 target address. It supports subdomain by fetching target recursively to the nearest parent.
      * @param -name DNS encoded ENS name to query
      * @param data The actual calldata
      * @return result result of the call
@@ -218,6 +159,10 @@ contract L1Resolver is
         if (selector == ContentHashResolver.contenthash.selector) {
             bytes32 node = abi.decode(data[4:], (bytes32));
             return _contenthash(node);
+        }
+        if (selector == this.getDeferralHandler.selector) {
+            (bytes memory _data) = abi.decode(data[4:], (bytes));
+            this.getDeferralHandler(_data);
         }
     }
 
@@ -429,13 +374,12 @@ contract L1Resolver is
         return interfaceID == type(IExtendedResolver).interfaceId
             || interfaceID == type(IWriteDeferral).interfaceId
             || interfaceID == type(EVMFetchTarget).interfaceId
-            || interfaceID == type(OffchainRegister).interfaceId
-            || interfaceID == type(OffchainMulticallable).interfaceId
-            || interfaceID == type(OffchainRegisterParams).interfaceId
             || interfaceID == type(IERC165).interfaceId
+            || interfaceID == type(ENSIP16).interfaceId
             || interfaceID == type(AddrResolver).interfaceId
             || interfaceID == type(TextResolver).interfaceId
             || interfaceID == type(ContentHashResolver).interfaceId
+            || interfaceID == type(IMulticallable).interfaceId
             || super.supportsInterface(interfaceID);
     }
 
@@ -457,6 +401,27 @@ contract L1Resolver is
         address prevAddr = targets[key];
         targets[key] = target;
         emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
+    }
+
+    function multicall(bytes[] calldata /* data */ )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(targets[TARGET_RESOLVER]);
+    }
+
+    function multicallWithNodeCheck(
+        bytes32,
+        bytes[] calldata /* data */
+    )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(targets[TARGET_RESOLVER]);
     }
 
 }
