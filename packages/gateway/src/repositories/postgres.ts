@@ -15,6 +15,7 @@ import {
   RegisterDomainProps,
   NodeProps,
   GetDomainProps,
+  SetResolverProps,
 } from '../types'
 import { Address, Text, Domain, Contenthash } from '../entities'
 import { zeroAddress } from 'viem'
@@ -45,9 +46,6 @@ export class PostgresRepository {
     owner,
     resolver,
     resolverVersion,
-    addresses,
-    texts,
-    contenthash,
   }: RegisterDomainProps) {
     await this.client.getRepository(Domain).insert({
       name,
@@ -58,19 +56,6 @@ export class PostgresRepository {
       resolver,
       resolverVersion,
     })
-
-    // TODO: Find a way to insert the relations in a single query relying on cascade
-    if (addresses) {
-      await this.client.getRepository(Address).insert(addresses)
-    }
-
-    if (texts) {
-      await this.client.getRepository(Text).insert(texts)
-    }
-
-    if (contenthash) {
-      await this.client.getRepository(Contenthash).insert(contenthash)
-    }
   }
 
   async transfer({ node, owner }: TransferDomainProps) {
@@ -110,6 +95,10 @@ export class PostgresRepository {
         )
     }
     return await query.getOne()
+  }
+
+  async setResolver({ node, resolver }: SetResolverProps) {
+    await this.client.getRepository(Domain).update({ node }, { resolver })
   }
 
   async getSubdomains({ node }: NodeProps): Promise<Domain[]> {

@@ -18,6 +18,7 @@ export function NewDataSource(
     logging: options?.debug,
     entities,
     migrations: [path.resolve(__dirname, 'migrations/*.ts')],
-    migrationsRun: options ? options.synchronize : true,
+    migrationsRun:
+      options?.synchronize !== undefined ? options.synchronize : true,
   })
 }
