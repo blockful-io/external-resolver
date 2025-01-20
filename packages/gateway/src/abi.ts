@@ -18,4 +18,5 @@ export const abi: string[] = [
   'function transfer(bytes32 node, address owner)',
   'function multicall(bytes[] calldata data) external returns (bytes[] memory results)',
   'function multicallWithNodeCheck(bytes32 node, bytes[] calldata data) external returns (bytes[] memory results)',
+  'function setResolver(bytes32 node, address resolver)',
 ]

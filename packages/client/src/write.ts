@@ -88,11 +88,6 @@ const _ = (async () => {
         node,
         [
           encodeFunctionData({
-            functionName: 'setName',
-            abi,
-            args: [node, name],
-          }),
-          encodeFunctionData({
             functionName: 'setText',
             abi,
             args: [node, 'com.twitter', `@${name}`],

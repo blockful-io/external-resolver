@@ -1,4 +1,4 @@
-import { Domain, Address, Text, Contenthash } from '../entities'
+import { Domain, Contenthash } from '../entities'
 import { PubKey } from '.'
 
 export type Response = {
@@ -15,17 +15,14 @@ export type NodeProps = Pick<Domain, 'node'>
 export type RegisterDomainProps = Omit<
   Domain,
   'addresses' | 'texts' | 'createdAt' | 'updatedAt' | 'contenthash'
-> & {
-  addresses: Omit<Address, 'id' | 'createdAt' | 'updatedAt'>[]
-  texts: Omit<Text, 'id' | 'createdAt' | 'updatedAt'>[]
-  contenthash: Omit<Contenthash, 'id' | 'createdAt' | 'updatedAt'> | undefined
-}
+>
 export type ResolverProps = {
   resolver: `0x${string}`
   resolverVersion: string
 }
 
 export type TransferDomainProps = Pick<Domain, 'node' | 'owner'>
+export type SetResolverProps = Pick<Domain, 'node' | 'resolver'>
 export type SetContentHashProps = ResolverProps &
   NodeProps &
   Pick<Contenthash, 'contenthash'>

@@ -12,6 +12,7 @@ import {
   SetPubkeyProps,
   NodeProps,
   GetDomainProps,
+  SetResolverProps,
 } from '../types'
 import { Address, Text, Domain, Contenthash } from '../entities'
 
@@ -70,9 +71,6 @@ export class InMemoryRepository {
     owner,
     resolver,
     resolverVersion,
-    addresses,
-    texts,
-    contenthash,
   }: RegisterDomainProps) {
     this.domains.set(node, {
       name,
@@ -87,36 +85,6 @@ export class InMemoryRepository {
       createdAt: new Date(),
       updatedAt: new Date(),
     })
-    if (addresses.length > 0) {
-      addresses.forEach((addr) => {
-        this.addresses.set(`${node}-${addr.coin}`, {
-          ...addr,
-          coin: addr.coin.toString(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-      })
-    }
-
-    if (texts.length > 0) {
-      texts.forEach((text) => {
-        this.texts.set(`${node}-${text.key}`, {
-          ...text,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-      })
-    }
-    if (contenthash) {
-      this.contenthashes.set(node, {
-        domain: node,
-        contenthash: contenthash.contenthash,
-        resolver,
-        resolverVersion,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-    }
   }
 
   async transfer({ node, owner }: TransferDomainProps) {
@@ -127,6 +95,17 @@ export class InMemoryRepository {
     await this.domains.set(node, {
       ...existingNode,
       owner,
+    })
+  }
+
+  async setResolver({ node, resolver }: SetResolverProps) {
+    const existingNode = this.domains.get(node)
+    if (!existingNode) {
+      throw Error('Node not found')
+    }
+    await this.domains.set(node, {
+      ...existingNode,
+      resolver,
     })
   }
 

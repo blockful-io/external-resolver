@@ -8,18 +8,15 @@ import {
   OwnershipValidator,
   TypedSignature,
   TransferDomainProps,
+  SetResolverProps,
 } from '../types'
-import {
-  parseEncodedAddressCalls,
-  parseEncodedContentHashCall,
-  parseEncodedTextCalls,
-} from '../services'
 import { Domain } from '../entities'
 import { decodeDNSName, extractParentFromName } from '../utils'
 
 interface WriteRepository {
   register(params: RegisterDomainProps)
   transfer(params: TransferDomainProps)
+  setResolver(params: SetResolverProps)
 }
 
 interface ReadRepository {
@@ -30,9 +27,9 @@ export function withRegisterDomain(
   repo: WriteRepository & ReadRepository,
 ): ccip.HandlerDescription {
   return {
-    type: 'register((bytes name,address owner,uint256 duration,bytes32 secret,address resolver,bytes[] data,bool reverseRecord,uint16 fuses,bytes extraData))',
+    type: 'register((bytes name,address owner,uint256 duration,bytes32 secret,bytes extraData))',
     func: async (
-      [[name, owner, ttl, , , data]],
+      [[name, owner, ttl]],
       { signature }: { signature: TypedSignature },
     ) => {
       try {
@@ -44,21 +41,14 @@ export function withRegisterDomain(
           return { error: { message: 'Domain already exists', status: 400 } }
         }
 
-        const addresses = parseEncodedAddressCalls(data, node, signature)
-        const texts = parseEncodedTextCalls(data, node, signature)
-        const contenthash = parseEncodedContentHashCall(data, node, signature)
-
         await repo.register({
           name,
           node,
           ttl: ttl.toString(),
           owner,
-          contenthash,
           parent: namehash(extractParentFromName(name)),
           resolver: signature.domain.verifyingContract,
           resolverVersion: signature.domain.version,
-          addresses,
-          texts,
         })
       } catch (err) {
         return {
@@ -93,6 +83,28 @@ export function withTransferDomain(
           error: { message: 'Unable to transfer domain', status: 400 },
         }
       }
+    },
+  }
+}
+
+export function withSetResolver(
+  repo: WriteRepository,
+  validator: OwnershipValidator,
+): ccip.HandlerDescription {
+  return {
+    type: 'setResolver(bytes32 node, address resolver)',
+    func: async (
+      { node, resolver },
+      { signature }: { signature: TypedSignature },
+    ) => {
+      const isOwner = await validator.verifyOwnership({
+        node,
+        signature,
+      })
+      if (!isOwner) {
+        return { error: { message: 'Unauthorized', status: 401 } }
+      }
+      await repo.setResolver({ node, resolver })
     },
   }
 }
