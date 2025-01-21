@@ -10,6 +10,7 @@ import {IExtendedResolver} from
 import {AddrResolver} from "@ens-contracts/resolvers/profiles/AddrResolver.sol";
 import {NameResolver} from "@ens-contracts/resolvers/profiles/NameResolver.sol";
 import {ABIResolver} from "@ens-contracts/resolvers/profiles/ABIResolver.sol";
+import {IMulticallable} from "@ens-contracts/resolvers/IMulticallable.sol";
 import {PubkeyResolver} from
     "@ens-contracts/resolvers/profiles/PubkeyResolver.sol";
 import {TextResolver} from "@ens-contracts/resolvers/profiles/TextResolver.sol";
@@ -391,6 +392,29 @@ contract DatabaseResolver is
         return result;
     }
 
+    //////// MULTICALL ////////
+
+    function multicall(bytes[] calldata /* data */ )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(msg.data);
+    }
+
+    function multicallWithNodeCheck(
+        bytes32, /* node */
+        bytes[] calldata /* data */
+    )
+        external
+        view
+        override
+        returns (bytes[] memory)
+    {
+        _offChainStorage(msg.data);
+    }
+
     //////// ENS WRITE DEFERRAL RESOLVER (EIP-5559) ////////
 
     /**
@@ -548,27 +572,6 @@ contract DatabaseResolver is
             || interfaceID == type(IExtendedResolver).interfaceId
             || interfaceID == type(IMulticallable).interfaceId
             || super.supportsInterface(interfaceID);
-    }
-
-    function multicall(bytes[] calldata /* data */ )
-        external
-        view
-        override
-        returns (bytes[] memory)
-    {
-        _offChainStorage(msg.data);
-    }
-
-    function multicallWithNodeCheck(
-        bytes32,
-        bytes[] calldata /* data */
-    )
-        external
-        view
-        override
-        returns (bytes[] memory)
-    {
-        _offChainStorage(msg.data);
     }
 
 }

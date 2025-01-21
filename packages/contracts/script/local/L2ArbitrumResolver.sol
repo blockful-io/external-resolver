@@ -17,14 +17,17 @@ import {ETHRegistrarController} from
     "@ens-contracts/ethregistrar/ETHRegistrarController.sol";
 import {DummyOracle} from "@ens-contracts/ethregistrar/DummyOracle.sol";
 import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
-import {StaticMetadataService} from
-    "@ens-contracts/wrapper/StaticMetadataService.sol";
+import {MockMetadataService} from "../mocks/MetadataService.sol";
 import {IMetadataService} from "@ens-contracts/wrapper/IMetadataService.sol";
 import {PublicResolver} from "@ens-contracts/resolvers/PublicResolver.sol";
 import {NameEncoder} from "@ens-contracts/utils/NameEncoder.sol";
 
 import {ENSHelper} from "../ENSHelper.sol";
 import {SubdomainController} from "../../src/SubdomainController.sol";
+import {
+    OffchainRegister,
+    RegisterRequest
+} from "../../src/interfaces/WildcardWriting.sol";
 
 contract L2ArbitrumResolver is Script, ENSHelper {
 
@@ -48,12 +51,11 @@ contract L2ArbitrumResolver is Script, ENSHelper {
             rootNode, labelhash("eth"), address(baseRegistrar)
         );
 
-        StaticMetadataService metadata = new StaticMetadataService(
+        MockMetadataService metadata = new MockMetadataService(
             "http://ens-metadata-service.appspot.com/name/0x{id}"
         );
-        NameWrapper nameWrapper = new NameWrapper(
-            registry, baseRegistrar, IMetadataService(address(metadata))
-        );
+        NameWrapper nameWrapper =
+            new NameWrapper(registry, baseRegistrar, metadata);
         baseRegistrar.addController(address(nameWrapper));
 
         DummyOracle dummyOracle = new DummyOracle(16 gwei);
@@ -80,10 +82,8 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         nameWrapper.setController(msg.sender, true);
 
         uint256 subdomainPrice = 0.001 ether;
-        uint256 commitTime = 0;
-        SubdomainController subdomainController = new SubdomainController(
-            address(nameWrapper), subdomainPrice, commitTime
-        );
+        SubdomainController subdomainController =
+            new SubdomainController(address(nameWrapper), subdomainPrice);
         nameWrapper.setApprovalForAll(address(subdomainController), true);
 
         PublicResolver arbResolver = new PublicResolver(
@@ -109,21 +109,24 @@ contract L2ArbitrumResolver is Script, ENSHelper {
         );
 
         subdomainController.register{value: subdomainController.price()}(
-            name,
-            msg.sender,
-            31556952000,
-            keccak256("secret"),
-            address(arbResolver),
-            data,
-            false,
-            0,
-            bytes("")
+            RegisterRequest(
+                name,
+                msg.sender,
+                31556952000,
+                keccak256(abi.encode("secret")),
+                address(arbResolver),
+                data,
+                false,
+                0,
+                bytes("")
+            )
         );
 
         vm.stopBroadcast();
 
         console.log("Registry deployed at", address(registry));
         console.log("NameWrapper deployed at", address(nameWrapper));
+        console.log("BaseRegistrar deployed at", address(baseRegistrar));
         console.log(
             "SubdomainController deployed at", address(subdomainController)
         );

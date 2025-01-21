@@ -8,6 +8,7 @@ import {IAddrResolver} from
     "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
 import {IAddressResolver} from
     "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
+import {IMulticallable} from "@ens-contracts/resolvers/IMulticallable.sol";
 import {AddrResolver} from "@ens-contracts/resolvers/profiles/AddrResolver.sol";
 import {TextResolver} from "@ens-contracts/resolvers/profiles/TextResolver.sol";
 import {ContentHashResolver} from
@@ -61,8 +62,6 @@ contract L1Resolver is
     uint256 constant VERSIONABLE_HASHES_SLOT = 3;
     uint256 constant VERSIONABLE_TEXTS_SLOT = 10;
     uint256 constant PRICE_SLOT = 0;
-    uint256 constant COMMIT_SLOT = 1;
-    uint256 constant EXTRA_DATA_SLOT = 2;
 
     /// Contract targets
     bytes32 public constant TARGET_RESOLVER = keccak256("resolver");

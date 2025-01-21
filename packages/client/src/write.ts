@@ -93,15 +93,17 @@ const _ = (async () => {
     functionName: 'register',
     abi: scAbi,
     args: [
-      encodedName,
-      signer.address, // owner
-      duration,
-      zeroHash,
-      resolver,
-      data, // records calldata
-      false, // reverseRecord
-      0, // fuses
-      zeroHash,
+      {
+        name: encodedName,
+        owner: signer.address,
+        duration,
+        secret: zeroHash,
+        resolver,
+        data,
+        reverseRecord: false,
+        fuses: 0,
+        extraData: zeroHash,
+      },
     ],
     account: signer,
   }
@@ -154,13 +156,18 @@ const _ = (async () => {
 
         let value = 0n
         try {
-          const [_value /* commitTime */ /* extraData */, ,] =
-            (await client.readContract({
-              address: contractAddress,
-              abi: scAbi,
-              functionName: 'registerParams',
-              args: [encodedName, duration],
-            })) as [bigint, bigint, Hex]
+          const { price: _value } = (await client.readContract({
+            address: contractAddress,
+            abi: scAbi,
+            functionName: 'registerParams',
+            args: [encodedName, duration],
+          })) as {
+            price: bigint
+            commitTime: bigint
+            extraData: Hex
+            available: boolean
+            token: Hex
+          }
           value = _value
         } catch {
           // interface not implemented by the resolver

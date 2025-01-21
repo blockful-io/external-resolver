@@ -113,21 +113,22 @@ describe('Gateway API', () => {
           texts: [],
         }
 
-        const args = [
-          toHex(packetToBytes(domain.name)),
-          owner,
-          300n,
-          zeroHash,
-          TEST_ADDRESS,
-          [],
-          false,
-          0,
-          zeroHash,
-        ]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
-          args,
+          args: [
+            {
+              name: toHex(packetToBytes(domain.name)),
+              owner,
+              duration: 300n,
+              secret: zeroHash,
+              resolver: TEST_ADDRESS,
+              data: [],
+              reverseRecord: false,
+              fuses: 0,
+              extraData: zeroHash,
+            },
+          ],
         })
 
         const signature = await signData({
@@ -159,21 +160,22 @@ describe('Gateway API', () => {
         server.add(serverAbi, withRegisterDomain(repo))
         const app = server.makeApp('/')
 
-        const args = [
-          toHex(packetToBytes(domain.name)),
-          owner,
-          300n,
-          zeroHash,
-          TEST_ADDRESS,
-          [],
-          false,
-          0,
-          zeroHash,
-        ]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
-          args,
+          args: [
+            {
+              name: toHex(packetToBytes(domain.name)),
+              owner,
+              duration: 300n,
+              secret: zeroHash,
+              resolver: TEST_ADDRESS,
+              data: [],
+              reverseRecord: false,
+              fuses: 0,
+              extraData: zeroHash,
+            },
+          ],
         })
 
         const signature = await signData({
@@ -221,21 +223,22 @@ describe('Gateway API', () => {
           texts: [],
         }
 
-        const args = [
-          toHex(packetToBytes(domain.name)),
-          newOwner,
-          300n,
-          zeroHash,
-          TEST_ADDRESS,
-          [],
-          false,
-          0,
-          zeroHash,
-        ]
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
-          args,
+          args: [
+            {
+              name: toHex(packetToBytes(domain.name)),
+              owner: newOwner,
+              duration: 300n,
+              secret: zeroHash,
+              resolver: TEST_ADDRESS,
+              data: [],
+              reverseRecord: false,
+              fuses: 0,
+              extraData: zeroHash,
+            },
+          ],
         })
 
         const signature = await signData({
@@ -278,6 +281,13 @@ describe('Gateway API', () => {
           resolverVersion: '1',
           owner,
           ttl: '300',
+          contenthash: {
+            contenthash:
+              'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450',
+            resolver: TEST_ADDRESS,
+            resolverVersion: '1',
+            domain: node,
+          },
           addresses: [
             {
               address: '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0',
@@ -325,22 +335,34 @@ describe('Gateway API', () => {
               '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2',
             ],
           }),
+          encodeFunctionData({
+            functionName: 'setContenthash',
+            abi,
+            args: [
+              node,
+              stringToHex(
+                'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450',
+              ),
+            ],
+          }),
         ]
-        const args = [
-          toHex(packetToBytes(domain.name)),
-          owner,
-          300n,
-          zeroHash,
-          TEST_ADDRESS,
-          calldata,
-          false,
-          0,
-          zeroHash,
-        ]
+
         const data = encodeFunctionData({
           abi,
           functionName: 'register',
-          args,
+          args: [
+            {
+              name: toHex(packetToBytes(domain.name)),
+              owner,
+              duration: 300n,
+              secret: zeroHash,
+              resolver: TEST_ADDRESS,
+              data: calldata,
+              reverseRecord: false,
+              fuses: 0,
+              extraData: zeroHash,
+            },
+          ],
         })
 
         const signature = await signData({

@@ -95,15 +95,17 @@ describe('Gateway Database', () => {
           method: 'register',
           pvtKey,
           args: [
-            toHex(packetToBytes(name)),
-            owner,
-            300n,
-            zeroHash,
-            TEST_ADDRESS,
-            [],
-            false,
-            0,
-            zeroHash,
+            {
+              name: toHex(packetToBytes(name)),
+              owner,
+              duration: 300n,
+              secret: zeroHash,
+              resolver: TEST_ADDRESS,
+              data: [],
+              reverseRecord: false,
+              fuses: 0,
+              extraData: zeroHash,
+            },
           ],
         })
 
@@ -140,15 +142,17 @@ describe('Gateway Database', () => {
           method: 'register',
           pvtKey,
           args: [
-            toHex(packetToBytes(domain.name)),
-            owner,
-            300n,
-            zeroHash,
-            TEST_ADDRESS,
-            [],
-            false,
-            0,
-            zeroHash,
+            {
+              name: toHex(packetToBytes(domain.name)),
+              owner,
+              duration: 300n,
+              secret: zeroHash,
+              resolver: TEST_ADDRESS,
+              data: [],
+              reverseRecord: false,
+              fuses: 0,
+              extraData: zeroHash,
+            },
           ],
         })
 
@@ -193,15 +197,17 @@ describe('Gateway Database', () => {
           method: 'register',
           pvtKey,
           args: [
-            toHex(packetToBytes(name)),
-            owner,
-            300n,
-            zeroHash,
-            TEST_ADDRESS,
-            calldata,
-            false,
-            0,
-            zeroHash,
+            {
+              name: toHex(packetToBytes(name)),
+              owner,
+              duration: 300n,
+              secret: zeroHash,
+              resolver: TEST_ADDRESS,
+              data: calldata,
+              reverseRecord: false,
+              fuses: 0,
+              extraData: zeroHash,
+            },
           ],
         })
 
@@ -233,6 +239,64 @@ describe('Gateway Database', () => {
             coin: '1',
           })
         expect(actualAddressWithCoin).toBe(true)
+      })
+
+      it('should block registering a domain with records from another domain', async () => {
+        const pvtKey = generatePrivateKey()
+        const owner = privateKeyToAddress(pvtKey)
+        const name = 'blockful.eth'
+        const server = new ccip.Server()
+        server.add(abi, withRegisterDomain(repo))
+
+        const anotherNode = namehash('another.eth')
+
+        const calldata = [
+          encodeFunctionData({
+            abi: parseAbi(abi),
+            functionName: 'setText',
+            args: [anotherNode, 'com.twitter', '@blockful.eth'],
+          }),
+          encodeFunctionData({
+            functionName: 'setAddr',
+            abi: parseAbi(abi),
+            args: [anotherNode, '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0'],
+          }),
+          encodeFunctionData({
+            functionName: 'setAddr',
+            abi: parseAbi(abi),
+            args: [
+              anotherNode,
+              1n,
+              '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2',
+            ],
+          }),
+        ]
+        await doCall({
+          server,
+          abi,
+          sender: TEST_ADDRESS,
+          method: 'register',
+          pvtKey,
+          args: [
+            {
+              name: toHex(packetToBytes(name)),
+              owner,
+              duration: 300n,
+              secret: zeroHash,
+              resolver: TEST_ADDRESS,
+              data: calldata,
+              reverseRecord: false,
+              fuses: 0,
+              extraData: zeroHash,
+            },
+          ],
+        })
+
+        const actual = await datasource.getRepository(Domain).existsBy({
+          node: namehash(name),
+          owner,
+        })
+        expect(actual).toBe(false)
       })
     })
 

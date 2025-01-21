@@ -2,65 +2,52 @@
 pragma solidity ^0.8.17;
 
 import {INameWrapper} from "@ens-contracts/wrapper/INameWrapper.sol";
+import {ENSRegistry} from "@ens-contracts/registry/ENSRegistry.sol";
 import {Resolver} from "@ens-contracts/resolvers/Resolver.sol";
 import {BytesUtils} from "@ens-contracts/utils/BytesUtils.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {ENSHelper} from "../script/ENSHelper.sol";
 import {
-    OffchainRegister,
-    OffchainRegisterParams
+    OffchainRegister, RegisterRequest
 } from "./interfaces/WildcardWriting.sol";
 
-contract SubdomainController is
-    IERC165,
-    OffchainRegister,
-    OffchainRegisterParams,
-    ENSHelper
-{
+contract SubdomainController is IERC165, OffchainRegister, ENSHelper {
 
     using BytesUtils for bytes;
 
     uint256 public price;
-    uint256 public commitTime;
     INameWrapper nameWrapper;
 
-    constructor(
-        address _nameWrapperAddress,
-        uint256 _price,
-        uint256 _commitTime
-    ) {
-        commitTime = _commitTime;
+    constructor(address _nameWrapperAddress, uint256 _price) {
         price = _price;
         nameWrapper = INameWrapper(_nameWrapperAddress);
     }
 
     function registerParams(
-        bytes calldata, /* name */
+        bytes calldata name,
         uint256 /* duration */
     )
         external
         view
-        returns (uint256, uint256, bytes memory)
+        override
+        returns (RegisterParams memory)
     {
-        return (price, commitTime, "");
+        return RegisterParams({
+            price: price,
+            available: nameWrapper.ownerOf(uint256(name.namehash(0))) == address(0),
+            token: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, // EIP-7528 ETH
+            commitTime: 0,
+            extraData: ""
+        });
     }
 
-    function register(
-        bytes calldata name,
-        address owner,
-        uint256 duration,
-        bytes32, /* secret */
-        address resolver,
-        bytes[] calldata data,
-        bool, /* reverseRecord */
-        uint16 fuses,
-        bytes memory /* extraData */
-    )
+    function register(RegisterRequest calldata request)
         external
         payable
         override
     {
+        bytes calldata name = request.name;
         bytes32 node = name.namehash(0);
         string memory label = _getLabel(name);
 
@@ -74,11 +61,19 @@ contract SubdomainController is
         require(msg.value >= price, "insufficient funds");
 
         nameWrapper.setSubnodeRecord(
-            parentNode, label, owner, resolver, 0, fuses, uint64(duration)
+            parentNode,
+            label,
+            request.owner,
+            request.resolver,
+            0,
+            request.fuses,
+            uint64(request.duration)
         );
 
-        if (data.length > 0) {
-            Resolver(resolver).multicallWithNodeCheck(node, data);
+        if (request.data.length > 0) {
+            Resolver(request.resolver).multicallWithNodeCheck(
+                node, request.data
+            );
         }
     }
 
@@ -94,8 +89,7 @@ contract SubdomainController is
 
     function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
         return interfaceId == type(IERC165).interfaceId
-            || interfaceId == type(OffchainRegister).interfaceId
-            || interfaceId == type(OffchainRegisterParams).interfaceId;
+            || interfaceId == type(OffchainRegister).interfaceId;
     }
 
 }

@@ -30,9 +30,9 @@ export function withRegisterDomain(
   repo: WriteRepository & ReadRepository,
 ): ccip.HandlerDescription {
   return {
-    type: 'register(bytes calldata name, address owner, uint256 duration, bytes32 secret, address resolver, bytes[] calldata data, bool reverseRecord, uint16 fuses, bytes memory extraData)',
+    type: 'register((bytes name,address owner,uint256 duration,bytes32 secret,address resolver,bytes[] data,bool reverseRecord,uint16 fuses,bytes extraData))',
     func: async (
-      { name, duration: ttl, owner, data },
+      [[name, owner, ttl, , , data]],
       { signature }: { signature: TypedSignature },
     ) => {
       try {
@@ -44,9 +44,9 @@ export function withRegisterDomain(
           return { error: { message: 'Domain already exists', status: 400 } }
         }
 
-        const addresses = parseEncodedAddressCalls(data, signature)
-        const texts = parseEncodedTextCalls(data, signature)
-        const contenthash = parseEncodedContentHashCall(data, signature)
+        const addresses = parseEncodedAddressCalls(data, node, signature)
+        const texts = parseEncodedTextCalls(data, node, signature)
+        const contenthash = parseEncodedContentHashCall(data, node, signature)
 
         await repo.register({
           name,
