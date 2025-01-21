@@ -20,7 +20,6 @@ import {
   withQuery,
   withRegisterDomain,
   withTransferDomain,
-  withMulticallWithNodeCheck,
   withSetResolver,
 } from '../src/handlers'
 import { abi } from '../src/abi'
@@ -109,7 +108,6 @@ const _ = (async () => {
     withSetContentHash(repo, ownershipValidator),
     withRegisterDomain(repo),
     withTransferDomain(repo, ownershipValidator),
-    withMulticallWithNodeCheck(repo),
     withSetResolver(repo, ownershipValidator),
   )
 

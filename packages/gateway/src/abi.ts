@@ -16,7 +16,5 @@ export const abi: string[] = [
   'function getStorageSlots(address addr, bytes32[] memory commands, bytes[] memory) external view returns(bytes memory witness)',
   'function register((bytes name,address owner,uint256 duration,bytes32 secret,bytes extraData))',
   'function transfer(bytes32 node, address owner)',
-  'function multicall(bytes[] calldata data) external returns (bytes[] memory results)',
-  'function multicallWithNodeCheck(bytes32 node, bytes[] calldata data) external returns (bytes[] memory results)',
   'function setResolver(bytes32 node, address resolver)',
 ]

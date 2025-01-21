@@ -16,15 +16,7 @@ import {
   assert,
 } from 'vitest'
 import * as ccip from '@blockful/ccip-server'
-import {
-  Hex,
-  encodeFunctionData,
-  pad,
-  parseAbi,
-  stringToHex,
-  toHex,
-  zeroHash,
-} from 'viem'
+import { Hex, pad, stringToHex, toHex, zeroHash } from 'viem'
 import { namehash, packetToBytes } from 'viem/ens'
 import { generatePrivateKey, privateKeyToAddress } from 'viem/accounts'
 
@@ -100,10 +92,6 @@ describe('Gateway Database', () => {
               owner,
               duration: 300n,
               secret: zeroHash,
-              resolver: TEST_ADDRESS,
-              data: [],
-              reverseRecord: false,
-              fuses: 0,
               extraData: zeroHash,
             },
           ],
@@ -147,10 +135,6 @@ describe('Gateway Database', () => {
               owner,
               duration: 300n,
               secret: zeroHash,
-              resolver: TEST_ADDRESS,
-              data: [],
-              reverseRecord: false,
-              fuses: 0,
               extraData: zeroHash,
             },
           ],
@@ -164,139 +148,6 @@ describe('Gateway Database', () => {
           owner,
         })
         expect(d).toEqual(1)
-      })
-
-      it('should create new domain with records', async () => {
-        const pvtKey = generatePrivateKey()
-        const owner = privateKeyToAddress(pvtKey)
-        const name = 'blockful.eth'
-        const node = namehash(name)
-        const server = new ccip.Server()
-        server.add(abi, withRegisterDomain(repo))
-        const calldata = [
-          encodeFunctionData({
-            abi: parseAbi(abi),
-            functionName: 'setText',
-            args: [node, 'com.twitter', '@blockful.eth'],
-          }),
-          encodeFunctionData({
-            functionName: 'setAddr',
-            abi: parseAbi(abi),
-            args: [node, '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0'],
-          }),
-          encodeFunctionData({
-            functionName: 'setAddr',
-            abi: parseAbi(abi),
-            args: [node, 1n, '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2'],
-          }),
-        ]
-        await doCall({
-          server,
-          abi,
-          sender: TEST_ADDRESS,
-          method: 'register',
-          pvtKey,
-          args: [
-            {
-              name: toHex(packetToBytes(name)),
-              owner,
-              duration: 300n,
-              secret: zeroHash,
-              resolver: TEST_ADDRESS,
-              data: calldata,
-              reverseRecord: false,
-              fuses: 0,
-              extraData: zeroHash,
-            },
-          ],
-        })
-
-        const actual = await datasource.getRepository(Domain).findOneBy({
-          node,
-          owner,
-        })
-        assert(actual !== null)
-        expect(actual.name).toEqual(name)
-        expect(actual.parent).toEqual(namehash('eth'))
-        expect(actual.ttl).toEqual(300)
-
-        const actualText = await datasource.getRepository(Text).existsBy({
-          domain: node,
-          key: 'com.twitter',
-        })
-        expect(actualText).toBe(true)
-        const actualAddress = await datasource.getRepository(Address).existsBy({
-          domain: node,
-          address: '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0',
-          coin: '60',
-        })
-        expect(actualAddress).toBe(true)
-        const actualAddressWithCoin = await datasource
-          .getRepository(Address)
-          .existsBy({
-            domain: node,
-            address: '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2',
-            coin: '1',
-          })
-        expect(actualAddressWithCoin).toBe(true)
-      })
-
-      it('should block registering a domain with records from another domain', async () => {
-        const pvtKey = generatePrivateKey()
-        const owner = privateKeyToAddress(pvtKey)
-        const name = 'blockful.eth'
-        const server = new ccip.Server()
-        server.add(abi, withRegisterDomain(repo))
-
-        const anotherNode = namehash('another.eth')
-
-        const calldata = [
-          encodeFunctionData({
-            abi: parseAbi(abi),
-            functionName: 'setText',
-            args: [anotherNode, 'com.twitter', '@blockful.eth'],
-          }),
-          encodeFunctionData({
-            functionName: 'setAddr',
-            abi: parseAbi(abi),
-            args: [anotherNode, '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0'],
-          }),
-          encodeFunctionData({
-            functionName: 'setAddr',
-            abi: parseAbi(abi),
-            args: [
-              anotherNode,
-              1n,
-              '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2',
-            ],
-          }),
-        ]
-        await doCall({
-          server,
-          abi,
-          sender: TEST_ADDRESS,
-          method: 'register',
-          pvtKey,
-          args: [
-            {
-              name: toHex(packetToBytes(name)),
-              owner,
-              duration: 300n,
-              secret: zeroHash,
-              resolver: TEST_ADDRESS,
-              data: calldata,
-              reverseRecord: false,
-              fuses: 0,
-              extraData: zeroHash,
-            },
-          ],
-        })
-
-        const actual = await datasource.getRepository(Domain).existsBy({
-          node: namehash(name),
-          owner,
-        })
-        expect(actual).toBe(false)
       })
     })
 
