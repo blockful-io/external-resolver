@@ -7,7 +7,6 @@ pragma solidity ^0.8.17;
 /// @param duration The length of time in seconds to register the name for
 /// @param secret The secret to be used for the registration based on commit/reveal
 /// @param extraData Additional registration data encoded as bytes
-/// @param extraData Additional registration data encoded as bytes
 struct RegisterRequest {
     bytes name;
     address owner;

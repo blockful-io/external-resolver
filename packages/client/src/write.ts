@@ -82,37 +82,28 @@ const _ = (async () => {
       args: [node, resolver],
     },
     {
-      functionName: 'multicallWithNodeCheck',
+      functionName: 'setText',
+      abi,
+      args: [node, 'com.twitter', `@${name}`],
+    },
+    {
+      functionName: 'setAddr',
+      abi,
+      args: [node, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
+    },
+    {
+      functionName: 'setAddr',
+      abi,
+      args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
+    },
+    {
+      functionName: 'setContenthash',
       abi,
       args: [
         node,
-        [
-          encodeFunctionData({
-            functionName: 'setText',
-            abi,
-            args: [node, 'com.twitter', `@${name}`],
-          }),
-          encodeFunctionData({
-            functionName: 'setAddr',
-            abi,
-            args: [node, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
-          }),
-          encodeFunctionData({
-            functionName: 'setAddr',
-            abi,
-            args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
-          }),
-          encodeFunctionData({
-            functionName: 'setContenthash',
-            abi,
-            args: [
-              node,
-              stringToHex(
-                'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450',
-              ),
-            ],
-          }),
-        ],
+        stringToHex(
+          'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450',
+        ),
       ],
     },
   ]

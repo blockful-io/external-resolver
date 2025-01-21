@@ -128,8 +128,6 @@ contract L1Resolver is
                 || selector == TextResolver.setText.selector
                 || selector == ContentHashResolver.setContenthash.selector
                 || selector == NameResolver.setName.selector
-                || selector == L1Resolver.multicall.selector
-                || selector == L1Resolver.multicallWithNodeCheck.selector
         ) _offChainStorage(targets[TARGET_RESOLVER]);
 
         revert FunctionNotSupported();
