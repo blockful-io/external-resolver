@@ -22,26 +22,20 @@ import {ENSIP16} from "./ENSIP16.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
-import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
+import {OperationRouter} from "./interfaces/OperationRouter.sol";
 import {OffchainRegister} from "./interfaces/WildcardWriting.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
     IExtendedResolver,
     IERC165,
-    IWriteDeferral,
+    OperationRouter,
     IMulticallable,
     Ownable,
     ENSIP16
 {
 
     using EVMFetcher for EVMFetcher.EVMFetchRequest;
-
-    //////// ERRORS ////////
-
-    /// @notice Error thrown when an unsupported function is called
-    /// @dev Used to indicate when a function call is not implemented or allowed
-    error FunctionNotSupported();
 
     //////// CONTRACT VARIABLE STATE ////////
 
@@ -109,9 +103,9 @@ contract L1Resolver is
     /**
      * @notice Validates and processes write parameters for deferred storage mutations
      * @param data The encoded data to be written
-     * @dev This function reverts with StorageHandledByL2 error to indicate L2 deferral
+     * @dev This function reverts with OperationHandledOnchain error to indicate L2 deferral
      */
-    function getDeferralHandler(bytes calldata data) public view override {
+    function getOperationHandler(bytes calldata data) public view override {
         bytes4 selector = bytes4(data);
 
         if (selector == OffchainRegister.register.selector) {
@@ -169,9 +163,9 @@ contract L1Resolver is
             bytes32 node = abi.decode(data[4:], (bytes32));
             return _contenthash(node);
         }
-        if (selector == this.getDeferralHandler.selector) {
+        if (selector == this.getOperationHandler.selector) {
             (bytes memory _data) = abi.decode(data[4:], (bytes));
-            this.getDeferralHandler(_data);
+            this.getOperationHandler(_data);
         }
     }
 
@@ -366,10 +360,10 @@ contract L1Resolver is
     //////// ENS WRITE DEFERRAL RESOLVER (EIP-5559) ////////
 
     /**
-     * @notice Builds an StorageHandledByL2 error.
+     * @notice Builds an OperationHandledOnchain error.
      */
     function _offChainStorage(address target) internal view {
-        revert StorageHandledByL2(chainId, target);
+        revert OperationHandledOnchain(chainId, target);
     }
 
     //////// ENS ERC-165 ////////
@@ -381,7 +375,7 @@ contract L1Resolver is
         returns (bool)
     {
         return interfaceID == type(IExtendedResolver).interfaceId
-            || interfaceID == type(IWriteDeferral).interfaceId
+            || interfaceID == type(OperationRouter).interfaceId
             || interfaceID == type(EVMFetchTarget).interfaceId
             || interfaceID == type(IERC165).interfaceId
             || interfaceID == type(ENSIP16).interfaceId
@@ -407,9 +401,7 @@ contract L1Resolver is
      * @param target The L2 contract address
      */
     function setTarget(bytes32 key, address target) public onlyOwner {
-        address prevAddr = targets[key];
         targets[key] = target;
-        emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
     }
 
     function multicall(bytes[] calldata /* data */ )

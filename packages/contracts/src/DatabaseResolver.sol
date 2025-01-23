@@ -20,7 +20,7 @@ import {IMulticallable} from "@ens-contracts/resolvers/IMulticallable.sol";
 
 import {ENSIP16} from "./ENSIP16.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
-import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
+import {OperationRouter} from "./interfaces/OperationRouter.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 /**
@@ -31,7 +31,7 @@ contract DatabaseResolver is
     ERC165,
     ENSIP16,
     IExtendedResolver,
-    IWriteDeferral,
+    OperationRouter,
     AddrResolver,
     ABIResolver,
     PubkeyResolver,
@@ -112,9 +112,9 @@ contract DatabaseResolver is
      * @notice Read call for fetching the required parameters for the offchain call
      * @notice avoiding multiple transactions
      * @param data The encoded data to be written
-     * @dev This function reverts with StorageHandledByL2 error to indicate L2 deferral
+     * @dev This function reverts with OperationHandledOnchain error to indicate L2 deferral
      */
-    function getDeferralHandler(bytes calldata data) public view override {
+    function getOperationHandler(bytes calldata data) public view override {
         _offChainStorage(data);
     }
 
@@ -143,9 +143,9 @@ contract DatabaseResolver is
             return bytes(this.name(node));
         }
 
-        if (bytes4(data[:4]) == this.getDeferralHandler.selector) {
+        if (bytes4(data[:4]) == this.getOperationHandler.selector) {
             (bytes memory _data) = abi.decode(data[4:], (bytes));
-            this.getDeferralHandler(_data);
+            this.getOperationHandler(_data);
         }
 
         _offChainLookup(data);
@@ -418,18 +418,18 @@ contract DatabaseResolver is
     //////// ENS WRITE DEFERRAL RESOLVER (EIP-5559) ////////
 
     /**
-     * @notice Builds an StorageHandledByOffChainDatabase error.
+     * @notice Builds an OperationHandledOffchain error.
      */
     function _offChainStorage(bytes calldata callData) private view {
-        revert StorageHandledByOffChainDatabase(
-            IWriteDeferral.domainData({
+        revert OperationHandledOffchain(
+            OperationRouter.DomainData({
                 name: _WRITE_DEFERRAL_DOMAIN_NAME,
                 version: _WRITE_DEFERRAL_DOMAIN_VERSION,
                 chainId: _CHAIN_ID,
                 verifyingContract: address(this)
             }),
             gatewayUrl,
-            IWriteDeferral.messageData({
+            OperationRouter.MessageData({
                 data: callData,
                 sender: msg.sender,
                 expirationTimestamp: block.timestamp
@@ -568,7 +568,7 @@ contract DatabaseResolver is
         )
         returns (bool)
     {
-        return interfaceID == type(IWriteDeferral).interfaceId
+        return interfaceID == type(OperationRouter).interfaceId
             || interfaceID == type(IExtendedResolver).interfaceId
             || interfaceID == type(IMulticallable).interfaceId
             || super.supportsInterface(interfaceID);

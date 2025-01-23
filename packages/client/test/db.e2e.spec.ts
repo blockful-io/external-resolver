@@ -90,7 +90,7 @@ async function offchainWriting({
       args: [
         encodedName,
         encodeFunctionData({
-          functionName: 'getDeferralHandler',
+          functionName: 'getOperationHandler',
           abi: abiDBResolver,
           args: [encodeFunctionData(calldata)],
         }),
@@ -105,7 +105,7 @@ async function offchainWriting({
       abi: abiDBResolver,
       data: params as Hex,
     })
-    if (errorResult?.errorName === 'StorageHandledByOffChainDatabase') {
+    if (errorResult?.errorName === 'OperationHandledOffchain') {
       const [domain, url, message] = errorResult?.args as [
         DomainData,
         string,
