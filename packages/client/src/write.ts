@@ -117,7 +117,7 @@ const _ = (async () => {
         args: [
           encodedName,
           encodeFunctionData({
-            functionName: 'getDeferralHandler',
+            functionName: 'getOperationHandler',
             abi,
             args: [
               encodeFunctionData({
@@ -142,7 +142,7 @@ const _ = (async () => {
         data: params as Hex,
       })
       switch (errorResult?.errorName) {
-        case 'StorageHandledByOffChainDatabase': {
+        case 'OperationHandledOffchain': {
           const [domain, url, message] = errorResult.args as [
             DomainData,
             string,
@@ -151,7 +151,7 @@ const _ = (async () => {
           await handleDBStorage({ domain, url, message, signer })
           continue
         }
-        case 'StorageHandledByL2': {
+        case 'OperationHandledOnchain': {
           const [chainId, contractAddress] = errorResult.args as [
             bigint,
             `0x${string}`,
