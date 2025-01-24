@@ -23,7 +23,11 @@ import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
 import {OperationRouter} from "./interfaces/OperationRouter.sol";
-import {OffchainRegister} from "./interfaces/WildcardWriting.sol";
+import {
+    OffchainRegister,
+    RegisterRequest,
+    OffchainTransferrable
+} from "./interfaces/WildcardWriting.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
@@ -32,6 +36,8 @@ contract L1Resolver is
     OperationRouter,
     IMulticallable,
     Ownable,
+    OffchainRegister,
+    OffchainTransferrable,
     ENSIP16
 {
 
@@ -98,7 +104,7 @@ contract L1Resolver is
         setTarget(TARGET_NAME_WRAPPER, _target_nameWrapper);
     }
 
-    //////// ENSIP Wildcard Writing ////////
+    //////// EIP Operation Router ////////
 
     /**
      * @notice Validates and processes write parameters for deferred storage mutations
@@ -112,9 +118,10 @@ contract L1Resolver is
             _offChainStorage(targets[TARGET_REGISTRAR]);
         }
 
-        if (selector == NameWrapper.setResolver.selector) {
-            _offChainStorage(targets[TARGET_NAME_WRAPPER]);
-        }
+        if (
+            selector == NameWrapper.setResolver.selector
+                || selector == OffchainTransferrable.transferFrom.selector
+        ) _offChainStorage(targets[TARGET_NAME_WRAPPER]);
 
         if (
             selector == bytes4(keccak256("setAddr(bytes32,address)"))
@@ -125,6 +132,27 @@ contract L1Resolver is
         ) _offChainStorage(targets[TARGET_RESOLVER]);
 
         revert FunctionNotSupported();
+    }
+
+    //////// ENSIP Wildcard Writing ////////
+
+    function registerParams(
+        bytes calldata,
+        uint256
+    )
+        external
+        view
+        returns (RegisterParams memory)
+    {
+        getOperationHandler(msg.data);
+    }
+
+    function register(RegisterRequest calldata) external payable {
+        getOperationHandler(msg.data);
+    }
+
+    function transferFrom(bytes calldata, address, address) external view {
+        getOperationHandler(msg.data);
     }
 
     //////// ENSIP 10 ////////
@@ -383,6 +411,8 @@ contract L1Resolver is
             || interfaceID == type(TextResolver).interfaceId
             || interfaceID == type(ContentHashResolver).interfaceId
             || interfaceID == type(IMulticallable).interfaceId
+            || interfaceID == type(OffchainRegister).interfaceId
+            || interfaceID == type(OffchainTransferrable).interfaceId
             || super.supportsInterface(interfaceID);
     }
 

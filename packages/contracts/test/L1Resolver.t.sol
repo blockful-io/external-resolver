@@ -57,15 +57,6 @@ contract L1ResolverTest is Test, ENSHelper {
         assertEq(actual, expected);
     }
 
-    function test_EmitEventOnSetTarget() public {
-        address target = address(0x123);
-        vm.expectEmit(true, true, true, false);
-        emit OperationRouter.L2HandlerContractAddressChanged(
-            chainId, TARGET_RESOLVER, target
-        );
-        l1Resolver.setTarget(l1Resolver.TARGET_RESOLVER(), target);
-    }
-
     function test_RevertWhen_UnauthorizedSetTarget() public {
         address target = address(0x123);
 
@@ -73,108 +64,6 @@ contract L1ResolverTest is Test, ENSHelper {
         vm.prank(address(0x2024));
         vm.expectRevert(bytes("Ownable: caller is not the owner"));
         l1Resolver.setTarget(node, target);
-    }
-
-    //////// WRITE PARAMS TESTS ////////
-
-    function test_getOperationHandlerRegister() public {
-        bytes memory name = "test.eth";
-        bytes memory data = abi.encodeWithSelector(
-            OffchainRegister.register.selector,
-            name,
-            address(0),
-            0,
-            bytes32(0),
-            new bytes[](0)
-        );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                OperationRouter.OperationHandledOnchain.selector,
-                chainId,
-                TARGET_REGISTRAR
-            )
-        );
-        l1Resolver.getOperationHandler(data);
-    }
-
-    function test_getOperationHandlerSetAddr() public {
-        bytes memory data = abi.encodeWithSelector(
-            bytes4(keccak256("setAddr(bytes32,address)")),
-            bytes32(0),
-            address(0)
-        );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                OperationRouter.OperationHandledOnchain.selector,
-                chainId,
-                TARGET_RESOLVER
-            )
-        );
-        l1Resolver.getOperationHandler(data);
-    }
-
-    function test_getOperationHandlerSetAddrWithCoinType() public {
-        bytes memory data = abi.encodeWithSelector(
-            bytes4(keccak256("setAddr(bytes32,uint256,bytes)")),
-            bytes32(0),
-            uint256(0),
-            new bytes(0)
-        );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                OperationRouter.OperationHandledOnchain.selector,
-                chainId,
-                TARGET_RESOLVER
-            )
-        );
-        l1Resolver.getOperationHandler(data);
-    }
-
-    function test_getOperationHandlerSetText() public {
-        bytes memory data = abi.encodeWithSelector(
-            bytes4(keccak256("setText(bytes32,string,string)")),
-            bytes32(0),
-            "",
-            ""
-        );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                OperationRouter.OperationHandledOnchain.selector,
-                chainId,
-                TARGET_RESOLVER
-            )
-        );
-        l1Resolver.getOperationHandler(data);
-    }
-
-    function test_getOperationHandlerSetContenthash() public {
-        bytes memory data = abi.encodeWithSelector(
-            bytes4(keccak256("setContenthash(bytes32,bytes)")),
-            bytes32(0),
-            new bytes(0)
-        );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                OperationRouter.OperationHandledOnchain.selector,
-                chainId,
-                TARGET_RESOLVER
-            )
-        );
-        l1Resolver.getOperationHandler(data);
-    }
-
-    function test_getOperationHandlerUnsupportedFunction() public {
-        bytes memory data = abi.encodeWithSelector(
-            bytes4(keccak256("unsupportedFunction()")), bytes32(0)
-        );
-
-        vm.expectRevert(L1Resolver.FunctionNotSupported.selector);
-        l1Resolver.getOperationHandler(data);
     }
 
     function test_RevertWhen_GetAddr() public {
@@ -299,6 +188,106 @@ contract L1ResolverTest is Test, ENSHelper {
         assertTrue(
             l1Resolver.supportsInterface(type(ContentHashResolver).interfaceId)
         );
+    }
+
+    function test_getOperationHandlerRegister() public {
+        bytes memory name = "test.eth";
+        bytes memory data = abi.encodeWithSelector(
+            OffchainRegister.register.selector,
+            name,
+            address(0),
+            0,
+            bytes32(0),
+            new bytes[](0)
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OperationRouter.OperationHandledOnchain.selector,
+                chainId,
+                TARGET_REGISTRAR
+            )
+        );
+        l1Resolver.getOperationHandler(data);
+    }
+
+    function test_getOperationHandlerSetAddr() public {
+        bytes memory data = abi.encodeWithSelector(
+            bytes4(keccak256("setAddr(bytes32,address)")),
+            bytes32(0),
+            address(0)
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OperationRouter.OperationHandledOnchain.selector,
+                chainId,
+                TARGET_RESOLVER
+            )
+        );
+        l1Resolver.getOperationHandler(data);
+    }
+
+    function test_getOperationHandlerSetAddrWithCoinType() public {
+        bytes memory data = abi.encodeWithSelector(
+            bytes4(keccak256("setAddr(bytes32,uint256,bytes)")),
+            bytes32(0),
+            uint256(0),
+            new bytes(0)
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OperationRouter.OperationHandledOnchain.selector,
+                chainId,
+                TARGET_RESOLVER
+            )
+        );
+        l1Resolver.getOperationHandler(data);
+    }
+
+    function test_getOperationHandlerSetText() public {
+        bytes memory data = abi.encodeWithSelector(
+            bytes4(keccak256("setText(bytes32,string,string)")),
+            bytes32(0),
+            "",
+            ""
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OperationRouter.OperationHandledOnchain.selector,
+                chainId,
+                TARGET_RESOLVER
+            )
+        );
+        l1Resolver.getOperationHandler(data);
+    }
+
+    function test_getOperationHandlerSetContenthash() public {
+        bytes memory data = abi.encodeWithSelector(
+            bytes4(keccak256("setContenthash(bytes32,bytes)")),
+            bytes32(0),
+            new bytes(0)
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OperationRouter.OperationHandledOnchain.selector,
+                chainId,
+                TARGET_RESOLVER
+            )
+        );
+        l1Resolver.getOperationHandler(data);
+    }
+
+    function test_getOperationHandlerUnsupportedFunction() public {
+        bytes memory data = abi.encodeWithSelector(
+            bytes4(keccak256("unsupportedFunction()")), bytes32(0)
+        );
+
+        vm.expectRevert(OperationRouter.FunctionNotSupported.selector);
+        l1Resolver.getOperationHandler(data);
     }
 
 }

@@ -21,6 +21,11 @@ import {IMulticallable} from "@ens-contracts/resolvers/IMulticallable.sol";
 import {ENSIP16} from "./ENSIP16.sol";
 import {SignatureVerifier} from "./SignatureVerifier.sol";
 import {OperationRouter} from "./interfaces/OperationRouter.sol";
+import {
+    OffchainRegister,
+    OffchainTransferrable,
+    RegisterRequest
+} from "./interfaces/WildcardWriting.sol";
 import {EnumerableSetUpgradeable} from "./utils/EnumerableSetUpgradeable.sol";
 
 /**
@@ -39,6 +44,8 @@ contract DatabaseResolver is
     ContentHashResolver,
     NameResolver,
     IMulticallable,
+    OffchainRegister,
+    OffchainTransferrable,
     Ownable
 {
 
@@ -106,7 +113,7 @@ contract DatabaseResolver is
         return true;
     }
 
-    //////// ENSIP Wildcard Writing ////////
+    //////// EIP Operation Router ////////
 
     /**
      * @notice Read call for fetching the required parameters for the offchain call
@@ -116,6 +123,27 @@ contract DatabaseResolver is
      */
     function getOperationHandler(bytes calldata data) public view override {
         _offChainStorage(data);
+    }
+
+    //////// ENSIP Wildcard Writing ////////
+
+    function registerParams(
+        bytes calldata,
+        uint256
+    )
+        external
+        view
+        returns (RegisterParams memory)
+    {
+        getOperationHandler(msg.data);
+    }
+
+    function register(RegisterRequest calldata) external payable {
+        getOperationHandler(msg.data);
+    }
+
+    function transferFrom(bytes calldata, address, address) external view {
+        getOperationHandler(msg.data);
     }
 
     //////// ENSIP 10 ////////
@@ -571,6 +599,8 @@ contract DatabaseResolver is
         return interfaceID == type(OperationRouter).interfaceId
             || interfaceID == type(IExtendedResolver).interfaceId
             || interfaceID == type(IMulticallable).interfaceId
+            || interfaceID == type(OffchainRegister).interfaceId
+            || interfaceID == type(OffchainTransferrable).interfaceId
             || super.supportsInterface(interfaceID);
     }
 
