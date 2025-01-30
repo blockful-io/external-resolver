@@ -9,6 +9,7 @@ import {
   createPublicClient,
   decodeErrorResult,
   encodeFunctionData,
+  getChainContractAddress,
   http,
   namehash,
   stringToHex,
@@ -18,6 +19,7 @@ import {
 } from 'viem'
 import { normalize, packetToBytes } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
+import { addEnsContracts } from '@ensdomains/ensjs'
 
 import { abi } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
 import { abi as universalResolverResolveAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
@@ -29,7 +31,7 @@ config({
   path: process.env.ENV_FILE || '../.env',
 })
 
-const {
+let {
   UNIVERSAL_RESOLVER_ADDRESS: universalResolver,
   RESOLVER_ADDRESS: resolver,
   CHAIN_ID: chainId = '31337',
@@ -44,7 +46,7 @@ if (!chain) {
 }
 
 const client = createPublicClient({
-  chain,
+  chain: addEnsContracts(chain),
   transport: http(provider),
 }).extend(walletActions)
 console.log(`Connecting to ${chain?.name}.`)
@@ -55,7 +57,14 @@ const _ = (async () => {
     throw new Error('RESOLVER_ADDRESS is required')
   }
 
-  const name = normalize('gibi.arb.eth')
+  if (!universalResolver) {
+    universalResolver = getChainContractAddress({
+      chain: client.chain,
+      contract: 'ensUniversalResolver',
+    })
+  }
+
+  const name = normalize('meditation.arb.eth')
   const encodedName = toHex(packetToBytes(name))
   const node = namehash(name)
   const signer = privateKeyToAccount(privateKey as Hex)
@@ -155,8 +164,8 @@ const _ = (async () => {
         // SUBDOMAIN PRICING
 
         let value = 0n
-        try {
-          const { price: _value } = (await client.readContract({
+        if (calldata.functionName === 'register') {
+          const registerParams = (await l2Client.readContract({
             address: contractAddress,
             abi: scAbi,
             functionName: 'registerParams',
@@ -168,11 +177,13 @@ const _ = (async () => {
             available: boolean
             token: Hex
           }
-          value = _value
-        } catch {
-          // interface not implemented by the resolver
-        }
+          value = registerParams.price
 
+          if (!registerParams.available) {
+            console.log('Domain unavailable')
+            return
+          }
+        }
         try {
           const { request } = await l2Client.simulateContract({
             ...calldata,
