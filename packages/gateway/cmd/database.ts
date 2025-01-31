@@ -21,6 +21,7 @@ import {
   withQuery,
   withRegisterDomain,
   withTransferDomain,
+  withSetResolver,
 } from '../src/handlers'
 import { abi } from '../src/abi'
 import { getChain } from '../src/utils'
@@ -108,6 +109,7 @@ const _ = (async () => {
     withSetContentHash(repo, ownershipValidator),
     withRegisterDomain(repo),
     withTransferDomain(repo, ownershipValidator),
+    withSetResolver(repo, ownershipValidator),
   )
 
   server.makeApp('/').listen(port, () => {

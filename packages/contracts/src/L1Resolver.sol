@@ -8,8 +8,10 @@ import {IAddrResolver} from
     "@ens-contracts/resolvers/profiles/IAddrResolver.sol";
 import {IAddressResolver} from
     "@ens-contracts/resolvers/profiles/IAddressResolver.sol";
+import {NameWrapper} from "@ens-contracts/wrapper/NameWrapper.sol";
 import {IMulticallable} from "@ens-contracts/resolvers/IMulticallable.sol";
 import {AddrResolver} from "@ens-contracts/resolvers/profiles/AddrResolver.sol";
+import {NameResolver} from "@ens-contracts/resolvers/profiles/NameResolver.sol";
 import {TextResolver} from "@ens-contracts/resolvers/profiles/TextResolver.sol";
 import {ContentHashResolver} from
     "@ens-contracts/resolvers/profiles/ContentHashResolver.sol";
@@ -20,26 +22,26 @@ import {ENSIP16} from "./ENSIP16.sol";
 import {EVMFetcher} from "./evmgateway/EVMFetcher.sol";
 import {IEVMVerifier} from "./evmgateway/IEVMVerifier.sol";
 import {EVMFetchTarget} from "./evmgateway/EVMFetchTarget.sol";
-import {IWriteDeferral} from "./interfaces/IWriteDeferral.sol";
-import {OffchainRegister} from "./interfaces/WildcardWriting.sol";
+import {OperationRouter} from "./interfaces/OperationRouter.sol";
+import {
+    OffchainRegister,
+    RegisterRequest,
+    OffchainTransferrable
+} from "./interfaces/WildcardWriting.sol";
 
 contract L1Resolver is
     EVMFetchTarget,
     IExtendedResolver,
     IERC165,
-    IWriteDeferral,
+    OperationRouter,
     IMulticallable,
     Ownable,
+    OffchainRegister,
+    OffchainTransferrable,
     ENSIP16
 {
 
     using EVMFetcher for EVMFetcher.EVMFetchRequest;
-
-    //////// ERRORS ////////
-
-    /// @notice Error thrown when an unsupported function is called
-    /// @dev Used to indicate when a function call is not implemented or allowed
-    error FunctionNotSupported();
 
     //////// CONTRACT VARIABLE STATE ////////
 
@@ -66,6 +68,7 @@ contract L1Resolver is
     /// Contract targets
     bytes32 public constant TARGET_RESOLVER = keccak256("resolver");
     bytes32 public constant TARGET_REGISTRAR = keccak256("registrar");
+    bytes32 public constant TARGET_NAME_WRAPPER = keccak256("nameWrapper");
 
     //////// INITIALIZER ////////
 
@@ -77,6 +80,7 @@ contract L1Resolver is
         uint256 _chainId,
         address _target_resolver,
         address _target_registrar,
+        address _target_nameWrapper,
         IEVMVerifier _verifier,
         string memory _metadataUrl
     )
@@ -97,16 +101,17 @@ contract L1Resolver is
         chainId = _chainId;
         setTarget(TARGET_RESOLVER, _target_resolver);
         setTarget(TARGET_REGISTRAR, _target_registrar);
+        setTarget(TARGET_NAME_WRAPPER, _target_nameWrapper);
     }
 
-    //////// ENSIP Wildcard Writing ////////
+    //////// EIP Operation Router ////////
 
     /**
      * @notice Validates and processes write parameters for deferred storage mutations
      * @param data The encoded data to be written
-     * @dev This function reverts with StorageHandledByL2 error to indicate L2 deferral
+     * @dev This function reverts with OperationHandledOnchain error to indicate L2 deferral
      */
-    function getDeferralHandler(bytes calldata data) public view override {
+    function getOperationHandler(bytes calldata data) public view override {
         bytes4 selector = bytes4(data);
 
         if (selector == OffchainRegister.register.selector) {
@@ -114,13 +119,40 @@ contract L1Resolver is
         }
 
         if (
+            selector == NameWrapper.setResolver.selector
+                || selector == OffchainTransferrable.transferFrom.selector
+        ) _offChainStorage(targets[TARGET_NAME_WRAPPER]);
+
+        if (
             selector == bytes4(keccak256("setAddr(bytes32,address)"))
                 || selector == bytes4(keccak256("setAddr(bytes32,uint256,bytes)"))
                 || selector == TextResolver.setText.selector
                 || selector == ContentHashResolver.setContenthash.selector
+                || selector == NameResolver.setName.selector
         ) _offChainStorage(targets[TARGET_RESOLVER]);
 
         revert FunctionNotSupported();
+    }
+
+    //////// ENSIP Wildcard Writing ////////
+
+    function registerParams(
+        bytes calldata,
+        uint256
+    )
+        external
+        view
+        returns (RegisterParams memory)
+    {
+        getOperationHandler(msg.data);
+    }
+
+    function register(RegisterRequest calldata) external payable {
+        getOperationHandler(msg.data);
+    }
+
+    function transferFrom(bytes calldata, address, address) external view {
+        getOperationHandler(msg.data);
     }
 
     //////// ENSIP 10 ////////
@@ -159,9 +191,9 @@ contract L1Resolver is
             bytes32 node = abi.decode(data[4:], (bytes32));
             return _contenthash(node);
         }
-        if (selector == this.getDeferralHandler.selector) {
+        if (selector == this.getOperationHandler.selector) {
             (bytes memory _data) = abi.decode(data[4:], (bytes));
-            this.getDeferralHandler(_data);
+            this.getOperationHandler(_data);
         }
     }
 
@@ -356,10 +388,10 @@ contract L1Resolver is
     //////// ENS WRITE DEFERRAL RESOLVER (EIP-5559) ////////
 
     /**
-     * @notice Builds an StorageHandledByL2 error.
+     * @notice Builds an OperationHandledOnchain error.
      */
     function _offChainStorage(address target) internal view {
-        revert StorageHandledByL2(chainId, target);
+        revert OperationHandledOnchain(chainId, target);
     }
 
     //////// ENS ERC-165 ////////
@@ -371,7 +403,7 @@ contract L1Resolver is
         returns (bool)
     {
         return interfaceID == type(IExtendedResolver).interfaceId
-            || interfaceID == type(IWriteDeferral).interfaceId
+            || interfaceID == type(OperationRouter).interfaceId
             || interfaceID == type(EVMFetchTarget).interfaceId
             || interfaceID == type(IERC165).interfaceId
             || interfaceID == type(ENSIP16).interfaceId
@@ -379,6 +411,8 @@ contract L1Resolver is
             || interfaceID == type(TextResolver).interfaceId
             || interfaceID == type(ContentHashResolver).interfaceId
             || interfaceID == type(IMulticallable).interfaceId
+            || interfaceID == type(OffchainRegister).interfaceId
+            || interfaceID == type(OffchainTransferrable).interfaceId
             || super.supportsInterface(interfaceID);
     }
 
@@ -397,9 +431,7 @@ contract L1Resolver is
      * @param target The L2 contract address
      */
     function setTarget(bytes32 key, address target) public onlyOwner {
-        address prevAddr = targets[key];
         targets[key] = target;
-        emit L2HandlerContractAddressChanged(chainId, prevAddr, target);
     }
 
     function multicall(bytes[] calldata /* data */ )

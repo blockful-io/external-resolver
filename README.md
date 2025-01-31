@@ -37,7 +37,7 @@ This project not only makes ENS more efficient and cost-effective but also opens
 | BaseRegistrarImplementation | Arbitrum | [0x2C6a113C513fa0fd404abcCE3aC8a4BE16ccb651](https://sepolia.arbiscan.io/address/0x2C6a113C513fa0fd404abcCE3aC8a4BE16ccb651)  |
 | NameWrapper                 | Arbitrum | [0xff4f34ac12a84de527cf9e24856fc8d7c42cc379](https://sepolia.arbiscan.io/address/0xff4f34ac12a84de527cf9e24856fc8d7c42cc379)  |
 | ETHRegistrarController      | Arbitrum | [0x263c644d8f5d4bdb44cfab020491ec6fc4ca5271](https://sepolia.arbiscan.io/address/0x263c644d8f5d4bdb44cfab020491ec6fc4ca5271)  |
-| SubdomainController         | Arbitrum | [0x41eede073217084a30f6f3bc2c546bda1f08b5ca](https://sepolia.arbiscan.io/address/0x41eede073217084a30f6f3bc2c546bda1f08b5ca)  |
+| SubdomainController         | Arbitrum | [0x2e28f723818ED7B70a3ec10879309aa39CC4b3D6](https://sepolia.arbiscan.io/address/0x2e28f723818ED7B70a3ec10879309aa39CC4b3D6)  |
 | PublicResolver              | Arbitrum | [0x0a33f065c9c8f0F5c56BB84b1593631725F0f3af](https://sepolia.arbiscan.io/address/0x0a33f065c9c8f0F5c56BB84b1593631725F0f3af)  |
 
 ## Components
@@ -79,7 +79,7 @@ try {
     })
   } catch (err) {
     const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByOffChainDatabase') {
+    if (data?.errorName === 'OperationHandledOffchain') {
       const [domain, url, message] = data.args as [
         DomainData,
         string,
@@ -104,7 +104,7 @@ try {
     })
   } catch (err) {
     const data = getRevertErrorData(err)
-    if (data?.errorName === 'StorageHandledByL2') {
+    if (data?.errorName === 'OperationHandledOnchain') {
       const [chainId, contractAddress] = data.args as [bigint, `0x${string}`]
 
       await handleL2Storage({
@@ -290,7 +290,7 @@ Domain Register:
 1. Find the resolver associated with the given domain through the Universal Resolver
 2. Call the `register` function on the resolver passing the address of the Layer 2 resolver that will be managing the properties of a given domain
 3. Client calls `setOwner` on the L1 Resolver
-4. Client receive a `StorageHandledByL2` revert with the arguments required to call the gateway
+4. Client receive a `OperationHandledOnchain` revert with the arguments required to call the gateway
 5. Client calls the L2 Resolver with the returned arguments
 
 ![domain register](https://github.com/blockful-io/external-resolver/assets/29408363/1ef65db2-a979-4e2f-bb9f-7dde0769fae4)

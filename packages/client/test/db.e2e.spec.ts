@@ -90,7 +90,7 @@ async function offchainWriting({
       args: [
         encodedName,
         encodeFunctionData({
-          functionName: 'getDeferralHandler',
+          functionName: 'getOperationHandler',
           abi: abiDBResolver,
           args: [encodeFunctionData(calldata)],
         }),
@@ -105,7 +105,7 @@ async function offchainWriting({
       abi: abiDBResolver,
       data: params as Hex,
     })
-    if (errorResult?.errorName === 'StorageHandledByOffChainDatabase') {
+    if (errorResult?.errorName === 'OperationHandledOffchain') {
       const [domain, url, message] = errorResult?.args as [
         DomainData,
         string,
@@ -195,10 +195,6 @@ describe('DatabaseResolver', async () => {
             owner: owner.address,
             duration: 300n,
             secret: zeroHash,
-            resolver,
-            data: [],
-            reverseRecord: false,
-            fuses: 0,
             extraData: zeroHash,
           },
         ],
@@ -215,74 +211,6 @@ describe('DatabaseResolver', async () => {
       expect(actual).eq(1)
     })
 
-    it('should register new domain with records', async () => {
-      const calldata = [
-        encodeFunctionData({
-          abi: abiDBResolver,
-          functionName: 'setText',
-          args: [node, 'com.twitter', '@blockful.eth'],
-        }),
-        encodeFunctionData({
-          functionName: 'setAddr',
-          abi: abiDBResolver,
-          args: [node, '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0'],
-        }),
-        encodeFunctionData({
-          functionName: 'setAddr',
-          abi: abiDBResolver,
-          args: [node, 1n, '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2'],
-        }),
-      ]
-      const response = await offchainWriting({
-        encodedName,
-        functionName: 'register',
-        abi: abiOffchainRegister,
-        args: [
-          {
-            name: encodedName,
-            owner: owner.address,
-            duration: 300n,
-            secret: zeroHash,
-            resolver,
-            data: calldata,
-            reverseRecord: false,
-            fuses: 0,
-            extraData: zeroHash,
-          },
-        ],
-        universalResolverAddress,
-        signer: owner,
-      })
-
-      expect(response?.status).equal(200)
-
-      const d = await datasource.getRepository(Domain).countBy({
-        node,
-        owner: owner.address,
-      })
-      expect(d).eq(1)
-
-      const actualText = await datasource.getRepository(Text).existsBy({
-        domain: node,
-        key: 'com.twitter',
-      })
-      expect(actualText).eq(true)
-      const actualAddress = await datasource.getRepository(Address).existsBy({
-        domain: node,
-        address: '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a0',
-        coin: '60',
-      })
-      expect(actualAddress).eq(true)
-      const actualAddressWithCoin = await datasource
-        .getRepository(Address)
-        .existsBy({
-          domain: node,
-          address: '0x3a872f8fed4421e7d5be5c98ab5ea0e0245169a2',
-          coin: '1',
-        })
-      expect(actualAddressWithCoin).eq(true)
-    })
-
     it('should block register of duplicated domain with same owner', async () => {
       domain = await datasource.manager.save(domain)
 
@@ -296,10 +224,6 @@ describe('DatabaseResolver', async () => {
             owner: owner.address,
             duration: 300n,
             secret: zeroHash,
-            resolver,
-            data: [],
-            reverseRecord: false,
-            fuses: 0,
             extraData: zeroHash,
           },
         ],
@@ -330,10 +254,6 @@ describe('DatabaseResolver', async () => {
             owner: newOwner.address,
             duration: 300n,
             secret: zeroHash,
-            resolver,
-            data: [],
-            reverseRecord: false,
-            fuses: 0,
             extraData: zeroHash,
           },
         ],
@@ -373,10 +293,6 @@ describe('DatabaseResolver', async () => {
             owner: newOwner,
             duration: 300n,
             secret: zeroHash,
-            resolver,
-            data: [],
-            reverseRecord: false,
-            fuses: 0,
             extraData: zeroHash,
           },
         ],

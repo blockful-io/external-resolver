@@ -22,8 +22,9 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { addEnsContracts } from '@ensdomains/ensjs'
 
 import { abi } from '@blockful/contracts/out/DatabaseResolver.sol/DatabaseResolver.json'
-import { abi as universalResolverResolveAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
+import { abi as urAbi } from '@blockful/contracts/out/UniversalResolver.sol/UniversalResolver.json'
 import { abi as scAbi } from '@blockful/contracts/out/SubdomainController.sol/SubdomainController.json'
+import { abi as nwAbi } from '@blockful/contracts/out/NameWrapper.sol/NameWrapper.json'
 import { MessageData, DomainData } from '@blockful/gateway/src/types'
 import { getRevertErrorData, getChain, handleDBStorage } from './client'
 
@@ -36,7 +37,7 @@ let {
   RESOLVER_ADDRESS: resolver,
   CHAIN_ID: chainId = '31337',
   RPC_URL: provider = 'http://127.0.0.1:8545/',
-  L2_RPC_URL: providerL2 = 'http://127.0.0.1:8547',
+  L2_RPC_URL: providerL2,
   PRIVATE_KEY: privateKey,
 } = process.env
 
@@ -68,24 +69,43 @@ const _ = (async () => {
   const encodedName = toHex(packetToBytes(name))
   const node = namehash(name)
   const signer = privateKeyToAccount(privateKey as Hex)
+  const duration = 31556952000n
 
-  const data: Hex[] = [
-    encodeFunctionData({
+  const multicallData = [
+    {
+      functionName: 'register',
+      abi: scAbi,
+      args: [
+        {
+          name: encodedName,
+          owner: signer.address,
+          duration,
+          secret: zeroHash,
+          extraData: zeroHash,
+        },
+      ],
+    },
+    {
+      functionName: 'setResolver',
+      abi: nwAbi,
+      args: [node, resolver],
+    },
+    {
       functionName: 'setText',
       abi,
       args: [node, 'com.twitter', `@${name}`],
-    }),
-    encodeFunctionData({
+    },
+    {
       functionName: 'setAddr',
       abi,
       args: [node, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
-    }),
-    encodeFunctionData({
+    },
+    {
       functionName: 'setAddr',
       abi,
       args: [node, 1n, '0x3a872f8FED4421E7d5BE5c98Ab5Ea0e0245169A0'],
-    }),
-    encodeFunctionData({
+    },
+    {
       functionName: 'setContenthash',
       abi,
       args: [
@@ -94,110 +114,98 @@ const _ = (async () => {
           'ipns://k51qzi5uqu5dgccx524mfjv7znyfsa6g013o6v4yvis9dxnrjbwojc62pt0450',
         ),
       ],
-    }),
+    },
   ]
 
-  const duration = 31556952000n
-  const calldata = {
-    functionName: 'register',
-    abi: scAbi,
-    args: [
-      {
-        name: encodedName,
-        owner: signer.address,
-        duration,
-        secret: zeroHash,
-        resolver,
-        data,
-        reverseRecord: false,
-        fuses: 0,
-        extraData: zeroHash,
-      },
-    ],
-    account: signer,
-  }
-
-  try {
-    await client.readContract({
-      address: universalResolver as Hex,
-      abi: universalResolverResolveAbi,
-      functionName: 'resolve',
-      args: [
-        encodedName,
-        encodeFunctionData({
-          functionName: 'getDeferralHandler',
-          abi,
-          args: [encodeFunctionData(calldata)],
-        }),
-      ],
-    })
-  } catch (err) {
-    const data = getRevertErrorData(err)
-    if (!data || !data.args || data.args?.length === 0) return
-
-    const [params] = data.args
-    const errorResult = decodeErrorResult({
-      abi,
-      data: params as Hex,
-    })
-    switch (errorResult?.errorName) {
-      case 'StorageHandledByOffChainDatabase': {
-        const [domain, url, message] = errorResult.args as [
-          DomainData,
-          string,
-          MessageData,
-        ]
-        await handleDBStorage({ domain, url, message, signer })
+  for (const calldata of multicallData) {
+    try {
+      await client.readContract({
+        address: universalResolver as Hex,
+        abi: urAbi,
+        functionName: 'resolve',
+        args: [
+          encodedName,
+          encodeFunctionData({
+            functionName: 'getOperationHandler',
+            abi,
+            args: [
+              encodeFunctionData({
+                functionName: calldata.functionName,
+                abi: calldata.abi,
+                args: calldata.args,
+              }),
+            ],
+          }),
+        ],
+      })
+    } catch (err) {
+      const data = getRevertErrorData(err)
+      if (!data || !data.args || data.args?.length === 0) {
+        console.log({ err })
         return
       }
-      case 'StorageHandledByL2': {
-        const [chainId, contractAddress] = errorResult.args as [
-          bigint,
-          `0x${string}`,
-        ]
 
-        const l2Client = createPublicClient({
-          chain: getChain(Number(chainId)),
-          transport: http(providerL2),
-        }).extend(walletActions)
-
-        // SUBDOMAIN PRICING
-
-        let value = 0n
-        if (calldata.functionName === 'register') {
-          const registerParams = (await l2Client.readContract({
-            address: contractAddress,
-            abi: scAbi,
-            functionName: 'registerParams',
-            args: [encodedName, duration],
-          })) as {
-            price: bigint
-            commitTime: bigint
-            extraData: Hex
-            available: boolean
-            token: Hex
-          }
-          value = registerParams.price
-
-          if (!registerParams.available) {
-            console.log('Domain unavailable')
-            return
-          }
+      const [params] = data.args
+      const errorResult = decodeErrorResult({
+        abi,
+        data: params as Hex,
+      })
+      switch (errorResult?.errorName) {
+        case 'OperationHandledOffchain': {
+          const [domain, url, message] = errorResult.args as [
+            DomainData,
+            string,
+            MessageData,
+          ]
+          await handleDBStorage({ domain, url, message, signer })
+          continue
         }
-        try {
+        case 'OperationHandledOnchain': {
+          const [chainId, contractAddress] = errorResult.args as [
+            bigint,
+            `0x${string}`,
+          ]
+
+          const l2Client = createPublicClient({
+            chain: getChain(Number(chainId)),
+            transport: http(providerL2),
+          }).extend(walletActions)
+
+          let value = 0n
+          if (calldata.functionName === 'register') {
+            const registerParams = (await l2Client.readContract({
+              address: contractAddress,
+              abi: scAbi,
+              functionName: 'registerParams',
+              args: [encodedName, duration],
+            })) as {
+              price: bigint
+              commitTime: bigint
+              extraData: Hex
+              available: boolean
+              token: Hex
+            }
+            value = registerParams.price
+
+            if (!registerParams.available) {
+              console.log('Domain unavailable')
+              return
+            }
+          }
           const { request } = await l2Client.simulateContract({
-            ...calldata,
+            functionName: calldata.functionName,
+            abi: calldata.abi,
+            args: calldata.args,
             address: contractAddress,
             value,
+            account: signer,
           })
           await l2Client.writeContract(request)
-        } catch (err) {
-          console.log('error while trying to make the request: ', { err })
+          return
         }
-        return
+        default:
+          console.error('error registering domain: ', { err })
       }
-      default:
-        console.error('error registering domain: ', { err })
     }
   }
 })()

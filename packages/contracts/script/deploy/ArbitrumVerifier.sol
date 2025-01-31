@@ -15,7 +15,9 @@ contract ArbitrumVerifierScript is Script {
             , /* ENSRegistry registry */
             IRollupCore rollup,
             , /* uint256 targetChainId */
-            , /* address l2Resolver */ /* address l2Registrar */
+            , /* address l2Resolver */
+            , /* address l2Registrar */
+             /* address l2NameWrapper */
         ) = (new L1ArbitrumConfig(block.chainid, msg.sender))
             .activeNetworkConfig();
 

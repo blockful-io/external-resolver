@@ -22,7 +22,8 @@ contract L1ArbitrumResolverScript is Script, ENSHelper {
             IRollupCore rollup,
             uint256 targetChainId,
             address l2Resolver,
-            address l2Registrar
+            address l2Registrar,
+            address l2NameWrapper
         ) = (new L1ArbitrumConfig(block.chainid, msg.sender))
             .activeNetworkConfig();
 
@@ -38,7 +39,12 @@ contract L1ArbitrumResolverScript is Script, ENSHelper {
 
         ArbitrumVerifier verifier = new ArbitrumVerifier(urls, rollup);
         L1Resolver l1resolver = new L1Resolver(
-            targetChainId, l2Resolver, l2Registrar, verifier, metadataUrl
+            targetChainId,
+            l2Resolver,
+            l2Registrar,
+            l2NameWrapper,
+            verifier,
+            metadataUrl
         );
 
         // .eth

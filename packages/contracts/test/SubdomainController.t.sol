@@ -19,12 +19,10 @@ contract DummyNameWrapper {
         return owners[bytes32(id)];
     }
 
-    function setSubnodeRecord(
+    function setSubnodeOwner(
         bytes32 parentNode,
         string memory label,
         address owner,
-        address, /* resolver */
-        uint64, /* ttl */
         uint32, /* fuses */
         uint64 /* expiry */
     )
@@ -95,17 +93,14 @@ contract SubdomainControllerTest is Test, ENSHelper {
         address owner = address(0x123);
         uint256 duration = 365 days;
         bytes32 secret = bytes32(0);
-        bytes[] memory data = new bytes[](0);
 
         vm.expectCall(
             address(nameWrapper),
             abi.encodeWithSelector(
-                DummyNameWrapper.setSubnodeRecord.selector,
+                DummyNameWrapper.setSubnodeOwner.selector,
                 namehash("blockful.eth"),
                 "newdomain",
                 owner,
-                address(resolver),
-                0,
                 0,
                 duration
             )
@@ -113,17 +108,7 @@ contract SubdomainControllerTest is Test, ENSHelper {
 
         vm.deal(address(this), PRICE);
         controller.register{value: PRICE}(
-            RegisterRequest(
-                name,
-                owner,
-                duration,
-                secret,
-                address(resolver),
-                data,
-                false,
-                0,
-                bytes("")
-            )
+            RegisterRequest(name, owner, duration, secret, bytes(""))
         );
 
         assertEq(
@@ -139,22 +124,11 @@ contract SubdomainControllerTest is Test, ENSHelper {
         address owner = address(0x123);
         uint256 duration = 365 days;
         bytes32 secret = bytes32(0);
-        bytes[] memory data = new bytes[](0);
 
         vm.expectRevert("insufficient funds");
 
         controller.register{value: PRICE - 1}(
-            RegisterRequest(
-                name,
-                owner,
-                duration,
-                secret,
-                address(resolver),
-                data,
-                false,
-                0,
-                bytes("")
-            )
+            RegisterRequest(name, owner, duration, secret, bytes(""))
         );
     }
 
@@ -164,96 +138,17 @@ contract SubdomainControllerTest is Test, ENSHelper {
         address owner = address(0x123);
         uint256 duration = 365 days;
         bytes32 secret = bytes32(0);
-        bytes[] memory data = new bytes[](0);
 
         // Simulate that the domain is already registered
-        nameWrapper.setSubnodeRecord(
-            namehash("blockful.eth"),
-            "existingdomain",
-            owner,
-            address(0),
-            0,
-            0,
-            0
+        nameWrapper.setSubnodeOwner(
+            namehash("blockful.eth"), "existingdomain", owner, 0, 0
         );
 
         vm.expectRevert("domain already registered");
 
         vm.deal(address(this), PRICE);
         controller.register{value: PRICE}(
-            RegisterRequest(
-                name,
-                owner,
-                duration,
-                secret,
-                address(resolver),
-                data,
-                false,
-                0,
-                bytes("")
-            )
-        );
-    }
-
-    function testRegisterWithResolverData() public {
-        (bytes memory name, bytes32 node) =
-            NameEncoder.dnsEncodeName("newdomain.blockful.eth");
-        address owner = address(0x123);
-        uint256 duration = 365 days;
-        bytes32 secret = bytes32(0);
-
-        bytes[] memory data = new bytes[](1);
-        data[0] = abi.encodeWithSelector(
-            DummyResolver.setText.selector, node, "key", "value"
-        );
-
-        vm.expectCall(
-            address(nameWrapper),
-            abi.encodeWithSelector(
-                DummyNameWrapper.setSubnodeRecord.selector,
-                namehash("blockful.eth"),
-                "newdomain",
-                owner,
-                address(resolver),
-                0,
-                0,
-                duration
-            )
-        );
-
-        vm.expectCall(
-            address(resolver),
-            abi.encodeWithSelector(
-                Multicallable.multicallWithNodeCheck.selector, node, data
-            )
-        );
-
-        vm.deal(address(this), PRICE);
-        controller.register{value: PRICE}(
-            RegisterRequest(
-                name,
-                owner,
-                duration,
-                secret,
-                address(resolver),
-                data,
-                false,
-                0,
-                bytes("")
-            )
-        );
-
-        assertEq(
-            nameWrapper.ownerOf(uint256(node)),
-            owner,
-            "Owner should be set correctly"
-        );
-
-        // Verify that the text record was saved correctly
-        assertEq(
-            resolver.text(node, "key"),
-            "value",
-            "Text record should be set correctly"
+            RegisterRequest(name, owner, duration, secret, bytes(""))
         );
     }
 
