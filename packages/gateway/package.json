@@ -47,6 +47,7 @@
   "dependencies": {
     "@apollo/server": "^4.11.0",
     "@blockful/ccip-server": "*",
+    "@ensdomains/ensjs": "^4.0.2",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "express-mung": "^0.5.1",

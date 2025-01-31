@@ -29,9 +29,9 @@ This project not only makes ENS more efficient and cost-effective but also opens
 
 | Contract                    | Network  | Address                                                                                                                       |
 | --------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| DatabaseResolver            | Ethereum | [0x464e965E2BA20430d9E35c815c8F73a76D5ea4F6](https://sepolia.etherscan.io/address/0x464e965E2BA20430d9E35c815c8F73a76D5ea4F6) |
+| DatabaseResolver            | Ethereum | [0xEB3e3a9f737f7bEED451a0f8A41033082abC9B6b](https://sepolia.etherscan.io/address/0xEB3e3a9f737f7bEED451a0f8A41033082abC9B6b) |
 | ArbitrumVerifier            | Ethereum | [0x8fc4a214705e3c40032e99f867d964c012bf8efb](https://sepolia.etherscan.io/address/0x8fc4a214705e3c40032e99f867d964c012bf8efb) |
-| L1Resolver                  | Ethereum | [0xa0038AD12102c9Fbe7163D5b1bb286E6F678b4df](https://sepolia.etherscan.io/address/0xa0038AD12102c9Fbe7163D5b1bb286E6F678b4df) |
+| L1Resolver                  | Ethereum | [0x32D18361Acc3f3058565AAFD3F27Fe3d5135b4aD](https://sepolia.etherscan.io/address/0x32D18361Acc3f3058565AAFD3F27Fe3d5135b4aD) |
 | ENSRegistry                 | Arbitrum | [0x8d55e297c37993ebbd2e7a8d7688f7e5b35f1b50](https://sepolia.arbiscan.io/address/0x8d55e297c37993ebbd2e7a8d7688f7e5b35f1b50)  |
 | ReverseRegistrar            | Arbitrum | [0xb3c9ff08671bbadddd0436cc46fbfa005c8da0a7](https://sepolia.arbiscan.io/address/0xb3c9ff08671bbadddd0436cc46fbfa005c8da0a7)  |
 | BaseRegistrarImplementation | Arbitrum | [0x2C6a113C513fa0fd404abcCE3aC8a4BE16ccb651](https://sepolia.arbiscan.io/address/0x2C6a113C513fa0fd404abcCE3aC8a4BE16ccb651)  |

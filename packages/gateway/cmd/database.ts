@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import { config } from 'dotenv'
 import { Hex, createPublicClient, getChainContractAddress, http } from 'viem'
+import { addEnsContracts } from '@ensdomains/ensjs'
 
 import * as ccip from '@blockful/ccip-server'
 
@@ -58,7 +59,7 @@ const _ = (async () => {
   console.log(`Connected to chain: ${chain.name}`)
 
   const client = createPublicClient({
-    chain,
+    chain: addEnsContracts(chain),
     transport: http(rpcURL),
   })
   const ethClient = new EthereumClient(
