@@ -157,6 +157,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
                 owner: msg.sender,
                 duration: 0,
                 secret: bytes32(0),
+                resolver: address(resolver),
                 extraData: new bytes(0)
             })
         );
@@ -190,6 +191,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
                 owner: msg.sender,
                 duration: 0,
                 secret: bytes32(0),
+                resolver: address(resolver),
                 extraData: new bytes(0)
             })
         );
@@ -217,6 +219,7 @@ contract DatabaseResolverTest is Test, ENSHelper {
                 owner: msg.sender,
                 duration: 0,
                 secret: bytes32(0),
+                resolver: address(resolver),
                 extraData: new bytes(0)
             })
         );

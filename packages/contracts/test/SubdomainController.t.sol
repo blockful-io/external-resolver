@@ -19,12 +19,14 @@ contract DummyNameWrapper {
         return owners[bytes32(id)];
     }
 
-    function setSubnodeOwner(
+    function setSubnodeRecord(
         bytes32 parentNode,
         string memory label,
         address owner,
-        uint32, /* fuses */
-        uint64 /* expiry */
+        address resolver,
+        uint64 ttl,
+        uint32 fuses,
+        uint64 expiry
     )
         public
         returns (bytes32 node)
@@ -97,10 +99,12 @@ contract SubdomainControllerTest is Test, ENSHelper {
         vm.expectCall(
             address(nameWrapper),
             abi.encodeWithSelector(
-                DummyNameWrapper.setSubnodeOwner.selector,
+                DummyNameWrapper.setSubnodeRecord.selector,
                 namehash("blockful.eth"),
                 "newdomain",
                 owner,
+                address(resolver),
+                0,
                 0,
                 duration
             )
@@ -108,7 +112,9 @@ contract SubdomainControllerTest is Test, ENSHelper {
 
         vm.deal(address(this), PRICE);
         controller.register{value: PRICE}(
-            RegisterRequest(name, owner, duration, secret, bytes(""))
+            RegisterRequest(
+                name, owner, duration, secret, address(resolver), bytes("")
+            )
         );
 
         assertEq(
@@ -128,7 +134,9 @@ contract SubdomainControllerTest is Test, ENSHelper {
         vm.expectRevert("insufficient funds");
 
         controller.register{value: PRICE - 1}(
-            RegisterRequest(name, owner, duration, secret, bytes(""))
+            RegisterRequest(
+                name, owner, duration, secret, address(resolver), bytes("")
+            )
         );
     }
 
@@ -140,15 +148,23 @@ contract SubdomainControllerTest is Test, ENSHelper {
         bytes32 secret = bytes32(0);
 
         // Simulate that the domain is already registered
-        nameWrapper.setSubnodeOwner(
-            namehash("blockful.eth"), "existingdomain", owner, 0, 0
+        nameWrapper.setSubnodeRecord(
+            namehash("blockful.eth"),
+            "existingdomain",
+            owner,
+            address(resolver),
+            0,
+            0,
+            0
         );
 
         vm.expectRevert("domain already registered");
 
         vm.deal(address(this), PRICE);
         controller.register{value: PRICE}(
-            RegisterRequest(name, owner, duration, secret, bytes(""))
+            RegisterRequest(
+                name, owner, duration, secret, address(resolver), bytes("")
+            )
         );
     }
 

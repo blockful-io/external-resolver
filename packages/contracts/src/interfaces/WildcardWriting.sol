@@ -6,12 +6,14 @@ pragma solidity ^0.8.17;
 /// @param owner The address that will own the registered name
 /// @param duration The length of time in seconds to register the name for
 /// @param secret The secret to be used for the registration based on commit/reveal
+/// @param resolver The address of the resolver used as entrypoint on the L1
 /// @param extraData Additional registration data encoded as bytes
 struct RegisterRequest {
     bytes name;
     address owner;
     uint256 duration;
     bytes32 secret;
+    address resolver;
     bytes extraData;
 }
 

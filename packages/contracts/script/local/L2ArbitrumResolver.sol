@@ -114,6 +114,7 @@ contract L2ArbitrumResolver is Script, ENSHelper {
                 msg.sender,
                 31556952000,
                 keccak256(abi.encode("secret")),
+                address(arbResolver),
                 bytes("")
             )
         );

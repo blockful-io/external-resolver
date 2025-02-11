@@ -27,9 +27,9 @@ export function withRegisterDomain(
   repo: WriteRepository & ReadRepository,
 ): ccip.HandlerDescription {
   return {
-    type: 'register((bytes name,address owner,uint256 duration,bytes32 secret,bytes extraData))',
+    type: 'register((bytes name,address owner,uint256 duration,bytes32 secret,address resolver,bytes extraData))',
     func: async (
-      [[name, owner, ttl]],
+      [[name, owner, ttl, , resolver]],
       { signature }: { signature: TypedSignature },
     ) => {
       try {
@@ -47,7 +47,7 @@ export function withRegisterDomain(
           ttl: ttl.toString(),
           owner,
           parent: namehash(extractParentFromName(name)),
-          resolver: signature.domain.verifyingContract,
+          resolver,
           resolverVersion: signature.domain.version,
         })
       } catch (err) {
