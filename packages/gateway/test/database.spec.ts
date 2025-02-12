@@ -92,6 +92,7 @@ describe('Gateway Database', () => {
               owner,
               duration: 300n,
               secret: zeroHash,
+              resolver: TEST_ADDRESS,
               extraData: zeroHash,
             },
           ],
@@ -105,6 +106,7 @@ describe('Gateway Database', () => {
         expect(d.name).toEqual(name)
         expect(d.parent).toEqual(namehash('eth'))
         expect(d.ttl).toEqual(300)
+        expect(d.resolver).toEqual(TEST_ADDRESS)
       })
 
       // Register a domain 'public.eth' with a given TTL, then attempt to register the same domain with a different TTL
@@ -135,6 +137,7 @@ describe('Gateway Database', () => {
               owner,
               duration: 300n,
               secret: zeroHash,
+              resolver: TEST_ADDRESS,
               extraData: zeroHash,
             },
           ],

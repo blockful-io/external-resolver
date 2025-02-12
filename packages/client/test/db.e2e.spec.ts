@@ -195,6 +195,7 @@ describe('DatabaseResolver', async () => {
             owner: owner.address,
             duration: 300n,
             secret: zeroHash,
+            resolver,
             extraData: zeroHash,
           },
         ],
@@ -204,11 +205,13 @@ describe('DatabaseResolver', async () => {
 
       expect(response?.status).equal(200)
 
-      const actual = await datasource.getRepository(Domain).countBy({
+      const actual = await datasource.getRepository(Domain).findOneBy({
         node,
         owner: owner.address,
       })
-      expect(actual).eq(1)
+      expect(actual?.name).eq(name)
+      expect(actual?.owner).eq(owner.address)
+      expect(actual?.resolver).eq(resolver)
     })
 
     it('should block register of duplicated domain with same owner', async () => {
@@ -223,6 +226,7 @@ describe('DatabaseResolver', async () => {
             name: encodedName,
             owner: owner.address,
             duration: 300n,
+            resolver,
             secret: zeroHash,
             extraData: zeroHash,
           },
@@ -253,6 +257,7 @@ describe('DatabaseResolver', async () => {
             name: encodedName,
             owner: newOwner.address,
             duration: 300n,
+            resolver,
             secret: zeroHash,
             extraData: zeroHash,
           },
@@ -292,6 +297,7 @@ describe('DatabaseResolver', async () => {
             name: encodedName,
             owner: newOwner,
             duration: 300n,
+            resolver,
             secret: zeroHash,
             extraData: zeroHash,
           },
