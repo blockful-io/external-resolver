@@ -74,6 +74,7 @@ ponder.on('ENSRegistry:NewOwner', async ({ event, context }) => {
       node: event.args.node,
       name: '',
       parent: zeroHash,
+      ttl: '600',
       resolver: zeroAddress,
       createdAt: new Date(
         parseInt(event.block.timestamp.toString()) * 1000,
